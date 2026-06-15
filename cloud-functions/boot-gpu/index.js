@@ -1,5 +1,71 @@
 // cloud-functions/boot-gpu/index.js
-const { InstancesClient, DisksClient, ImagesClient, AcceleratorTypesClient } = require('@google-cloud/compute');
+
+// 💡 Abstracted Configuration independent of the cloud provider infrastructure
+const RUNPOD_CONFIG = {
+    API_KEY: process.env.RUNPOD_API_KEY,
+    GPU_TYPE: 'NVIDIA GeForce RTX 4090', // Or 'NVIDIA Tesla T4' with zero quota blocks
+    GPU_COUNT: 1,
+    IMAGE_NAME: 'runpod/pytorch:2.4.0-py3.11-cuda12.4.1-devel-ubuntu22.04',
+    DOCKER_ARGS: `-v /mnt/vault/Juggernaut-Z:/root/model` // Direct asset bindings
+};
+
+
+
+async function deployAgnosticWorker() {
+
+    const axios = require('axios');
+
+    console.log(`🛰️ [RUNPOD] Orchestrating hardware allocation for: ${RUNPOD_CONFIG.GPU_TYPE}`);
+
+    // GraphQL payload to spawn a container instantly via RunPod's control plane
+    const query = `
+    mutation {
+        podFindAndDeploy(input: {
+            gpuTypeId: "${RUNPOD_CONFIG.GPU_TYPE}",
+            gpuCount: ${RUNPOD_CONFIG.GPU_COUNT},
+            imageName: "${RUNPOD_CONFIG.IMAGE_NAME}",
+            dockerArgs: "${RUNPOD_CONFIG.DOCKER_ARGS}",
+            ports: "8000/http",
+            volumeInGb: 50
+        }) {
+            id
+            desiredStatus
+            runtime {
+                ports {
+                    ip
+                    isPublic
+                    publicPort
+                }
+            }
+        }
+    }`;
+
+    const response = await axios.post(
+        'https://api.runpod.io/v1/gce-graphql',
+        { query },
+        { headers: { 'Authorization': `Bearer ${RUNPOD_CONFIG.API_KEY}`, 'Content-Type': 'application/json' } }
+    );
+
+    const pod = response.data?.data?.podFindAndDeploy;
+    if (!pod) throw new Error("Hardware provider rejected container allocation layer.");
+
+    // Parse out the public execution routing endpoint dynamically
+    const httpPort = pod.runtime?.ports?.find(p => p.privatePort === 8000);
+    const publicEndpoint = httpPort ? `http://${httpPort.ip}:${httpPort.publicPort}` : null;
+
+    return {
+        statusCode: 202,
+        body: {
+            status: 'INITIALIZING',
+            podId: pod.id,
+            endpoint: publicEndpoint,
+            message: "Agnostic cluster worker successfully spawned via decentralized mesh."
+        }
+    };
+}
+
+
+
 const path = require('path');
 const fs = require('fs');
 
@@ -15,7 +81,19 @@ const CONFIG = {
     DISK_SIZE_GB: 100,
     VAULT_DISK_SIZE_GB: 50,
     EXTENDED_RAM_MB: 0, // Optional, remove if not needed
+    USE_SPOT: true,
 };
+
+
+
+// ============================================================================
+// GLOBAL STATE CACHE (Persists inside the Cloud Function memory isolation layer)
+// ============================================================================
+let cachedImageUri = null;
+let cacheExpirationTime = null;
+let activeImageScanPromise = null; // The Mutex Lock
+
+const CACHE_DURATION_MS = 2 * 24 * 60 * 60 * 1000; // 💡 Exactly 2 Days
 
 exports.bootGpu = async (req, res) => {
     res.set('Access-Control-Allow-Origin', '*');
@@ -38,6 +116,9 @@ exports.bootGpu = async (req, res) => {
         clientOptions.authClient = req.oauth2Client;
     }
 
+
+
+    const { InstancesClient, DisksClient, ImagesClient, AcceleratorTypesClient } = require('@google-cloud/compute');
     const instancesClient = new InstancesClient(clientOptions);
     const disksClient = new DisksClient(clientOptions);
     const imagesClient = new ImagesClient(clientOptions);
@@ -48,9 +129,39 @@ exports.bootGpu = async (req, res) => {
         const activeZone = await resolveOperationalZone(acceleratorTypesClient, projectId, CONFIG.ZONE_FAILOVER_POOL);
         console.log(`🌍 [ZONE] Using zone: ${activeZone}`);
 
-        // 2. Resolve latest compatible image
-        const resolvedImageUri = await resolveActiveImage(imagesClient);
-        console.log(`🖼️ [IMAGE] Using: ${resolvedImageUri}`);
+        // 2. Resolve latest compatible image (Idempotent & Mutex Locked)
+        let resolvedImageUri = null;
+        const now = Date.now();
+
+        if (cachedImageUri && cacheExpirationTime && now < cacheExpirationTime) {
+            console.log(`⚡ [RESOLVER CACHE] Hot memory hit! Reusing baseline layer: ${cachedImageUri}`);
+            resolvedImageUri = cachedImageUri;
+        } else {
+            // Check if another parallel request is already processing the Registry scan
+            if (activeImageScanPromise) {
+                console.warn(`🛑 [MUTEX LOCK] Concurrent poll detected. Chaining onto active in-flight registry stream...`);
+                resolvedImageUri = await activeImageScanPromise;
+            } else {
+                console.log(`🚀 [RESOLVER CACHE] Cache cold or expired. Securing exclusive scan lock...`);
+
+                // Create the lock promise
+                activeImageScanPromise = resolveActiveImage(imagesClient);
+
+                try {
+                    resolvedImageUri = await activeImageScanPromise;
+
+                    // Commit to long-term memory cache
+                    cachedImageUri = resolvedImageUri;
+                    cacheExpirationTime = Date.now() + CACHE_DURATION_MS;
+                    console.log(`💾 [RESOLVER CACHE] Registry locked down. Values cached for 2 days.`);
+                } finally {
+                    // CRITICAL: Always release the lock so future failures can try again
+                    activeImageScanPromise = null;
+                }
+            }
+        }
+
+        console.log(`🖼️ [IMAGE LAYER BOUND] Using: ${resolvedImageUri}`);
 
         // 3. Ensure model vault disk is ready (create seeder if needed)
         const vaultStatus = await ensureVaultReady(disksClient, instancesClient, projectId, activeZone, resolvedImageUri);
@@ -75,7 +186,7 @@ exports.bootGpu = async (req, res) => {
         return res.status(workerStatus.statusCode).json(workerStatus.body);
 
     } catch (err) {
-        console.error("❌ [ERROR]", err);
+        console.error("❌ [ORCHESTRATOR ERROR]", err);
         return res.status(500).json({ status: 'ERROR', error: err.message });
     }
 };
@@ -102,27 +213,128 @@ async function resolveOperationalZone(acceleratorClient, project, pool) {
     return pool[0];
 }
 
-async function resolveActiveImage(imagesClient) {
-    const targetProjects = ['deeplearning-platform-release', 'debian-cloud'];
-    const targetFamilies = ['common-cpu-debian-11', 'debian-11', 'common-cpu-debian-11-py310'];
 
-    for (const proj of targetProjects) {
+
+async function resolveActiveImage(imagesClient) {
+    const targetProject = 'deeplearning-platform-release';
+    console.log(`🔍 [RESOLVER] Initializing highly verbose registry scan...`);
+
+    // Use the broadest safe filter possible to get all active images over the wire
+    const apiFilter = 'status = "READY"';
+    console.log(`📡 [RESOLVER API] Filter string passing to GCP: '${apiFilter}'`);
+
+    try {
+        const imagesPager = imagesClient.listAsync({
+            project: targetProject,
+            filter: apiFilter
+        });
+
+        let totalInspected = 0;
+        let skippedCpu = 0;
+        let skippedDeprecated = 0;
+        let candidateImages = [];
+
+        for await (const image of imagesPager) {
+            totalInspected++;
+
+            // 1. Drop obvious CPU-only architectures right away
+            if (image.name.includes('cpu')) {
+                skippedCpu++;
+                continue;
+            }
+
+            // 2. Drop broken/deprecated releases
+            if (image.deprecated) {
+                skippedDeprecated++;
+                continue;
+            }
+
+            // Calculate a preference score to sort choices intelligently later
+            let score = 0;
+            if (image.name.includes('nvidia')) score += 100;
+            if (image.name.includes('cu12')) score += 50;  // Prefer modern CUDA 12 stacks
+            if (image.name.includes('debian-12')) score += 20; // Prefer stable Debian 12
+            if (image.name.includes('ubuntu')) score += 10;
+
+            // Log every viable candidate with its calculated metrics
+            console.log(`   💡 [VIABLE IMAGE FOUND] Name: "${image.name}" | Score: ${score} | Created: ${image.creationTimestamp}`);
+
+            candidateImages.push({
+                name: image.name,
+                selfLink: image.selfLink,
+                score: score,
+                creationTimestamp: new Date(image.creationTimestamp)
+            });
+        }
+
+        console.log(`\n📊 [RESOLVER METRICS] Pipeline Scan Complete.`);
+        console.log(`   ├─ Total Raw Objects Inspected: ${totalInspected}`);
+        console.log(`   ├─ Skipped (CPU-bound): ${skippedCpu}`);
+        console.log(`   ├─ Skipped (Deprecated): ${skippedDeprecated}`);
+        console.log(`   └─ Total Gathered Candidates: ${candidateImages.length}\n`);
+
+        if (candidateImages.length > 0) {
+            // Sort primary by capability score, and secondary by freshness
+            candidateImages.sort((a, b) => {
+                if (b.score !== a.score) {
+                    return b.score - a.score;
+                }
+                return b.creationTimestamp - a.creationTimestamp;
+            });
+
+            // Log the top 3 items to confirm the sorting math works out in your terminal
+            console.log(`🔝 Top Candidates evaluated:`);
+            candidateImages.slice(0, 3).forEach((img, idx) => {
+                console.log(`   [${idx}] Score: ${img.score} | Name: ${img.name}`);
+            });
+
+            const chosenImage = candidateImages[0];
+            console.log(`\n🎯 [RESOLVER SELECTION]`);
+            console.log(`   └─ Image Name: ${chosenImage.name}`);
+            console.log(`   └─ URI Link  : ${chosenImage.selfLink}\n`);
+
+            return chosenImage.selfLink;
+        }
+
+        throw new Error("Zero live registry objects survived the base filtration criteria.");
+
+    } catch (err) {
+        console.error(`❌ [RESOLVER ERROR] Scan execution failed:`, err);
+        console.log(`🔄 [RESOLVER] Falling back to known-stable targets...`);
+
+        const targetFamilies = [
+            'common-cu129-debian-12-nvidia-580', // Built for the Debian 12 images you found
+            'common-cu129-ubuntu-2404-nvidia-580',
+            'pytorch-2-9-cu129-ubuntu-2404-nvidia-580'
+        ];
+
         for (const family of targetFamilies) {
             try {
                 const [imageMeta] = await imagesClient.getFromFamily({
-                    project: proj,
+                    project: targetProject,
                     family
                 });
+
                 if (imageMeta?.selfLink) {
+                    console.log(`🎯 [RESOLVER] Fallback Family Match Found: ${family}`);
                     return imageMeta.selfLink;
                 }
-            } catch (e) {
-                // Silent fail
+            } catch (familyErr) {
+                console.warn(`   ℹ️ Family ${family} not matching family pointer. Trying next...`);
             }
         }
+
+        console.warn("🚨 [RESOLVER] Deep learning registries unreachable. Invoking emergency infrastructure backup...");
+        const [fallbackMeta] = await imagesClient.getFromFamily({
+            project: 'debian-cloud',
+            family: 'debian-12'
+        });
+
+        if (fallbackMeta?.selfLink) return fallbackMeta.selfLink;
+        throw new Error("Orchestration Engine Halted: Deep learning registries completely offline.");
     }
-    throw new Error("Failed to resolve any compatible OS image.");
 }
+
 
 async function ensureVaultReady(disksClient, instancesClient, project, zone, sourceImage) {
     let diskExists = false;
@@ -229,6 +441,7 @@ gcloud compute instances delete $(hostname) --zone=${zone} --quiet
     return 'INITIALIZING_STORAGE';
 }
 
+
 async function deployGpuWorker(instancesClient, project, zone, sourceImage) {
     // Check if worker already running
     let workerMetadata = null;
@@ -261,24 +474,10 @@ async function deployGpuWorker(instancesClient, project, zone, sourceImage) {
         ? fs.readFileSync(agentScriptPath, 'utf8')
         : '# No custom agent script found';
 
-    const startupScript = `#!/bin/bash
-echo "🚀 Starting Juggernaut-Z GPU worker..."
-export HOME=/root
-cd /root
-
-cat << 'EOF' > /root/worker-agent.py
-${agentScriptContent}
-EOF
-
-echo "⚡ Mounting model vault..."
-mkdir -p /mnt/vault
-mount /dev/sdb /mnt/vault
-
-apt-get update && apt-get install -y python3-pip
-pip install -U diffusers transformers accelerate fastapi uvicorn pillow torch torchvision torchaudio python-multipart
-
-python3 /root/worker-agent.py > /root/worker.log 2>&1 &
-`;
+    const bootScriptPath = path.join(__dirname, 'start-gpu.sh');
+    const bootScriptContent = fs.existsSync(bootScriptPath)
+        ? fs.readFileSync(bootScriptPath, 'utf8')
+        : '# No custom boot script found';
 
     const vmConfig = {
         name: CONFIG.INSTANCE_NAME,
@@ -294,6 +493,8 @@ python3 /root/worker-agent.py > /root/worker.log 2>&1 &
             },
             {
                 boot: false,
+                // Match deviceName to disk name so GCP creates the predictable symlink
+                deviceName: CONFIG.MODEL_DISK_NAME,
                 source: `projects/${project}/zones/${zone}/disks/${CONFIG.MODEL_DISK_NAME}`,
                 mode: 'READ_ONLY'
             }
@@ -307,13 +508,15 @@ python3 /root/worker-agent.py > /root/worker.log 2>&1 &
             accessConfigs: [{ type: 'ONE_TO_ONE_NAT' }]
         }],
         scheduling: {
-            preemptible: true,
-            onHostMaintenance: 'TERMINATE',
-            automaticRestart: false
+            // 💡 Dynamic scheduling options dependent on your debug config toggle
+            preemptible: CONFIG.USE_SPOT,
+            provisioningModel: CONFIG.USE_SPOT ? 'SPOT' : 'STANDARD',
+            onHostMaintenance: CONFIG.USE_SPOT ? 'TERMINATE' : 'TERMINATE',
+            automaticRestart: !CONFIG.USE_SPOT
         },
         metadata: {
             items: [
-                { key: 'startup-script', value: startupScript },
+                { key: 'startup-script', value: bootScriptContent },
                 { key: 'install-nvidia-driver', value: 'true' }
             ]
         }
@@ -329,7 +532,7 @@ python3 /root/worker-agent.py > /root/worker.log 2>&1 &
         statusCode: 202,
         body: {
             status: 'INITIALIZING',
-            message: `Spot GPU worker deployment started in ${zone}`,
+            message: `GPU worker deployment started in ${zone} (Spot: ${CONFIG.USE_SPOT})`,
             timestamp: new Date().toISOString()
         }
     };

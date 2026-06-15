@@ -1,12 +1,19 @@
-# worker-agent.py
 import io
+import os
+import time
+import threading
 import torch
 from fastapi import FastAPI, UploadFile, File, Form
 from fastapi.responses import StreamingResponse
-from PIL import Image, ImageDraw
+from PIL import Image
 from diffusers import DiffusionPipeline
+import platform
 
 app = FastAPI(title="Illustrious Juggernaut-Z Spatial Worker")
+
+# ⏱️ Idle Autoclose Configuration
+IDLE_TIMEOUT_SECONDS = 600  # 10 minutes of silence before shutting down
+last_activity_time = time.time()
 
 # Global session matrix cache
 pipe = None
@@ -14,24 +21,51 @@ pipe = None
 def get_pipeline():
     global pipe
     if pipe is None:
-        print("⚡ Loading RunDiffusion/Juggernaut-Z into VRAM context...")
+        current_os = platform.system()
         
-        # Pulling the optimized half-precision variant to keep execution blindingly fast
+        print("⚡ Loading RunDiffusion/Juggernaut-Z into VRAM context...")
         pipe = DiffusionPipeline.from_pretrained(
             "/mnt/vault/Juggernaut-Z",
-            torch_dtype=torch.float16, # Use float16 or bfloat16 depending on T4 driver bindings
+            torch_dtype=torch.float16,
             variant="fp16",
             use_safetensors=True
         )
-        
-        # Route processing parameters straight to the CUDA cluster
-        pipe.to("cuda")
-        
-        # Optional VRAM optimization safety loop
-        if torch.cuda.get_device_properties(0).total_memory < 16000000000:
-            pipe.enable_model_cpu_offload()
+        if current_os == "Darwin":
+            print("🍏 Context bound to Apple Silicon. Activating Metal (MPS) device pipeline...")
+            pipe.to("mps")
+            
+        # 🐧 Handle Cloud Linux execution layer
+        elif current_os == "Linux":
+            print("🐧 Context bound to Cloud Linux. Activating native NVIDIA CUDA cluster...")
+            pipe.to("cuda")
+            # Keep your cloud-specific VRAM optimization step here safely
+            if torch.cuda.is_available() and torch.cuda.get_device_properties(0).total_memory < 16000000000:
+                pipe.enable_model_cpu_offload()
+                
+        else:
+            raise NotImplementedError(f"Operating system topology '{current_os}' not supported by current backend configuration.")
             
     return pipe
+
+def record_activity():
+    """Resets the idle clock whenever the frontend hits a core endpoint."""
+    global last_activity_time
+    last_activity_time = time.time()
+
+def idle_monitor_loop():
+    """Background thread that kills the instance if it remains idle."""
+    print(f"⏰ Idle monitor started. Timeout set to {IDLE_TIMEOUT_SECONDS}s.")
+    while True:
+        time.sleep(30)
+        idle_duration = time.time() - last_activity_time
+        if idle_duration > IDLE_TIMEOUT_SECONDS:
+            print(f"🛑 Worker idle for {int(idle_duration)}s. Initiating self-shutdown...")
+            # Commands the host OS to shut down immediately
+            os.system("sudo shutdown -h now")
+
+# Spin up the monitor as a daemon thread so it doesn't block FastAPI startup
+threading.Thread(target=idle_monitor_loop, daemon=True).start()
+
 
 @app.post("/api/spatial/multicast")
 async def multicast_slice(
@@ -42,12 +76,12 @@ async def multicast_slice(
     h: int = Form(...),
     file: UploadFile = File(...)
 ):
-    # 1. Capture the incoming 3D canvas stage visual snapshot
+    record_activity() # ⚡ Reset the clock!
+    
     image_bytes = await file.read()
     base_image = Image.open(io.BytesIO(image_bytes)).convert("RGB")
     width, height = base_image.size
 
-    # 2. Translate percentage-based text controls into precise pixel space coordinates
     px_x = int((x / 100) * width)
     px_y = int((y / 100) * height)
     px_w = int((w / 100) * width)
@@ -55,24 +89,16 @@ async def multicast_slice(
 
     print(f"📡 Mapping Juggernaut-Z focus viewport: X:{px_x} Y:{px_y} W:{px_w} H:{px_h}")
 
-    # 3. Handle the Image Generation/Inpainting loop
-    # NOTE: Since Juggernaut-Z utilizes the ultra-modern Lumina2 transformer layers, 
-    # we can pass our target crop slice right down the pipeline options array.
     pipeline = get_pipeline()
-    
-    # We craft an editorial, presentation-ready scene using recommended configuration guidelines
     output = pipeline(
         prompt=prompt,
-        guidance_scale=6.0,       # Custom tuned sweet spot for Juggernaut Z
-        num_inference_steps=35,   # Recommended range for presentation-ready focus
+        guidance_scale=6.0,
+        num_inference_steps=35,
     ).images[0]
 
-    # 4. Extract the generation matrix and composite it back into your spatial location frame
-    # This replaces just the "infected layer slice" section while preserving the surrounding canvas state
     cropped_generation = output.resize((px_w, px_h), Image.Resampling.LANCZOS)
     base_image.paste(cropped_generation, (px_x, px_y))
 
-    # 5. Stream the freshly infected binary JPEG map straight back to your browser canvas
     buffer = io.BytesIO()
     base_image.save(buffer, format="JPEG", quality=90)
     buffer.seek(0)
@@ -81,6 +107,9 @@ async def multicast_slice(
 
 @app.get("/api/health")
 def health_check():
+    # Optional: You can choose whether health checks reset the idle timer.
+    # If your frontend polls health continuously on an interval, do NOT record_activity() here
+    # or the machine will never turn off.
     return {
         "status": "READY", 
         "architecture": "lumina2/ZImagePipeline",

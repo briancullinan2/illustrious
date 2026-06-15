@@ -88,6 +88,7 @@ async function saveCredentials() {
 let localFunctionsList = [];
 let selectedFunctionName = '';
 
+
 async function loadLocalFunctions(forcedList) {
     const listContainer = document.getElementById('functions-list');
     if (!listContainer) return;
@@ -108,26 +109,26 @@ async function loadLocalFunctions(forcedList) {
         listContainer.innerHTML = '';
 
         if (localFunctionsList.length === 0) {
-            listContainer.innerHTML = '<li style="color: var(--text-dim); cursor: default;">No valid function folders found inside ./cloud-functions/</li>';
+            listContainer.innerHTML = '<li class="list-empty-msg">No valid function folders found inside ./cloud-functions/</li>';
             document.getElementById('install-func-btn').disabled = true;
             document.getElementById('install-all-btn').disabled = true;
             return;
         }
 
-        let anyDeployed = false
+        let anyDeployed = false;
         localFunctionsList.forEach((funcObj, idx) => {
-            // Handle both flat array string fallbacks and our new object payload configuration structural format
+            // Handle both flat array string fallbacks and our new object payload configuration format
             const name = typeof funcObj === 'string' ? funcObj : funcObj.name;
             const isDeployed = typeof funcObj === 'string' ? false : funcObj.isDeployed;
             if (isDeployed) {
-                anyDeployed = true
+                anyDeployed = true;
             }
             const li = document.createElement('li');
 
-            // Build out your gorgeous jellyfin styling status indicators
+            // Map out your status indicator strings cleanly using dedicated classes
             const statusLabel = isDeployed
-                ? `<span style="color: var(--accent); font-weight: bold; font-size: 12px; background: rgba(0, 255, 204, 0.1); padding: 2px 8px; border-radius: 4px; border: 1px solid rgba(0, 255, 204, 0.2);">LIVE ✓</span>`
-                : `<span style="color: #4a4a5a; font-size: 12px;">LOCAL ONLY</span>`;
+                ? `<span class="func-status-badge live">LIVE ✓</span>`
+                : `<span class="func-status-badge local">LOCAL ONLY</span>`;
 
             li.innerHTML = `<span>📂 ${name}</span><span class="proj-id">${statusLabel}</span>`;
 
@@ -159,10 +160,9 @@ async function loadLocalFunctions(forcedList) {
             document.getElementById('next-3').disabled = false;
         }
     } catch (err) {
-        listContainer.innerHTML = `<li style="color: #ff3355;">Scan failed: ${err.message}</li>`;
+        listContainer.innerHTML = `<li class="func-scan-failed">Scan failed: ${err.message}</li>`;
     }
 }
-
 
 
 const term = document.getElementById('terminal-output');
@@ -448,3 +448,34 @@ async function initWizard() {
 }
 
 initWizard();
+
+document.getElementById('back-3').addEventListener('click', navigateStep.bind(null, '2-5'))
+document.getElementById('next-3').addEventListener('click', testAndRedirect)
+document.getElementById('back-2').addEventListener('click', navigateStep.bind(null, 2))
+document.getElementById('next-25').addEventListener('click', navigateStep.bind(null, 3))
+document.getElementById('back-1').addEventListener('click', navigateStep.bind(null, 1))
+document.getElementById('next-2').addEventListener('click', saveCredentials)
+document.getElementById('next-1').addEventListener('click', navigateStep.bind(null, 2))
+document.getElementById('callback-uri-display').addEventListener('click', () => {
+    document.getElementById('callback-uri-display').select();
+    document.execCommand('copy');
+    alert('Copied to clipboard!');
+})
+
+document.getElementById('oauth-secrets').addEventListener('submit', (e) => {
+    e.preventDefault()
+    e.stopPropagation()
+    return false
+})
+
+document.getElementById('service-select').addEventListener('submit', (e) => {
+    e.preventDefault()
+    e.stopPropagation()
+    return false
+})
+
+document.getElementById('install-func-btn').addEventListener('click', deploySelectedFunction)
+document.getElementById('install-all-btn').addEventListener('click', deployAllFunctions)
+
+
+

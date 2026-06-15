@@ -11,14 +11,13 @@ let oauth2ClientInstance = null;
 let cachedClientId = null;
 let cachedClientSecret = null;
 
-/**
- * Custom Error Template Generator
- * Spits out a unified centered dialogue canvas using your exact token palette variables
- */
+
+
 function serveErrorScreen(res, title, description, showSetupButton = true) {
+    // FIXED: Corrected closing tags from </button> to </a>
     const actionButton = showSetupButton
-        ? `<button class="primary" onclick="window.location.href='/setup'" style="margin-top: 20px; max-width: 200px;">Launch Setup Wizard</button>`
-        : `<button class="secondary" onclick="window.location.href='/'" style="margin-top: 20px; max-width: 200px;">Return Home</button>`;
+        ? `<a class="primary err-action-btn" href="/setup">Launch Setup Wizard</a>`
+        : `<a class="secondary err-action-btn" href="/">Return Home</a>`;
 
     return res.status(400).send(`
         <!DOCTYPE html>
@@ -26,18 +25,12 @@ function serveErrorScreen(res, title, description, showSetupButton = true) {
         <head>
             <title>${title} // Illustrious Error</title>
             <link rel="stylesheet" href="/main.css" />
-            <style>
-                body { display: flex; justify-content: center; align-items: center; min-height: 100vh; background-color: var(--bg); color: var(--text); }
-                .error-dialog { width: 100%; max-width: 500px; background: var(--panel); border: 1px solid #ff3355; border-radius: 12px; padding: 40px; box-shadow: 0 20px 40px rgba(0, 0, 0, 0.6); text-align: center; }
-                h2 { color: #ff5577; font-size: 20px; margin-bottom: 12px; font-weight: 700; }
-                p { color: var(--text-dim); font-size: 14px; line-height: 1.6; }
-            </style>
         </head>
-        <body>
+        <body class="error-screen-body">
             <div class="error-dialog">
-                <h2>⚠️ ${title}</h2>
-                <p>${description}</p>
-                <div style="display:flex; justify-content:center;">
+                <h2 class="error-dialog-title">⚠️ ${title}</h2>
+                <p class="error-dialog-text">${description}</p>
+                <div class="err-action-wrapper">
                     ${actionButton}
                 </div>
             </div>
@@ -46,11 +39,33 @@ function serveErrorScreen(res, title, description, showSetupButton = true) {
     `);
 }
 
-/**
- * ⚡ HOT-RELOADING CREDENTIALS MIDDLEWARE
- * Runs on every request using credentials to intercept fresh profile modifications instantly
- */
-const requireReactiveCredentials = (req, res, next) => {
+app.get('/', requireReactiveCredentials, (req, res) => {
+    // Check if memory has dynamic token session allocations loaded
+    if (!req.oauth2Client.credentials || !req.oauth2Client.credentials.access_token) {
+        return res.redirect('/auth');
+    }
+
+    // Serve your beautiful separate index.html studio canvas file from disk
+    const appIndex = path.join(__dirname, 'index.html');
+    if (fs.existsSync(appIndex)) {
+        return res.sendFile(appIndex);
+    }
+
+    // Fallback display canvas if index.html isn't present
+    res.send(`
+        <div class="fallback-stage-wrapper">
+            <h1 class="fallback-stage-title">🌌 Illustrious Studio Engine Live</h1>
+            <p class="fallback-stage-meta">Project Boundary: <b>${req.gcpCredentials.PROJECT_ID}</b></p>
+            <div class="fallback-stage-terminal">
+                Tokens verified. Cluster pipeline communication loops open.
+            </div>
+        </div>
+    `);
+});
+
+
+
+function requireReactiveCredentials(req, res, next) {
     const credentials = loadAppCredentials();
 
     if (!credentials) {
@@ -84,34 +99,7 @@ const requireReactiveCredentials = (req, res, next) => {
     next();
 };
 
-// ==========================================
-// 🔐 CORE OAUTH & SITE NAVIGATION SYSTEM
-// ==========================================
 
-// Main Entry Point
-app.get('/', requireReactiveCredentials, (req, res) => {
-    // Check if memory has dynamic token session allocations loaded
-    if (!req.oauth2Client.credentials || !req.oauth2Client.credentials.access_token) {
-        return res.redirect('/auth');
-    }
-
-    // Serve your beautiful separate index.html studio canvas file from disk
-    const appIndex = path.join(__dirname, 'index.html');
-    if (fs.existsSync(appIndex)) {
-        return res.sendFile(appIndex);
-    }
-
-    // Fallback display canvas if index.html isn't present
-    res.send(`
-        <div style="background: #0b0b0e; color: #f0f0f5; font-family: sans-serif; min-height: 100vh; display: flex; flex-direction: column; justify-content: center; align-items: center;">
-            <h1 style="color: #00ffcc; letter-spacing: 1px;">🌌 Illustrious Studio Engine Live</h1>
-            <p style="color: #6a6a7a;">Project Boundary: <b>${req.gcpCredentials.PROJECT_ID}</b></p>
-            <div style="background: #050508; border: 1px solid #1e1e26; padding: 20px; border-radius: 6px; font-family: monospace; color: #3bf53b;">
-                Tokens verified. Cluster pipeline communication loops open.
-            </div>
-        </div>
-    `);
-});
 
 // OAuth Initialization Gateway Link
 app.get('/auth', requireReactiveCredentials, (req, res) => {

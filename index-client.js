@@ -65,26 +65,7 @@ async function initializeClusterStatus() {
 }
 
 
-/**
- * Trigger master multicast calculation pipeline loops on serverless workers
- */
-async function renderMulticastScene() {
-    const stage = document.getElementById('canvas-stage');
-    const prompt = document.getElementById('prompt-input').value;
 
-    console.log(`📡 Dispatched Multicast Execution Target Chain...`);
-
-    if (stage) {
-        stage.innerHTML = `
-            <div style="font-family: monospace; font-size: 13px; color: var(--accent); display:flex; flex-direction:column; gap:8px; align-items:center;">
-                <span>⚡ Committing Multicast Engine Generation Loop...</span>
-                <span style="color: var(--text-dim); font-size:11px;">"${prompt}"</span>
-            </div>
-        `;
-    }
-
-    // TODO: Execute fetch POST against /api/cluster/allocate to spin the deployed gcloud GPU function
-}
 
 /**
  * Hand execution context over to your clean OAuth authentication gate
@@ -126,52 +107,60 @@ document.addEventListener("DOMContentLoaded", () => {
  */
 async function syncClusterHardware() {
     const statusView = document.getElementById('project-selector');
+    const pulseLight = document.getElementById('observer-pulse');
+
+    // Telemetry animation pulse handler
+    if (pulseLight) {
+        pulseLight.style.opacity = '0.3';
+        setTimeout(() => { pulseLight.style.opacity = '1'; }, 300);
+    }
 
     try {
         console.log("🔄 [CLIENT TELEMETRY] Pinging cluster manager control layer...");
-        const CLUSTER_MANAGER_URL = projectConfig.ACTIVE_PROJECT_ID
+        const CLUSTER_MANAGER_URL = window.projectConfig?.ACTIVE_PROJECT_ID
             ? `https://${projectConfig.REGION}-${projectConfig.ACTIVE_PROJECT_ID}.cloudfunctions.net/clusterManager?t=${Date.now()}`
-            : '/api/cluster/status'
+            : '/api/cluster/status';
+
         const res = await fetch(CLUSTER_MANAGER_URL, { method: 'GET' });
         const data = await res.json();
 
         console.log(`📥 [CLIENT TELEMETRY] Response payload received (HTTP ${res.status}):`, data);
 
+        // 📊 Route the unpacked payloads directly to your new structural UI observers
+        renderObserverQuotaTable(data.quota);
+        renderObserverVmMatrix(data.instances);
+
+        if (document.getElementById('obs-zone')) {
+            document.getElementById('obs-zone').textContent = data.zone || '--';
+        }
+
         // 1. Handle Active Auto-Boot / Relay Scaling States
         if (data.status === 'SCALING_UP') {
-            if (statusView) {
-                statusView.style.color = '#ffaa00';
-                statusView.innerText = `🛰️ CLUSTER INITIALIZING: Kicking off baseline hardware allocation...`;
-            }
+            updateMainStatusView(statusView, '#ffaa00', `🛰️ CLUSTER INITIALIZING: Kicking off baseline hardware allocation...`);
+            toggleManualBootTray(false);
             activeWorkerEndpoint = null;
             return;
         }
 
-        // 2. 👉 INSERTED: Handle One-Time Storage Volume/Seeder Initializations (Mode A)
+        // 2. Handle One-Time Storage Volume/Seeder Initializations (Mode A)
         if (data.status === 'INITIALIZING_STORAGE') {
-            if (statusView) {
-                statusView.style.color = '#00bcff';
-                statusView.innerText = `⚙️ CORE STORAGE BOUNDARY: Seeding Juggernaut-Z weights...`;
-            }
+            updateMainStatusView(statusView, '#00bcff', `⚙️ CORE STORAGE BOUNDARY: Seeding Juggernaut-Z weights...`);
+            toggleManualBootTray(false);
             activeWorkerEndpoint = null;
             return;
         }
 
-        // 3. 👉 INSERTED: Handle Direct Worker Allocation Lifecycle Boots (Mode B Initial Handshake)
+        // 3. Handle Direct Worker Allocation Lifecycle Boots (Mode B Initial Handshake)
         if (data.status === 'INITIALIZING') {
-            if (statusView) {
-                statusView.style.color = '#ffff00';
-                statusView.innerText = `⚡ PROVISIONING HARDWARE: Spot hypervisors allocating T4 VRAM maps...`;
-            }
+            updateMainStatusView(statusView, '#ffff00', `⚡ PROVISIONING HARDWARE: Spot hypervisors allocating T4 VRAM maps...`);
+            toggleManualBootTray(false);
             activeWorkerEndpoint = null;
             return;
         }
 
         if (data.status === 'POOL_BLOCKED') {
-            if (statusView) {
-                statusView.style.color = '#ff3355';
-                statusView.innerText = `🛑 POOL BLOCKED: ${data.message}`;
-            }
+            updateMainStatusView(statusView, '#ff3355', `🛑 POOL BLOCKED: ${data.message}`);
+            toggleManualBootTray(false);
             activeWorkerEndpoint = null;
             return;
         }
@@ -186,38 +175,154 @@ async function syncClusterHardware() {
             if (hotNode) {
                 activeWorkerEndpoint = hotNode.endpoint;
                 console.log(`🎯 [CLIENT TELEMETRY] Channel cleared! Endpoint locked to hot node: ${activeWorkerEndpoint}`);
-                if (statusView) {
-                    statusView.style.color = 'var(--accent)';
-                    statusView.innerText = `🛰️ POOL ACTIVE // CHANNELS OPEN TO: ${hotNode.name}`;
-                }
+                updateMainStatusView(statusView, 'var(--accent)', `🛰️ POOL ACTIVE // CHANNELS OPEN TO: ${hotNode.name}`);
+                toggleManualBootTray(false);
             } else {
                 // Node is active in GCP, but its current cloud status string is PROVISIONING, STAGING, or REPAIRING
                 const stagingNode = data.instances[0];
                 console.log(`⏳ [CLIENT TELEMETRY] Node "${stagingNode.name}" is visible but unready. State: ${stagingNode.status}`);
-                if (statusView) {
-                    statusView.style.color = '#ffaa00';
-                    statusView.innerText = `⏳ STAGING HARDWARE: ${stagingNode.name} is [${stagingNode.status}]`;
-                }
+                updateMainStatusView(statusView, '#ffaa00', `⏳ STAGING HARDWARE: ${stagingNode.name} is [${stagingNode.status}]`);
+                toggleManualBootTray(false);
                 activeWorkerEndpoint = null;
             }
         } else {
             // Pool is empty and fallback trigger mechanisms didn't emit specialized status keys
             console.warn("⚠️ [CLIENT TELEMETRY] Cluster manager reported an empty instance array tracking layer.");
-            if (statusView) {
-                statusView.style.color = '#ffaa00';
-                statusView.innerText = `⏳ STAGING HARDWARE TIER POOLS...`;
-            }
+            updateMainStatusView(statusView, '#ffaa00', `⏳ STAGING HARDWARE TIER POOLS...`);
+            toggleManualBootTray(true); // Expose the manual activation override panel securely
             activeWorkerEndpoint = null;
         }
 
     } catch (err) {
         console.error("❌ [CLIENT TELEMETRY CRASH] Failed to map cluster state framework:", err);
-        if (statusView) {
-            statusView.style.color = '#ff3355';
-            statusView.innerText = `⚠️ OFFLINE // CLOUD CONNECTOR INTERRUPTED`;
-        }
+        updateMainStatusView(statusView, '#ff3355', `⚠️ OFFLINE // CLOUD CONNECTOR INTERRUPTED`);
+        toggleManualBootTray(false);
     }
 }
+
+
+// ============================================================================
+// 🛠️ DYNAMIC OBSERVABILITY ENGINE DRAW LOOPS
+// ============================================================================
+
+function updateMainStatusView(element, color, text) {
+    if (!element) return;
+    element.style.color = color;
+    element.textContent = text;
+}
+
+function toggleManualBootTray(shouldShow) {
+    const tray = document.getElementById('manual-allocation-tray');
+    if (tray) tray.style.display = shouldShow ? 'block' : 'none';
+}
+
+
+async function renderMulticastScene() {
+    const stage = document.getElementById('canvas-stage');
+    const prompt = document.getElementById('prompt-input').value;
+
+    console.log(`📡 Dispatched Multicast Execution Target Chain...`);
+
+    if (stage) {
+        stage.innerHTML = `
+            <div class="stage-generating-box">
+                <span>⚡ Committing Multicast Engine Generation Loop...</span>
+                <span class="stage-prompt-subtext">"${prompt}"</span>
+            </div>
+        `;
+    }
+
+    // TODO: Execute fetch POST against /api/cluster/allocate to spin the deployed gcloud GPU function
+}
+
+function renderObserverQuotaTable(quotaReport) {
+    const tableBody = document.getElementById('quota-telemetry-rows');
+    if (!tableBody) return;
+
+    if (!quotaReport || Object.keys(quotaReport).length === 0) {
+        tableBody.innerHTML = `<tr><td colspan="4" class="quota-empty-alert">No active GPU quotas verified in this region.</td></tr>`;
+        return;
+    }
+
+    let rowsHtml = '';
+    for (const [metricName, metrics] of Object.entries(quotaReport)) {
+        // Apply conditional structural class strings based on availability
+        const availabilityClass = metrics.available < 1 ? 'status-critical-text' : 'status-optimal-text';
+
+        rowsHtml += `
+            <tr class="quota-row">
+                <td class="quota-cell-metric">${metricName}</td>
+                <td class="quota-cell-value text-white">${metrics.usage}</td>
+                <td class="quota-cell-value text-muted-dark">${metrics.limit}</td>
+                <td class="quota-cell-value ${availabilityClass}">${metrics.available}</td>
+            </tr>
+        `;
+    }
+    tableBody.innerHTML = rowsHtml;
+}
+
+/**
+ * Builds clear, diagnostic-equipped visual blocks for each remote compute instance
+ */
+function renderObserverVmMatrix(instances) {
+    const container = document.getElementById('vm-pool-container');
+    if (!container) return;
+
+    if (!instances || instances.length === 0) {
+        container.innerHTML = `<div class="vm-matrix-empty-msg">Zero hypervisor tracking structures online inside this zone pool.</div>`;
+        return;
+    }
+
+    container.innerHTML = instances.map(instance => {
+        // Resolve target state modifier classes dynamically
+        let statusModifierClass = 'state-staging';
+        if (instance.status === 'RUNNING') statusModifierClass = 'state-active';
+        if (['STOPPING', 'TERMINATED', 'PROVISIONING_FAILED'].includes(instance.status)) statusModifierClass = 'state-failed';
+
+        return `
+            <div class="vm-instance-card">
+                <div class="vm-card-header">
+                    <span class="vm-card-name">${instance.name}</span>
+                    <span class="vm-card-badge ${statusModifierClass}">
+                        ${instance.status}
+                    </span>
+                </div>
+                <div class="vm-card-detail">
+                    📍 IP Reference: <span class="text-muted-light">${instance.ip || 'Unassigned'}</span>
+                </div>
+                ${instance.endpoint ? `
+                <div class="vm-card-detail">
+                    🔗 Worker Link: <a href="${instance.endpoint}" target="_blank" class="vm-worker-link">${instance.endpoint}</a>
+                </div>` : ''}
+                ${instance.diagnostic ? `
+                <div class="vm-card-diagnostic-alert">
+                    ⚠️ ${instance.diagnostic}
+                </div>` : ''}
+            </div>
+        `;
+    }).join('');
+}
+
+async function triggerManualAllocationClaim() {
+    console.log("🚀 [MANUAL SYSTEM ALLOCATION] Bypassing automatic manager timers...");
+    const statusView = document.getElementById('project-selector');
+    updateMainStatusView(statusView, '#ffff00', `🚀 CLAIM TRIGGER DISPATCHED: Spawning machine...`);
+
+    try {
+        const CLUSTER_MANAGER_URL = window.projectConfig?.ACTIVE_PROJECT_ID
+            ? `https://${projectConfig.REGION}-${projectConfig.ACTIVE_PROJECT_ID}.cloudfunctions.net/clusterManager?t=${Date.now()}`
+            : '/api/cluster/status';
+        const res = await fetch(CLUSTER_MANAGER_URL, { method: 'POST' });
+        const result = await res.json();
+        console.log("📥 [MANUAL ALLOCATION COMPLETED]", result);
+
+        // Fast pulse refresh 1 second post-trigger to capture instant hypervisor response status
+        setTimeout(syncClusterHardware, 1000);
+    } catch (err) {
+        console.error("❌ Programmatic override allocation error:", err);
+    }
+}
+
 
 /**
  * Scale Cluster: Dispatches immediate instructions to add another parallel node
@@ -359,3 +464,28 @@ function addSceneSlice() {
 
     stage.appendChild(sliceElement);
 }
+
+document.getElementById('multicast-scene').addEventListener('click', renderMulticastScene)
+document.getElementById('add-layer').addEventListener('click', addSceneSlice)
+document.getElementById('claim-instance').addEventListener('click', triggerManualAllocationClaim)
+
+
+document.getElementById('observer-panel').addEventListener('click', e => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    // Slide Control Panel out of viewport left, slide Cloud Observer into focus right
+    document.getElementById('control-panel').classList.remove('active');
+    document.getElementById('cloud-observer').classList.add('active');
+    return false;
+});
+
+document.getElementById('control-switch').addEventListener('click', e => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    // Slide Cloud Observer out of viewport right, slide Control Panel back into focus left
+    document.getElementById('cloud-observer').classList.remove('active');
+    document.getElementById('control-panel').classList.add('active');
+    return false;
+});

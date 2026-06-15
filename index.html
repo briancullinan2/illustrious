@@ -9,16 +9,27 @@
 
 <body>
 
-    <div id="control-panel">
+    <div id="control-panel" class="active">
         <h2>
-            <span style="flex-basis: 100%; flex-shrink: 1;">Illustrious Spatial Engine</span>
-            <span style="flex-basis: 50%; flex-shrink: 1;">&nbsp;</span>
+            <span class="header-title">Illustrious Spatial Engine</span>
+
+            <span class="header-spacer">&nbsp;</span>
+
             <a href="/privacy" title="About Matrix" class="header-icon-btn">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
                     stroke-linecap="round" stroke-linejoin="round">
                     <circle cx="12" cy="12" r="10"></circle>
                     <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path>
                     <line x1="12" y1="17" x2="12.01" y2="17"></line>
+                </svg>
+            </a>
+
+            <a id="observer-panel" href="#" title="Cloud Status" class="header-icon-btn">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+                    stroke-linecap="round" stroke-linejoin="round">
+                    <rect x="4" y="4" width="16" height="16" rx="2" ry="2"></rect>
+                    <rect x="9" y="9" width="6" height="6"></rect>
+                    <path d="M9 1 v3M15 1 v3M9 20 v3M15 20 v3M1 9 h3M1 15 h3M20 9 h3M20 15 h3"></path>
                 </svg>
             </a>
 
@@ -30,15 +41,80 @@
             <label>Prompt Slice:</label>
             <textarea id="prompt-input">An elephant on a red balloon</textarea>
             <label>Position Box (X, Y, W, H %):</label>
-            <input type="text" id="coords-input" value="70, 0, 30, 30"> <button onclick="addSceneSlice()">Infect Layer
-                Slice</button>
+            <input type="text" id="coords-input" value="70, 0, 30, 30">
+            <button id="add-layer">Add Layer Slice</button>
         </div>
-        <button style="background: #00ffcc; color: #000; padding: 10px; font-weight: bold;"
-            onclick="renderMulticastScene()">Multicast Image Pipeline</button>
+        <button id="multicast-scene">Multicast Image Pipeline</button>
     </div>
+
+
+    <div id="cloud-observer">
+        <h2 class="observer-header">
+
+            <a id="control-switch" href="#" title="Prompt Controls" class="header-icon-btn">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+                    stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="19" y1="12" x2="5" y2="12"></line>
+                    <polyline points="12 19 5 12 12 5"></polyline>
+                </svg>
+            </a>
+
+
+            <span>Cloud Observer Console</span>
+
+            <span class="header-spacer">&nbsp;</span>
+
+            <span id="observer-pulse"></span>
+        </h2>
+
+        <div class="observer-section-item border-bottom">
+            <h3>COMPUTE REALM</h3>
+            <span>Target Zone:</span>
+            <span id="obs-zone" class="value-highlight">--</span>
+        </div>
+
+        <h3 class="margin-bottom-sm">PROJECT ACCOUNT QUOTAS</h3>
+        <div id="quota-list">
+            <table class="quota-table">
+                <thead>
+                    <tr class="table-header-row">
+                        <th>Metric Name</th>
+                        <th class="text-right">In Use</th>
+                        <th class="text-right">Limit</th>
+                        <th class="text-right">Available</th>
+                    </tr>
+                </thead>
+                <tbody id="quota-telemetry-rows">
+                    <tr>
+                        <td colspan="4" class="table-waiting-state">Waiting for pipeline stream entries...</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="vm-pool-section">
+            <h3>ACTIVE HORIZON NODE ARRAY</h3>
+            <div id="vm-pool-container">
+                <div class="vm-empty-state">No instances discovered in active tracking slot.</div>
+            </div>
+        </div>
+
+        <div id="manual-allocation-tray">
+            <button id="claim-instance">
+                Claim A GPU Instance
+            </button>
+        </div>
+    </div>
+
+
+
     <div id="canvas-stage">
         <span class="canvas-stage-ready-text">🌌 [Spatial Render Stage Context Ready]</span>
     </div>
+
+
+
+
     <script src="/index-client.js"></script>
 </body>
 

@@ -15,31 +15,152 @@
             <div class="profile-badge" id="auth-status">{{AUTH_STATUS_INITIAL}}</div>
         </header>
 
-        
         <div id="step-1" class="step-panel active">
             <h2>Select Your Target Project</h2>
-            <p>We found the following projects linked to your local gcloud profile. Select the one dedicated to
-                Illustrious:</p>
 
-            <div
-                style="background: rgba(255, 255, 255, 0.02); border: 1px dashed var(--border); padding: 12px 16px; border-radius: 6px; margin-bottom: 20px; font-size: 13px; display: flex; justify-content: space-between; align-items: center;">
-                <span style="color: var(--text-dim);">Missing local Google Cloud environments?</span>
-                <a href="https://cloud.google.com/sdk/docs/install" target="_blank"
-                    style="color: var(--accent); font-weight: 600; text-decoration: none; font-family: monospace; font-size: 12px; border-bottom: 1px solid transparent; transition: border-color 0.2s;"
-                    onmouseover="this.style.borderColor='var(--accent)'"
-                    onmouseleave="this.style.borderColor='transparent'">
-                    Get gcloud SDK ↗
-                </a>
-            </div>
+            <form id="service-select">
+                <input name="cloud-service" id="gcloud-service" type="radio" checked />
+                <input name="cloud-service" id="runpod-service" type="radio" />
+                <input name="cloud-service" id="lambda-service" type="radio" />
+                <input name="cloud-service" id="vast-service" type="radio" />
+                <input name="cloud-service" id="replicate-service" type="radio" />
+                <input name="cloud-service" id="tencent-service" type="radio" />
+                <input name="cloud-service" id="paperspace-service" type="radio" />
+                <input name="cloud-service" id="coreweave-service" type="radio" />
 
-            <ul id="project-list" class="custom-list">
-                <li>Loading projects from shell execution...</li>
-            </ul>
+                <div class="scroll-grid-box">
+                    <label for="gcloud-service" class="vm-instance-card">
+                        <div class="vm-card-header">
+                            <span class="vm-card-name">Google Cloud (GCP)</span>
+                            <span class="vm-card-badge state-active">CONNECTED</span>
+                        </div>
+                        <div class="vm-card-detail">Compute Engine // T4, L4, A100 Allocations</div>
+                    </label>
+                    <label for="runpod-service" class="vm-instance-card">
+                        <div class="vm-card-header">
+                            <span class="vm-card-name">RunPod IO</span>
+                            <span class="vm-card-badge state-staging">AVAILABLE</span>
+                        </div>
+                        <div class="vm-card-detail">Serverless Containers & Dedicated Pod Silicon</div>
+                    </label>
+                    <label for="lambda-service" class="vm-instance-card">
+                        <div class="vm-card-header">
+                            <span class="vm-card-name">Lambda Labs</span>
+                            <span class="vm-card-badge state-staging">AVAILABLE</span>
+                        </div>
+                        <div class="vm-card-detail">High-Performance NVIDIA H100 GPU Clusters</div>
+                    </label>
+                    <label for="vast-service" class="vm-instance-card">
+                        <div class="vm-card-header">
+                            <span class="vm-card-name">Vast AI</span>
+                            <span class="vm-card-badge state-staging">AVAILABLE</span>
+                        </div>
+                        <div class="vm-card-detail">Decentralized P2P Bare-Metal Hardware Rental</div>
+                    </label>
+                    <label for="replicate-service" class="vm-instance-card">
+                        <div class="vm-card-header">
+                            <span class="vm-card-name">Replicate</span>
+                            <span class="vm-card-badge state-staging">AVAILABLE</span>
+                        </div>
+                        <div class="vm-card-detail">Serverless API Execution // Direct Inference Handshakes</div>
+                    </label>
+                    <label for="tencent-service" class="vm-instance-card">
+                        <div class="vm-card-header">
+                            <span class="vm-card-name">Tencent Cloud</span>
+                            <span class="vm-card-badge state-staging">AVAILABLE</span>
+                        </div>
+                        <div class="vm-card-detail">Elastic GPU Compute // Global AI Scaling Cells</div>
+                    </label>
+                    <label for="paperspace-service" class="vm-instance-card">
+                        <div class="vm-card-header">
+                            <span class="vm-card-name">Paperspace Core</span>
+                            <span class="vm-card-badge state-staging">AVAILABLE</span>
+                        </div>
+                        <div class="vm-card-detail">Dedicated Dev Machines // Persistent Linux GPU Desktop Backends
+                        </div>
+                    </label>
+                    <label for="coreweave-service" class="vm-instance-card">
+                        <div class="vm-card-header">
+                            <span class="vm-card-name">CoreWeave</span>
+                            <span class="vm-card-badge state-staging">AVAILABLE</span>
+                        </div>
+                        <div class="vm-card-detail">Enterprise Bare-Metal Inf // InfiniBand Interconnected Clusters
+                        </div>
+                    </label>
+                </div>
 
-            <div class="btn-row">
-                <div></div>
-                <button class="primary" id="next-1" disabled onclick="navigateStep(2)">Next</button>
-            </div>
+                <div id="gcloud" class="service">
+                    <p>We found the following projects linked to your local gcloud profile. Select the one dedicated to
+                        Illustrious:</p>
+
+                    <div class="banner-notice flex-row-between">
+                        <span class="text-muted">Missing local Google Cloud environments?</span>
+                        <a href="https://cloud.google.com/sdk/docs/install" target="_blank">
+                            Get gcloud SDK ↗
+                        </a>
+                    </div>
+
+                    <div class="banner-card-dark">
+                        <span class="warning-label-caps">⚠️ Resource Quota Check Required:</span>
+                        <p class="margin-bottom-xs">New Compute Engine projects are strictly limited to **0 GPUs** by
+                            default.
+                            Ensure your target workspace has approved allocations for `NVIDIA_T4_GPUS` or general
+                            regional
+                            allocations before spinning up worker compute pipelines.</p>
+                        <a href="https://console.cloud.google.com/iam-admin/quotas" target="_blank"
+                            class="vm-worker-link">
+                            Adjust Account Quotas Console ↗
+                        </a>
+                    </div>
+
+                    <ul id="project-list" class="custom-list">
+                        <li>Loading projects from shell execution...</li>
+                    </ul>
+
+                    <div class="btn-row">
+                        <div></div>
+                        <button class="primary" id="next-1" disabled>Select Google Project & Continue</button>
+                    </div>
+                </div>
+
+                <div id="runpod" class="service">
+                    <p>Provide your RunPod API credentials to integrate decentralized, bare-metal container clusters
+                        straight into the Illustrious Spatial pipeline.</p>
+
+                    <div class="banner-notice flex-row-between">
+                        <span class="text-muted">Need a fresh developer access key?</span>
+                        <a href="https://console.runpod.io/user/settings" target="_blank">
+                            Get RunPod API Key ↗
+                        </a>
+                    </div>
+
+                    <div class="banner-card-dark">
+                        <span class="warning-label-caps">⚠️ Wallet Balance Check Required:</span>
+                        <p class="margin-bottom-xs">RunPod instances operate entirely via prepaid community billing
+                            credits. If your account balance drops to **$0.00**, all active background serverless
+                            containers and persistent spot pods will be dropped instantly via resource reclamation.</p>
+                        <a href="https://www.runpod.io/console/billing" target="_blank" class="vm-worker-link">
+                            Top Up RunPod Wallet Balance ↗
+                        </a>
+                    </div>
+
+                    <form id="runpod-credentials">
+                        <label class="field-label-caps">API Secret Auth Key:</label>
+                        <input type="password" autocomplete="off" id="runpod-api-key"
+                            placeholder="rpi_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx" class="margin-bottom-xs">
+
+                        <label class="field-label-caps">Target Serverless Endpoint ID (Optional):</label>
+                        <input type="text" id="runpod-endpoint-id"
+                            placeholder="Enter endpoint identifier hash if leveraging cold-start worker pools">
+                    </form>
+
+                    <div class="btn-row">
+                        <div></div>
+                        <button class="primary" id="runpod-next">Save & Authenticate Pod Horizon</button>
+                    </div>
+                </div>
+            </form>
+
         </div>
 
 
@@ -51,25 +172,16 @@
             <a id="console-brand-link" class="action-link" href="#" target="_blank">👉 Step 1: Open GCP Branding
                 Platform Panel</a>
 
-            <label
-                style="font-size: 11px; color: var(--text-dim); display:block; margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.5px;">Authorized
-                Redirect URI:</label>
+            <label class="field-label-caps">Authorized Redirect URI:</label>
 
+            <input type="text" id="callback-uri-display" value="http://localhost:4000/oauth2callback" readonly>
 
-            <input type="text" id="callback-uri-display" value="http://localhost:4000/oauth2callback" readonly
-                onclick="this.select(); document.execCommand('copy'); alert('Copied to clipboard!');"
-                style="opacity: 0.5; background: #14141a; color: var(--text-dim); margin-bottom: 20px; cursor: pointer; transition: all 0.2s ease;"
-                onmouseover="this.style.opacity = '0.8'; this.style.borderColor = 'var(--accent)';"
-                onmouseleave="if(this.value === 'http://localhost:4000/oauth2callback') { this.style.opacity = '0.5'; this.style.borderColor = ''; } else { this.style.opacity = '1'; }">
-
-            <a id="console-client-link" class="action-link" href="#" target="_blank"
-                style="background: #111116; border-color: var(--accent); margin-bottom: 15px;">🔑 Step 2: Open Direct
-                Client Creation Page</a>
-            <p
-                style="font-size: 13px; color: var(--accent); margin-top: -5px; margin-bottom: 25px; text-align: center;">
+            <a id="console-client-link" class="action-link action-dark-accent" href="#" target="_blank">🔑 Step 2: Open
+                Direct Client Creation Page</a>
+            <p class="accent-warning-text text-center">
                 ⚠️ Note: Ensure "Application type" is set to <b>Web application</b></p>
 
-            <form onsubmit="return false;">
+            <form id="oauth-secrets" action="#">
                 <input type="text" id="client-id" placeholder="Paste Generated OAuth Client ID here">
                 <input type="password" autocomplete="off" id="client-secret"
                     placeholder="Paste Generated OAuth Client Secret here">
@@ -78,8 +190,8 @@
             <p id="credential-path"></p>
 
             <div class="btn-row">
-                <button class="secondary" onclick="navigateStep(1)">Back</button>
-                <button class="primary" onclick="saveCredentials()">Save & Continue</button>
+                <button id="back-1" class="secondary">Back</button>
+                <button id="next-2" class="primary">Save & Continue</button>
             </div>
         </div>
 
@@ -91,32 +203,24 @@
             <a id="console-brand-link-2" class="action-link" href="#" target="_blank">👉 Step 3: Open Full Branding
                 Setup Screen</a>
 
-            <div
-                style="background: #0d0d11; border: 1px solid var(--border); padding: 16px; border-radius: 6px; margin-bottom: 25px; font-size: 13px; line-height: 1.5;">
-                <span
-                    style="color: var(--accent); font-weight: bold; display: block; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.5px; font-size: 11px;">⚠️
-                    Mandatory Consent Fields for Approval:</span>
-                <ul
-                    style="padding-left: 20px; color: var(--text-dim); display: flex; flex-direction: column; gap: 6px;">
-                    <li><b style="color: #fff;">Application home page:</b> Set to <code
-                            style="color: var(--accent);">http://localhost:4000</code> for local profiling.</li>
-                    <li><b style="color: #fff;">Application privacy policy link:</b> Provide a dummy fallback link or
+            <div class="banner-card-dark">
+                <span class="warning-label-caps">⚠️ Mandatory Consent Fields for Approval:</span>
+                <ul class="bullet-list-dim">
+                    <li><b class="text-white">Application home page:</b> Set to <code
+                            class="code-accent">http://localhost:4000</code> for local profiling.</li>
+                    <li><b class="text-white">Application privacy policy link:</b> Provide a dummy fallback link or
                         internal domain matching your active workspace repository profiles.</li>
-                    <li><b style="color: #fff;">Developer contact information:</b> Ensure your active account email
-                        (<code style="color: #fff;">megamindbrian@gmail.com</code>) is confirmed in the list.</li>
+                    <li><b class="text-white">Developer contact information:</b> Ensure your active account email
+                        (<code class="text-white">megamindbrian@gmail.com</code>) is confirmed in the list.</li>
                 </ul>
             </div>
 
-            <label
-                style="font-size: 11px; color: var(--text-dim); display:block; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.5px;">Illustrious
-                Brand Identity Presets:</label>
-            <div id="logo-grid"
-                style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 25px; max-height: 220px; overflow-y: auto; padding: 5px; border: 1px solid var(--border); border-radius: 6px; background: #050508;">
-            </div>
+            <label class="field-label-caps margin-bottom-sm">Illustrious Brand Identity Presets:</label>
+            <div id="logo-grid" class="scroll-grid-box"></div>
 
             <div class="btn-row">
-                <button class="secondary" onclick="navigateStep(2)">Back</button>
-                <button class="primary" onclick="navigateStep(3)">Next: Deploy Serverless Worker</button>
+                <button id="back-2" class="secondary">Back</button>
+                <button id="next-25" class="primary">Next: Deploy Serverless Worker</button>
             </div>
         </div>
 
@@ -127,30 +231,24 @@
             <p>Select which cloud functions you want to coordinate or sync directly into your cloud platform instance.
                 These deployments are completely idempotent.</p>
 
-            <label
-                style="font-size: 11px; color: var(--text-dim); display:block; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.5px;">Available
-                Cloud Functions On Disk:</label>
-            <ul id="functions-list" class="custom-list" style="margin-bottom: 20px; max-height: 180px;">
+            <label class="field-label-caps margin-bottom-sm">Available Cloud Functions On Disk:</label>
+            <ul id="functions-list" class="custom-list functions-list-max">
                 <li>Scanning workspace directory...</li>
             </ul>
 
-            <div style="display: flex; gap: 12px; margin-bottom: 24px;">
-                <button class="primary" id="install-func-btn" onclick="deploySelectedFunction()">Deploy
-                    Selected</button>
-                <button class="secondary" id="install-all-btn" onclick="deployAllFunctions()"
-                    style="border-color: var(--accent); color: var(--accent);">Deploy All Functions</button>
+            <div class="flex-gap-sm margin-bottom-md">
+                <button class="primary" id="install-func-btn">Deploy Selected</button>
+                <button class="secondary" id="install-all-btn">Deploy All Functions</button>
             </div>
 
             <div>
-                <label
-                    style="font-size: 11px; color: var(--text-dim); display:block; margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.5px;">Deployment
-                    Streams:</label>
+                <label class="field-label-caps margin-bottom-xs">Deployment Streams:</label>
                 <div id="terminal-output" class="console-log">Ready for deployment orders...</div>
             </div>
 
             <div class="btn-row">
-                <button class="secondary" id="back-3" onclick="navigateStep('2-5')">Back</button>
-                <button class="primary" id="next-3" disabled onclick="testAndRedirect()">Authenticate & Launch
+                <button class="secondary" id="back-3">Back</button>
+                <button class="primary" id="next-3" disabled>Authenticate & Launch
                     Studio</button>
             </div>
         </div>
