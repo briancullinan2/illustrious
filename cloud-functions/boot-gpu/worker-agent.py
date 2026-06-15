@@ -14,11 +14,11 @@ pipe = None
 def get_pipeline():
     global pipe
     if pipe is None:
-        print("⚡ Loading RunDiffusion/Juggernaut-Z-Image into VRAM context...")
+        print("⚡ Loading RunDiffusion/Juggernaut-Z into VRAM context...")
         
         # Pulling the optimized half-precision variant to keep execution blindingly fast
         pipe = DiffusionPipeline.from_pretrained(
-            "RunDiffusion/Juggernaut-Z-Image",
+            "/mnt/vault/Juggernaut-Z",
             torch_dtype=torch.float16, # Use float16 or bfloat16 depending on T4 driver bindings
             variant="fp16",
             use_safetensors=True
