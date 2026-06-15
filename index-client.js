@@ -83,7 +83,7 @@ async function renderMulticastScene() {
         `;
     }
 
-    // TODO: Execute fetch POST against /api/cluster/provision to spin the deployed gcloud GPU function
+    // TODO: Execute fetch POST against /api/cluster/allocate to spin the deployed gcloud GPU function
 }
 
 /**
@@ -131,7 +131,7 @@ async function syncClusterHardware() {
         console.log("🔄 [CLIENT TELEMETRY] Pinging cluster manager control layer...");
         const CLUSTER_MANAGER_URL = projectConfig.ACTIVE_PROJECT_ID
             ? `https://${projectConfig.REGION}-${projectConfig.ACTIVE_PROJECT_ID}.cloudfunctions.net/clusterManager?t=${Date.now()}`
-            : '/api/local-debug/cluster'
+            : '/api/cluster/status'
         const res = await fetch(CLUSTER_MANAGER_URL, { method: 'GET' });
         const data = await res.json();
 
@@ -228,7 +228,7 @@ async function scaleClusterNodeUp() {
     try {
         const CLUSTER_MANAGER_URL = projectConfig.ACTIVE_PROJECT_ID
             ? `https://${projectConfig.REGION}-${projectConfig.ACTIVE_PROJECT_ID}.cloudfunctions.net/clusterManager?t=${Date.now()}`
-            : '/api/local-debug/cluster'
+            : '/api/cluster/status'
         await fetch(CLUSTER_MANAGER_URL, { method: 'POST' });
         syncClusterHardware();
     } catch (e) {
@@ -286,7 +286,7 @@ async function renderMulticastScene() {
 
         const RELAY_MANAGER_URL = projectConfig.ACTIVE_PROJECT_ID
             ? `https://${projectConfig.REGION}-${projectConfig.ACTIVE_PROJECT_ID}.cloudfunctions.net/spatialRelay?t=${Date.now()}`
-            : '/api/local-debug/relay'
+            : '/api/spatial/relay'
         // 3. Fire payload across the private data network boundary straight into Python FastAPI
         const response = await fetch(RELAY_MANAGER_URL, {
             method: 'POST',
