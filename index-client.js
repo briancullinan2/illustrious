@@ -103,6 +103,7 @@ document.addEventListener("DOMContentLoaded", () => {
     clusterPollInterval = setInterval(syncClusterHardware, 10000);
 });
 
+
 /**
  * Synchronize and parse global cluster node pool configurations from Google Cloud
  */
@@ -110,30 +111,78 @@ async function syncClusterHardware() {
     const statusView = document.getElementById('project-selector');
 
     try {
-        // 👉 CRITICAL CHANGE: Query your dedicated standalone Google Cloud Function directly!
+        console.log("🔄 [CLIENT TELEMETRY] Pinging cluster manager control layer...");
         const res = await fetch(CLUSTER_MANAGER_URL + '?t=' + Date.now(), { method: 'GET' });
         const data = await res.json();
 
-        // Handle your unbundled cluster manager's reactive auto-boot tier response
+        console.log(`📥 [CLIENT TELEMETRY] Response payload received (HTTP ${res.status}):`, data);
+
+        // 1. Handle Active Auto-Boot / Relay Scaling States
         if (data.status === 'SCALING_UP') {
             if (statusView) {
                 statusView.style.color = '#ffaa00';
-                statusView.innerText = `⏳ INITIALIZING: ${data.message}`;
+                statusView.innerText = `🛰️ CLUSTER INITIALIZING: Kicking off baseline hardware allocation...`;
             }
             activeWorkerEndpoint = null;
             return;
         }
 
-        // Locate any fully running compute nodes exposing active endpoints inside the cloud pool
-        const hotNode = data.instances?.find(node => node.status === 'RUNNING' && node.endpoint);
-
-        if (hotNode) {
-            activeWorkerEndpoint = hotNode.endpoint;
+        // 2. 👉 INSERTED: Handle One-Time Storage Volume/Seeder Initializations (Mode A)
+        if (data.status === 'INITIALIZING_STORAGE') {
             if (statusView) {
-                statusView.style.color = 'var(--accent)';
-                statusView.innerText = `🛰️ POOL ACTIVE // CHANNELS OPEN TO: ${hotNode.name}`;
+                statusView.style.color = '#00bcff';
+                statusView.innerText = `⚙️ CORE STORAGE BOUNDARY: Seeding Juggernaut-Z weights...`;
+            }
+            activeWorkerEndpoint = null;
+            return;
+        }
+
+        // 3. 👉 INSERTED: Handle Direct Worker Allocation Lifecycle Boots (Mode B Initial Handshake)
+        if (data.status === 'INITIALIZING') {
+            if (statusView) {
+                statusView.style.color = '#ffff00';
+                statusView.innerText = `⚡ PROVISIONING HARDWARE: Spot hypervisors allocating T4 VRAM maps...`;
+            }
+            activeWorkerEndpoint = null;
+            return;
+        }
+
+        if (data.status === 'POOL_BLOCKED') {
+            if (statusView) {
+                statusView.style.color = '#ff3355';
+                statusView.innerText = `🛑 POOL BLOCKED: ${data.message}`;
+            }
+            activeWorkerEndpoint = null;
+            return;
+        }
+        
+        // 4. Parse Operational Cluster Capacities
+        if (data.instances && data.instances.length > 0) {
+            console.log(`📊 [CLIENT TELEMETRY] Active pool size tracked: ${data.instances.length} nodes across zone.`);
+
+            // Locate any fully running compute nodes exposing active endpoints inside the cloud pool
+            const hotNode = data.instances.find(node => node.status === 'RUNNING' && node.endpoint);
+
+            if (hotNode) {
+                activeWorkerEndpoint = hotNode.endpoint;
+                console.log(`🎯 [CLIENT TELEMETRY] Channel cleared! Endpoint locked to hot node: ${activeWorkerEndpoint}`);
+                if (statusView) {
+                    statusView.style.color = 'var(--accent)';
+                    statusView.innerText = `🛰️ POOL ACTIVE // CHANNELS OPEN TO: ${hotNode.name}`;
+                }
+            } else {
+                // Node is active in GCP, but its current cloud status string is PROVISIONING, STAGING, or REPAIRING
+                const stagingNode = data.instances[0];
+                console.log(`⏳ [CLIENT TELEMETRY] Node "${stagingNode.name}" is visible but unready. State: ${stagingNode.status}`);
+                if (statusView) {
+                    statusView.style.color = '#ffaa00';
+                    statusView.innerText = `⏳ STAGING HARDWARE: ${stagingNode.name} is [${stagingNode.status}]`;
+                }
+                activeWorkerEndpoint = null;
             }
         } else {
+            // Pool is empty and fallback trigger mechanisms didn't emit specialized status keys
+            console.warn("⚠️ [CLIENT TELEMETRY] Cluster manager reported an empty instance array tracking layer.");
             if (statusView) {
                 statusView.style.color = '#ffaa00';
                 statusView.innerText = `⏳ STAGING HARDWARE TIER POOLS...`;
@@ -142,7 +191,7 @@ async function syncClusterHardware() {
         }
 
     } catch (err) {
-        console.error("Failed to map cluster state framework:", err);
+        console.error("❌ [CLIENT TELEMETRY CRASH] Failed to map cluster state framework:", err);
         if (statusView) {
             statusView.style.color = '#ff3355';
             statusView.innerText = `⚠️ OFFLINE // CLOUD CONNECTOR INTERRUPTED`;

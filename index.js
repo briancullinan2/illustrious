@@ -163,12 +163,20 @@ app.get('/api/user-profile', requireReactiveCredentials, async (req, res) => {
 });
 
 
-const { clusterManager } = require('./cloud-functions/cluster-manager/index');
+const { clusterManager } = require('./cloud-functions/cluster-manager');
+const { bootGpu } = require('./cloud-functions/boot-gpu');
 
-/**
- * Local Debug Routing Gateway
- * Mounts your cloud function logic locally under your verified credentials path
- */
+
+app.get('/api/local-debug/boot-gpu', requireReactiveCredentials, (req, res) => {
+    // Inject the current project ID into the environment variable slots 
+    // that the cloud function expects to read from
+    process.env.GCP_PROJECT_ID = req.gcpCredentials.PROJECT_ID;
+
+    // Execute the cloud function code right inside your local Express thread!
+    bootGpu(req, res);
+});
+
+
 app.get('/api/local-debug/cluster', requireReactiveCredentials, (req, res) => {
     // Inject the current project ID into the environment variable slots 
     // that the cloud function expects to read from
