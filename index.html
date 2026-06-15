@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Illustrious Studio</title>
+    <link rel="stylesheet" href="main.css" />
+</head>
+
+<body>
+
+    <div id="control-panel">
+        <h2>Illustrious Spatial Engine</h2>
+        <div id="project-selector">Connecting to Google Cloud...</div>
+        <hr />
+        <h3>Scene Construction</h3>
+        <div>
+            <label>Prompt Slice:</label>
+            <textarea id="prompt-input">An elephant on a red balloon</textarea>
+            <label>Position Box (X, Y, W, H %):</label>
+            <input type="text" id="coords-input" value="70, 0, 30, 30"> <button onclick="addSceneSlice()">Infect Layer
+                Slice</button>
+        </div>
+        <button style="background: #00ffcc; color: #000; padding: 10px; font-weight: bold;"
+            onclick="renderMulticastScene()">Multicast Image Pipeline</button>
+    </div>
+
+    <div id="canvas-stage">
+    </div>
+
+    <script>
+        const layers = [];
+
+        function addSceneSlice() {
+            const prompt = document.getElementById('prompt-input').value;
+            const coords = document.getElementById('coords-input').value.split(',').map(Number);
+
+            const layer = { prompt, x: coords[0], y: coords[1], w: coords[2], h: coords[3] };
+            layers.push(layer);
+
+            const el = document.createElement('div');
+            el.className = 'scene-slice';
+            el.style.left = layer.x + '%';
+            el.style.top = layer.y + '%';
+            el.style.width = layer.w + '%';
+            el.style.height = layer.h + '%';
+            el.innerText = prompt;
+
+            document.getElementById('canvas-stage').appendChild(el);
+        }
+
+        async function renderMulticastScene() {
+            console.log("Sending sliced layout layers to Juggernaut pipeline...", layers);
+            // This payload maps directly into our multi-masked Img2Img step
+        }
+    </script>
+</body>
+
+</html>

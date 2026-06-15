@@ -1,0 +1,233 @@
+:root {
+    --bg: #101014;
+    --panel: #16161e;
+    --accent: #00ffcc;
+    --accent-muted: rgba(0, 255, 204, 0.1);
+    --border: #2e2e3f;
+    --text: #f0f0f5;
+    --text-dim: #a0a0b5;
+}
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    background-color: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    padding: 20px;
+}
+
+.wizard-container {
+    width: 100%;
+    max-width: 650px;
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 40px;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
+}
+
+header {
+    text-align: center;
+    margin-bottom: 35px;
+}
+
+header h1 {
+    font-size: 24px;
+    font-weight: 700;
+    letter-spacing: -0.5px;
+    margin-bottom: 8px;
+}
+
+.profile-badge {
+    display: inline-block;
+    font-family: monospace;
+    font-size: 12px;
+    background: #1c1c24;
+    padding: 4px 12px;
+    border-radius: 20px;
+    color: var(--accent);
+    border: 1px solid rgba(0, 255, 204, 0.2);
+}
+
+.step-panel {
+    display: none;
+}
+
+.step-panel.active {
+    display: block;
+    animation: fadeIn 0.4s ease-out;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(8px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+h2 {
+    font-size: 18px;
+    margin-bottom: 12px;
+    color: #fff;
+}
+
+p {
+    color: var(--text-dim);
+    font-size: 14px;
+    line-height: 1.5;
+    margin-bottom: 20px;
+}
+
+/* Custom List Selector for Projects */
+.custom-list {
+    list-style: none;
+    max-height: 240px;
+    overflow-y: auto;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    background: #0d0d11;
+}
+
+.custom-list li {
+    padding: 14px 18px;
+    border-bottom: 1px solid var(--border);
+    cursor: pointer;
+    font-family: monospace;
+    font-size: 14px;
+    transition: all 0.2s ease;
+    display: flex;
+    justify-content: space-between;
+}
+
+.custom-list li:last-child {
+    border-bottom: none;
+}
+
+.custom-list li:hover {
+    background: rgba(255, 255, 255, 0.02);
+}
+
+.custom-list li.selected {
+    background: var(--accent-muted);
+    color: var(--accent);
+    border-left: 4px solid var(--accent);
+    padding-left: 14px;
+}
+
+.custom-list li .proj-id {
+    color: var(--text-dim);
+    font-size: 12px;
+}
+
+.custom-list li.selected .proj-id {
+    color: var(--accent);
+    opacity: 0.8;
+}
+
+input[type="text"],
+input[type="password"] {
+    width: 100%;
+    background: #0d0d11;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 14px;
+    color: #fff;
+    font-family: monospace;
+    font-size: 14px;
+    margin-bottom: 15px;
+    transition: border 0.2s;
+}
+
+input:focus {
+    outline: none;
+    border-color: var(--accent);
+}
+
+.btn-row {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 30px;
+    gap: 15px;
+}
+
+button {
+    flex: 1;
+    padding: 14px;
+    border-radius: 6px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    border: none;
+    transition: all 0.2s ease;
+}
+
+button.primary {
+    background: var(--accent);
+    color: #000;
+}
+
+button.primary:hover {
+    background: #00ddb0;
+    box-shadow: 0 0 12px rgba(0, 255, 204, 0.3);
+}
+
+button.secondary {
+    background: #22222c;
+    color: var(--text);
+    border: 1px solid var(--border);
+}
+
+button.secondary:hover {
+    background: #2a2a36;
+}
+
+button:disabled {
+    opacity: 0.3;
+    cursor: not-allowed;
+    box-shadow: none !important;
+}
+
+a.action-link {
+    display: block;
+    text-align: center;
+    background: #1c1c24;
+    border: 1px solid var(--border);
+    padding: 14px;
+    border-radius: 6px;
+    color: var(--accent);
+    text-decoration: none;
+    font-weight: 600;
+    margin: 20px 0;
+    transition: background 0.2s;
+}
+
+a.action-link:hover {
+    background: #242430;
+}
+
+.console-log {
+    background: #0d0d11;
+    border: 1px solid var(--border);
+    padding: 15px;
+    border-radius: 6px;
+    font-family: monospace;
+    font-size: 12px;
+    color: #33ff33;
+    height: 120px;
+    overflow-y: auto;
+    white-space: pre-wrap;
+}

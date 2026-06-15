@@ -1,0 +1,8 @@
+{
+    "name": "illustrious-worker",
+    "version": "1.0.0",
+    "private": true,
+    "dependencies": {
+        "@google-cloud/compute": "^4.4.0"
+    }
+}
