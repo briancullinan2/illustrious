@@ -3,7 +3,7 @@ let credentialData
 
 
 async function loadEnvironment() {
-    const res = await fetch('/api/local-env');
+    const res = await fetch('/api/local-env?t=' + Date.now());
     credentialData = await res.json();
     document.getElementById('auth-status').innerText = 'Profile Account: ' + credentialData.account;
 
@@ -55,7 +55,7 @@ function navigateStep(stepNum) {
     document.querySelectorAll('.step-panel').forEach(panel => panel.classList.remove('active'));
     document.getElementById(`step-${stepNum}`).classList.add('active');
     if (stepNum === 3 || stepNum === '3') {
-        loadLocalFunctions();
+        loadLocalFunctions(null);
     }
 }
 
@@ -73,7 +73,7 @@ async function saveCredentials() {
         return
     }
 
-    const res = await fetch('/api/save-credentials', {
+    const res = await fetch('/api/save-credentials?t=' + Date.now(), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ projectId: selectedProjectId, clientId, clientSecret })
@@ -88,18 +88,21 @@ async function saveCredentials() {
 let localFunctionsList = [];
 let selectedFunctionName = '';
 
-
-async function loadLocalFunctions(localFunctionsList) {
+async function loadLocalFunctions(forcedList) {
     const listContainer = document.getElementById('functions-list');
     if (!listContainer) return;
 
-    listContainer.innerHTML = '<li>Scanning cloud-functions paths...</li>';
+    listContainer.innerHTML = '<li>Scanning cloud-functions matrices...</li>';
 
     try {
-        if (!localFunctionsList) {
-            const res = await fetch('/api/list-functions');
+        // If we don't pass a forced cache array, fetch the fresh hybrid environment state
+        if (!forcedList) {
+            // Append the active project ID so the backend can run the live cross-reference check
+            const res = await fetch(`/api/list-functions?t=${Date.now()}&projectId=${selectedProjectId}`);
             const data = await res.json();
             localFunctionsList = data.functions || [];
+        } else {
+            localFunctionsList = forcedList;
         }
 
         listContainer.innerHTML = '';
@@ -111,15 +114,31 @@ async function loadLocalFunctions(localFunctionsList) {
             return;
         }
 
-        localFunctionsList.forEach((func, idx) => {
+        let anyDeployed = false
+        localFunctionsList.forEach((funcObj, idx) => {
+            // Handle both flat array string fallbacks and our new object payload configuration structural format
+            const name = typeof funcObj === 'string' ? funcObj : funcObj.name;
+            const isDeployed = typeof funcObj === 'string' ? false : funcObj.isDeployed;
+            if (isDeployed) {
+                anyDeployed = true
+            }
             const li = document.createElement('li');
-            li.innerHTML = `<span>📂 ${func}</span><span class="proj-id">node.js runtime</span>`;
+
+            // Build out your gorgeous jellyfin styling status indicators
+            const statusLabel = isDeployed
+                ? `<span style="color: var(--accent); font-weight: bold; font-size: 12px; background: rgba(0, 255, 204, 0.1); padding: 2px 8px; border-radius: 4px; border: 1px solid rgba(0, 255, 204, 0.2);">LIVE ✓</span>`
+                : `<span style="color: #4a4a5a; font-size: 12px;">LOCAL ONLY</span>`;
+
+            li.innerHTML = `<span>📂 ${name}</span><span class="proj-id">${statusLabel}</span>`;
 
             const selectFuncRow = () => {
                 document.querySelectorAll('#functions-list li').forEach(item => item.classList.remove('selected'));
                 li.classList.add('selected');
-                selectedFunctionName = func;
+                selectedFunctionName = name;
                 document.getElementById('install-func-btn').disabled = false;
+
+                // Slick UI detail: Change the button label if it's already live to indicate an update run
+                document.getElementById('install-func-btn').innerText = isDeployed ? "Sync/Update Function" : "Deploy Selected";
             };
 
             li.onclick = selectFuncRow;
@@ -130,6 +149,15 @@ async function loadLocalFunctions(localFunctionsList) {
         });
 
         document.getElementById('install-all-btn').disabled = false;
+
+        if (anyDeployed) {
+            const btn = document.getElementById('install-func-btn');
+            const allBtn = document.getElementById('install-all-btn');
+            btn.disabled = false;
+            allBtn.disabled = false;
+            document.getElementById('back-3').disabled = false;
+            document.getElementById('next-3').disabled = false;
+        }
     } catch (err) {
         listContainer.innerHTML = `<li style="color: #ff3355;">Scan failed: ${err.message}</li>`;
     }
@@ -162,7 +190,7 @@ function connectLogStream() {
 }
 
 async function executeDeploymentRequest(functionName) {
-    const res = await fetch('/api/deploy-function', {
+    const res = await fetch('/api/deploy-function?t=' + Date.now(), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ projectId: selectedProjectId, functionName: functionName })
@@ -256,11 +284,11 @@ async function deployAllFunctions() {
 
 
 
-
 function testAndRedirect() {
-    // Handing execution over to index.js configuration environment mapping
-    window.location.href = 'http://localhost:3000/';
+    console.log("🛰️ Initiating production OAuth handshake vector...");
+    window.location.href = 'http://localhost:4000/auth';
 }
+
 
 
 const ILLUSTRIOUS_THEMES = [

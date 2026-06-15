@@ -25,6 +25,184 @@ body {
     padding: 20px;
 }
 
+
+/* Sidebar Panel Setup Layout Matrix */
+#control-panel {
+    width: 320px;
+    background: var(--panel);
+    border-right: 1px solid var(--border);
+    padding: 25px;
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+    z-index: 10;
+}
+
+#control-panel h2 {
+    font-size: 18px;
+    font-weight: 700;
+    letter-spacing: -0.3px;
+    color: #fff;
+}
+
+#control-panel h3 {
+    font-size: 13px;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    color: var(--text-dim);
+}
+
+#project-selector {
+    font-family: monospace;
+    font-size: 11px;
+    color: var(--accent);
+    background: #0d0d11;
+    padding: 8px 12px;
+    border-radius: 4px;
+    border: 1px solid rgba(0, 255, 204, 0.15);
+}
+
+hr {
+    border: none;
+    border-top: 1px solid var(--border);
+}
+
+label {
+    display: block;
+    font-size: 11px;
+    color: var(--text-dim);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 6px;
+    margin-top: 12px;
+}
+
+textarea,
+input[type="text"] {
+    width: 100%;
+    background: #0d0d11;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 12px;
+    color: #fff;
+    font-family: monospace;
+    font-size: 13px;
+    transition: border-color 0.2s;
+    resize: none;
+}
+
+textarea {
+    height: 65px;
+    line-height: 1.4;
+}
+
+textarea:focus,
+input:focus {
+    outline: none;
+    border-color: var(--accent);
+}
+
+/* Functional Dashboard Action Controls */
+a.primary,
+a.secondary,
+button {
+    width: 100%;
+    padding: 12px;
+    border-radius: 6px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    border: none;
+    transition: all 0.15s ease;
+    text-align: center;
+    text-decoration: none;
+}
+
+.header-icon-btn {
+    display: inline-flex;
+    align-items: center;
+    color: var(--text-dim);
+    text-decoration: none;
+    transition: transform 0.2s ease, filter 0.2s ease, color 0.2s ease;
+    margin: 0 5px;
+}
+
+.header-icon-btn:hover {
+    color: var(--accent);
+    transform: scale(1.1);
+    filter: drop-shadow(0 0 6px rgba(0, 255, 204, 0.4));
+}
+
+/* Ensure the sidebar header structure naturally handles internal icon slots */
+#control-panel h2 {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    position: relative;
+    font-size: 18px;
+    font-weight: 700;
+    color: #fff;
+}
+
+/* Inherits the base size, positioning, filter, and color tokens cleanly */
+.header-icon-btn {
+    display: inline-flex;
+    align-items: center;
+    color: var(--text-dim);
+    text-decoration: none;
+    transition: transform 0.25s ease, filter 0.25s ease, color 0.25s ease;
+}
+
+.header-icon-btn:hover {
+    color: var(--accent);
+    filter: drop-shadow(0 0 6px rgba(0, 255, 204, 0.4));
+}
+
+/* Specific help question animation modifier */
+.header-icon-btn:not(.settings-cog):hover {
+    transform: scale(1.1);
+}
+
+/* Specific gear micro-interaction modifier */
+.settings-cog:hover {
+    transform: rotate(45deg);
+}
+
+button[onclick="addSceneSlice()"] {
+    background: #22222c;
+    color: var(--text);
+    border: 1px solid var(--border);
+    margin-top: 12px;
+}
+
+button[onclick="addSceneSlice()"]:hover {
+    background: #2a2a36;
+}
+
+button[onclick="renderMulticastScene()"] {
+    margin-top: auto;
+    /* Always pins primary pipeline trigger to bottom of panel */
+    border-radius: 6px;
+}
+
+button[onclick="renderMulticastScene()"]:hover {
+    background: #00ddb0 !important;
+    box-shadow: 0 0 15px rgba(0, 255, 204, 0.4);
+}
+
+/* Full-scale Visual Stage Viewport */
+#canvas-stage {
+    flex: 1;
+    position: relative;
+    background: #09090b;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+
+
+
 .wizard-container {
     width: 100%;
     max-width: 650px;
@@ -164,6 +342,9 @@ input:focus {
     gap: 15px;
 }
 
+
+a.primary,
+a.secondary,
 button {
     flex: 1;
     padding: 14px;
@@ -175,26 +356,29 @@ button {
     transition: all 0.2s ease;
 }
 
-button.primary {
+.primary {
     background: var(--accent);
     color: #000;
 }
 
-button.primary:hover {
+.primary:hover {
     background: #00ddb0;
     box-shadow: 0 0 12px rgba(0, 255, 204, 0.3);
 }
 
-button.secondary {
+.secondary {
     background: #22222c;
     color: var(--text);
     border: 1px solid var(--border);
 }
 
-button.secondary:hover {
+.secondary:hover {
     background: #2a2a36;
 }
 
+
+a.primary:disabled,
+a.secondary:disabled,
 button:disabled {
     opacity: 0.3;
     cursor: not-allowed;
@@ -230,4 +414,149 @@ a.action-link:hover {
     height: 120px;
     overflow-y: auto;
     white-space: pre-wrap;
+}
+
+
+.doc-container {
+    width: 100%;
+    max-width: 750px;
+    margin: 0 auto;
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 50px;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.6);
+}
+
+.doc-header {
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 25px;
+    margin-bottom: 30px;
+}
+
+.doc-header h1 {
+    font-size: 26px;
+    color: #fff;
+    font-weight: 700;
+    letter-spacing: -0.5px;
+}
+
+.meta-stamp {
+    font-family: monospace;
+    font-size: 11px;
+    color: var(--accent);
+    text-transform: uppercase;
+    margin-top: 6px;
+    letter-spacing: 1px;
+}
+
+.doc-section {
+    margin-bottom: 30px;
+}
+
+.doc-section h2 {
+    font-size: 16px;
+    color: #fff;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 12px;
+    border-left: 3px solid var(--accent);
+    padding-left: 12px;
+}
+
+.doc-section p {
+    font-size: 14px;
+    line-height: 1.6;
+    color: var(--text-dim);
+    margin-bottom: 12px;
+}
+
+.bullet-list {
+    list-style: none;
+    margin-bottom: 15px;
+    padding-left: 15px;
+}
+
+.bullet-list li {
+    font-size: 14px;
+    color: var(--text-dim);
+    line-height: 1.6;
+    margin-bottom: 8px;
+    position: relative;
+}
+
+.bullet-list li::before {
+    content: "▪";
+    color: var(--accent);
+    position: absolute;
+    left: -15px;
+    font-size: 10px;
+}
+
+.doc-container {
+    width: 100%;
+    max-width: 750px;
+    margin: 0 auto;
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 50px;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.6);
+}
+
+.doc-header {
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 25px;
+    margin-bottom: 30px;
+}
+
+.doc-header h1 {
+    font-size: 26px;
+    color: #fff;
+    font-weight: 700;
+    letter-spacing: -0.5px;
+}
+
+.meta-stamp {
+    font-family: monospace;
+    font-size: 11px;
+    color: var(--accent);
+    text-transform: uppercase;
+    margin-top: 6px;
+    letter-spacing: 1px;
+}
+
+.doc-section {
+    margin-bottom: 30px;
+}
+
+.doc-section h2 {
+    font-size: 16px;
+    color: #fff;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 12px;
+    border-left: 3px solid var(--accent);
+    padding-left: 12px;
+}
+
+.doc-section p {
+    font-size: 14px;
+    line-height: 1.6;
+    color: var(--text-dim);
+    margin-bottom: 12px;
+}
+
+.warning-callout {
+    background: rgba(255, 51, 85, 0.05);
+    border: 1px dashed #ff3355;
+    border-radius: 6px;
+    padding: 15px;
+    margin: 15px 0;
+}
+
+.warning-callout p {
+    color: #ff5577 !important;
+    font-weight: 500;
+    margin-bottom: 0;
 }

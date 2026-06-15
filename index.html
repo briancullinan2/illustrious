@@ -4,13 +4,25 @@
 <head>
     <meta charset="UTF-8">
     <title>Illustrious Studio</title>
-    <link rel="stylesheet" href="main.css" />
+    <link rel="stylesheet" href="/main.css" />
 </head>
 
 <body>
 
     <div id="control-panel">
-        <h2>Illustrious Spatial Engine</h2>
+        <h2>
+            <span style="flex-basis: 100%; flex-shrink: 1;">Illustrious Spatial Engine</span>
+            <span style="flex-basis: 50%; flex-shrink: 1;">&nbsp;</span>
+            <a href="/privacy" title="About Matrix" class="header-icon-btn">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+                    stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="12" cy="12" r="10"></circle>
+                    <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path>
+                    <line x1="12" y1="17" x2="12.01" y2="17"></line>
+                </svg>
+            </a>
+
+        </h2>
         <div id="project-selector">Connecting to Google Cloud...</div>
         <hr />
         <h3>Scene Construction</h3>
@@ -24,36 +36,10 @@
         <button style="background: #00ffcc; color: #000; padding: 10px; font-weight: bold;"
             onclick="renderMulticastScene()">Multicast Image Pipeline</button>
     </div>
-
     <div id="canvas-stage">
+        <span class="canvas-stage-ready-text">🌌 [Spatial Render Stage Context Ready]</span>
     </div>
-
-    <script>
-        const layers = [];
-
-        function addSceneSlice() {
-            const prompt = document.getElementById('prompt-input').value;
-            const coords = document.getElementById('coords-input').value.split(',').map(Number);
-
-            const layer = { prompt, x: coords[0], y: coords[1], w: coords[2], h: coords[3] };
-            layers.push(layer);
-
-            const el = document.createElement('div');
-            el.className = 'scene-slice';
-            el.style.left = layer.x + '%';
-            el.style.top = layer.y + '%';
-            el.style.width = layer.w + '%';
-            el.style.height = layer.h + '%';
-            el.innerText = prompt;
-
-            document.getElementById('canvas-stage').appendChild(el);
-        }
-
-        async function renderMulticastScene() {
-            console.log("Sending sliced layout layers to Juggernaut pipeline...", layers);
-            // This payload maps directly into our multi-masked Img2Img step
-        }
-    </script>
+    <script src="/index-client.js"></script>
 </body>
 
 </html>
