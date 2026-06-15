@@ -142,6 +142,7 @@ app.post('/api/save-credentials', (req, res) => {
 
     const projectSpecificFile = path.join(GLOBAL_CRED_DIR, `${projectId}.json`);
     const activeProjectAnchorFile = path.join(GLOBAL_CRED_DIR, 'illustrious-config.json');
+    fs.writeFileSync(activeProjectAnchorFile, JSON.stringify({ ACTIVE_PROJECT_ID: projectId }, null, 2));
 
     if (fs.existsSync(projectSpecificFile)) {
         try {
@@ -170,7 +171,6 @@ app.post('/api/save-credentials', (req, res) => {
     };
 
     fs.writeFileSync(projectSpecificFile, JSON.stringify(runtimeConfig, null, 2));
-    fs.writeFileSync(activeProjectAnchorFile, JSON.stringify({ ACTIVE_PROJECT_ID: projectId }, null, 2));
 
     res.json({ status: 'SUCCESS', message: 'Credentials safely registered globally!' });
 });
