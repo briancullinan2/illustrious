@@ -16,7 +16,7 @@ const GLOBAL_CRED_DIR = path.join(os.homedir(), '.credentials');
 
 // Shared utility to look up runtime environmental profile tokens safely
 function loadAppCredentials() {
-    const anchorPath = path.join(GLOBAL_CRED_DIR, 'illustrious-config.json');
+    const anchorPath = path.join(__dirname, 'illustrious-config.json');
     if (!fs.existsSync(anchorPath)) return null;
 
     try {

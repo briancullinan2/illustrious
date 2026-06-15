@@ -1,6 +1,8 @@
 // index-client.js
 
-
+let projectConfig = {
+    REGION: 'us-central1'
+}
 
 function injectSetupSettingsCog() {
     const panel = document.getElementById('control-panel');
@@ -30,6 +32,21 @@ async function initializeClusterStatus() {
 
     try {
         // Query the profile metadata engine
+        const res = await fetch('/illustrious-config.json');
+        projectConfig = await res.json();
+        if (projectConfig.DEBUG) {
+            delete projectConfig['ACTIVE_PROJECT_ID']
+        }
+    } catch (err) {
+        if (statusView) {
+            statusView.style.color = '#ff3355';
+            statusView.innerHTML = `⚠️ Illustrious endpoint project error <a href="/setup">Click here to configure</a>`;
+        }
+        console.warn("Ecosystem profile mapping localized. Ready for independent initialization.");
+    }
+
+    try {
+        // Query the profile metadata engine
         const res = await fetch('/api/user-profile');
         const data = await res.json();
 
@@ -44,6 +61,7 @@ async function initializeClusterStatus() {
         }
         console.warn("Ecosystem profile mapping localized. Ready for independent initialization.");
     }
+
 }
 
 
@@ -79,8 +97,7 @@ function testAndRedirect() {
 // index-client.js
 
 // 👉 CONFIGURATION BOUNDARY: Swap this with your public deployed Cloud Function URI
-//const CLUSTER_MANAGER_URL = "https://us-central1-illustrious-499422.cloudfunctions.net/clusterManager";
-const CLUSTER_MANAGER_URL = '/api/local-debug/cluster'
+
 
 
 let activeWorkerEndpoint = null;
@@ -112,7 +129,10 @@ async function syncClusterHardware() {
 
     try {
         console.log("🔄 [CLIENT TELEMETRY] Pinging cluster manager control layer...");
-        const res = await fetch(CLUSTER_MANAGER_URL + '?t=' + Date.now(), { method: 'GET' });
+        const CLUSTER_MANAGER_URL = projectConfig.ACTIVE_PROJECT_ID
+            ? `https://${projectConfig.REGION}-${projectConfig.ACTIVE_PROJECT_ID}.cloudfunctions.net/clusterManager?t=${Date.now()}`
+            : '/api/local-debug/cluster'
+        const res = await fetch(CLUSTER_MANAGER_URL, { method: 'GET' });
         const data = await res.json();
 
         console.log(`📥 [CLIENT TELEMETRY] Response payload received (HTTP ${res.status}):`, data);
@@ -155,7 +175,7 @@ async function syncClusterHardware() {
             activeWorkerEndpoint = null;
             return;
         }
-        
+
         // 4. Parse Operational Cluster Capacities
         if (data.instances && data.instances.length > 0) {
             console.log(`📊 [CLIENT TELEMETRY] Active pool size tracked: ${data.instances.length} nodes across zone.`);
@@ -206,6 +226,9 @@ async function syncClusterHardware() {
 async function scaleClusterNodeUp() {
     console.log("📡 Requesting secondary parallel computational cluster allocation...");
     try {
+        const CLUSTER_MANAGER_URL = projectConfig.ACTIVE_PROJECT_ID
+            ? `https://${projectConfig.REGION}-${projectConfig.ACTIVE_PROJECT_ID}.cloudfunctions.net/clusterManager?t=${Date.now()}`
+            : '/api/local-debug/cluster'
         await fetch(CLUSTER_MANAGER_URL, { method: 'POST' });
         syncClusterHardware();
     } catch (e) {
@@ -261,9 +284,16 @@ async function renderMulticastScene() {
 
         console.log(`📡 Shipping binary canvas packet directly to GPU engine: ${activeWorkerEndpoint}`);
 
+        const RELAY_MANAGER_URL = projectConfig.ACTIVE_PROJECT_ID
+            ? `https://${projectConfig.REGION}-${projectConfig.ACTIVE_PROJECT_ID}.cloudfunctions.net/spatialRelay?t=${Date.now()}`
+            : '/api/local-debug/relay'
         // 3. Fire payload across the private data network boundary straight into Python FastAPI
-        const response = await fetch(`${activeWorkerEndpoint}/api/spatial/multicast`, {
-            method: "POST",
+        const response = await fetch(RELAY_MANAGER_URL, {
+            method: 'POST',
+            headers: {
+                // Tell the Cloud Function where to forward the payload!
+                'x-target-endpoint': `${activeWorkerEndpoint}/api/spatial/multicast`
+            },
             body: formData
         });
 

@@ -24,7 +24,7 @@ function serveErrorScreen(res, title, description, showSetupButton = true) {
         <!DOCTYPE html>
         <html>
         <head>
-            <title>${title} // Illustrious Error Matrix</title>
+            <title>${title} // Illustrious Error</title>
             <link rel="stylesheet" href="/main.css" />
             <style>
                 body { display: flex; justify-content: center; align-items: center; min-height: 100vh; background-color: var(--bg); color: var(--text); }
@@ -165,26 +165,34 @@ app.get('/api/user-profile', requireReactiveCredentials, async (req, res) => {
 
 const { clusterManager } = require('./cloud-functions/cluster-manager');
 const { bootGpu } = require('./cloud-functions/boot-gpu');
-
+const { spatialRelay } = require('./cloud-functions/spatial-relay');
 
 app.get('/api/local-debug/boot-gpu', requireReactiveCredentials, (req, res) => {
-    // Inject the current project ID into the environment variable slots 
-    // that the cloud function expects to read from
     process.env.GCP_PROJECT_ID = req.gcpCredentials.PROJECT_ID;
+    process.env.GCP_PROJECT = req.gcpCredentials.PROJECT_ID;
 
-    // Execute the cloud function code right inside your local Express thread!
+    // Execute boot-gpu passing the augmented express context wrapper natively
     bootGpu(req, res);
 });
 
-
 app.get('/api/local-debug/cluster', requireReactiveCredentials, (req, res) => {
-    // Inject the current project ID into the environment variable slots 
-    // that the cloud function expects to read from
+    // Inject parameters before calling the module execution block
     process.env.GCP_PROJECT_ID = req.gcpCredentials.PROJECT_ID;
-    process.env.BOOT_GPU_FUNCTION_URL = `http://localhost:${PORT}/api/local-debug/boot-gpu`; // Proxy redirect
+    process.env.GCP_PROJECT = req.gcpCredentials.PROJECT_ID;
+    process.env.BOOT_GPU_FUNCTION_URL = `http://localhost:${PORT}/api/local-debug/boot-gpu`;
 
-    // Execute the cloud function code right inside your local Express thread!
+    // Execute cluster manager with hot credentials attached
     clusterManager(req, res);
+});
+
+app.get('/api/local-debug/relay', requireReactiveCredentials, (req, res) => {
+    // Inject parameters before calling the module execution block
+    process.env.GCP_PROJECT_ID = req.gcpCredentials.PROJECT_ID;
+    process.env.GCP_PROJECT = req.gcpCredentials.PROJECT_ID;
+    process.env.BOOT_GPU_FUNCTION_URL = `http://localhost:${PORT}/api/local-debug/boot-gpu`;
+
+    // Execute cluster manager with hot credentials attached
+    spatialRelay(req, res);
 });
 
 server.listen(PORT, () => {

@@ -275,7 +275,7 @@ mkdir -p /mnt/vault
 mount /dev/sdb /mnt/vault
 
 apt-get update && apt-get install -y python3-pip
-pip install -U diffusers transformers accelerate fastapi uvicorn pillow torch torchvision torchaudio
+pip install -U diffusers transformers accelerate fastapi uvicorn pillow torch torchvision torchaudio python-multipart
 
 python3 /root/worker-agent.py > /root/worker.log 2>&1 &
 `;

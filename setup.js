@@ -5,6 +5,9 @@ const fs = require('fs');
 const path = require('path');
 const WebSocket = require('ws');
 
+const DEFAULT_ZONE = 'us-central1-a'
+const DEFAULT_REGION = 'us-central1'
+
 // Set up an isolated WebSocket server that piggybacks onto the shared server container
 const wss = new WebSocket.Server({ noServer: true });
 let activeSocket = null;
@@ -141,8 +144,8 @@ app.post('/api/save-credentials', (req, res) => {
     }
 
     const projectSpecificFile = path.join(GLOBAL_CRED_DIR, `${projectId}.json`);
-    const activeProjectAnchorFile = path.join(GLOBAL_CRED_DIR, 'illustrious-config.json');
-    fs.writeFileSync(activeProjectAnchorFile, JSON.stringify({ ACTIVE_PROJECT_ID: projectId }, null, 2));
+    const activeProjectAnchorFile = path.join(__dirname, 'illustrious-config.json');
+    fs.writeFileSync(activeProjectAnchorFile, JSON.stringify({ REGION: DEFAULT_REGION, ACTIVE_PROJECT_ID: projectId }, null, 2));
 
     if (fs.existsSync(projectSpecificFile)) {
         try {
@@ -166,8 +169,8 @@ app.post('/api/save-credentials', (req, res) => {
         GCP_CLIENT_ID: clientId,
         GCP_CLIENT_SECRET: clientSecret,
         REDIRECT_URI: redirectUri || 'http://localhost:4000/', // Lock it inside your ~/.credentials profile record
-        REGION: 'us-central1',
-        FUNCTIONS_URL: `https://us-central1-${projectId}.cloudfunctions.net/bootGpuWorker`
+        REGION: DEFAULT_REGION,
+        FUNCTIONS_URL: `https://${DEFAULT_REGION}-${projectId}.cloudfunctions.net/bootGpu`
     };
 
     fs.writeFileSync(projectSpecificFile, JSON.stringify(runtimeConfig, null, 2));
@@ -254,7 +257,7 @@ app.post('/api/deploy-function', async (req, res) => {
             '--allow-unauthenticated',
             `--source=${functionSourceDir}`,
             `--entry-point=${entryPoint}`,
-            '--region=us-central1',
+            `--region=${DEFAULT_REGION}`,
             `--set-env-vars=GCP_CLIENT_ID="${projectCreds.GCP_CLIENT_ID}",GCP_CLIENT_SECRET="${projectCreds.GCP_CLIENT_SECRET}",GCP_PROJECT_ID="${projectId}",REDIRECT_URI="${projectCreds.REDIRECT_URI || 'http://localhost:4000/'}"`
         ];
 
