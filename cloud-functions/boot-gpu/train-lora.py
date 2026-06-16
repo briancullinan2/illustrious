@@ -82,20 +82,19 @@ def run_lora_alignment(model_path = BASE_MODEL):
         task_type="CAUSAL_LM"
     )
 
-    # 2. Pack your parameters inside the unified configuration mapping
     sft_config = SFTConfig(
         output_dir="./training_outputs",
         per_device_train_batch_size=1,  
-        gradient_accumulation_steps=4,
-        warmup_steps=5,
-        max_steps=50,                  
+        gradient_accumulation_steps=1,  # 🛠️ Change to 1 so it updates weights every single step
+        warmup_steps=0,                 # 🛠️ Change to 0 to skip warmup math entirely
+        max_steps=3,                    # 🛠️ Change to 3 steps total!
         learning_rate=2e-4,
         fp16=False,                    
         use_cpu=True,                  
-        logging_steps=5,
+        logging_steps=1,                # 🛠️ Log every single step so you see it working
         save_strategy="no",    
         report_to="none",
-        max_length=256,            # 🛠️ FIX: Corrected from max_length to stop HF Hub pings
+        max_length=128,            # 🛠️ Shrink to 128 to make the matrix math even smaller
         dataset_text_field="messages"  
     )
 
@@ -106,8 +105,7 @@ def run_lora_alignment(model_path = BASE_MODEL):
         model=base_model,
         train_dataset=dataset,
         peft_config=lora_config,
-        args=sft_config,
-        token=HF_TOKEN
+        args=sft_config
     )
 
     print("🔥 Commencing weight gradient execution loops...")
