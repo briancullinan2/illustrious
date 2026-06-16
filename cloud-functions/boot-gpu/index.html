@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Illustrious Token Engine Playground</title>
+    <style>
+        body {
+            background: #101014;
+            color: #f0f0f5;
+            font-family: monospace;
+            padding: 40px;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            color: #00ffcc;
+            font-size: 20px;
+            border-bottom: 1px solid #2e2e3f;
+            padding-bottom: 10px;
+            margin-bottom: 25px;
+        }
+
+        label {
+            display: block;
+            margin: 20px 0 6px;
+            font-weight: bold;
+            color: #a0a0b5;
+            text-transform: uppercase;
+            font-size: 11px;
+            letter-spacing: 0.5px;
+        }
+
+        textarea {
+            width: 100%;
+            height: 120px;
+            background: #16161e;
+            border: 1px solid #2e2e3f;
+            border-radius: 6px;
+            color: #fff;
+            padding: 12px;
+            font-family: monospace;
+            resize: none;
+            box-sizing: border-box;
+        }
+
+        textarea:focus,
+        select:focus,
+        input[type="password"]:focus,
+        input[type="text"]:focus {
+            outline: none;
+            border-color: #00ffcc;
+        }
+
+        select,
+        input[type="password"],
+        input[type="text"] {
+            width: 100%;
+            background: #16161e;
+            border: 1px solid #2e2e3f;
+            border-radius: 6px;
+            color: #fff;
+            padding: 12px;
+            font-family: monospace;
+            box-sizing: border-box;
+            font-size: 13px;
+        }
+
+        .option-row {
+            margin: 15px 0;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        button {
+            background: #00ffcc;
+            color: #000;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 6px;
+            font-weight: bold;
+            cursor: pointer;
+            font-family: monospace;
+            width: 100%;
+            margin-top: 15px;
+        }
+
+        button:hover {
+            background: #00ddb0;
+        }
+
+        .search-container {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .search-container input {
+            flex: 1;
+        }
+
+        .search-container button {
+            width: auto;
+            margin-top: 0;
+            padding: 0 25px;
+        }
+
+        #output-panel {
+            margin-top: 25px;
+            background: #0d0d11;
+            border: 1px solid #2e2e3f;
+            border-radius: 6px;
+            padding: 20px;
+            min-height: 60px;
+            white-space: pre-wrap;
+            color: #33ff33;
+        }
+
+        .meta-desc {
+            font-size: 11px;
+            color: #7e7e9a;
+            margin-top: 4px;
+        }
+        
+    </style>
+</head>
+
+<body>
+    <h1>🌌 Illustrious Intelligent Workspace Gateway</h1>
+
+    <label>Hugging Face User Access Token (HF_TOKEN):</label>
+    <input type="password" id="hf-token" placeholder="hf_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx" autocomplete="off" />
+
+    <label>Intelligent Hardware-Aware Model Discovery Engine:</label>
+    <div class="search-container">
+        <input type="text" id="search-query"
+            placeholder="Type language or feature (e.g., qwen2.5-coder, llama3, python)..." />
+        <button id="trigger-search">Search Hub</button>
+    </div>
+
+    <label>Active Execution Target Model:</label>
+    <select id="model-select">
+        <optgroup label="General Chat Infrastructure (Transformers)">
+            <option value="meta-llama/Meta-Llama-3-8B-Instruct">Meta Llama 3 8B Instruct</option>
+            <option value="google/gemma-2-9b-it">Google Gemma 2 9B IT</option>
+            <option value="mistralai/Mistral-7B-Instruct-v0.3">Mistral 7B Instruct v0.3</option>
+        </optgroup>
+        <optgroup label="Code Specialized Architecture (Transformers)">
+            <option value="Qwen/Qwen2.5-Coder-7B-Instruct">Qwen 2.5 Coder 7B Instruct</option>
+            <option value="mistralai/Codestral-22B-v0.1">Mistral Codestral 22B</option>
+        </optgroup>
+        <optgroup label="Local Optimized Micro-Kernels (GGUF Auto-Download)">
+            <option value="Qwen/Qwen2.5-Coder-7B-Instruct-GGUF/qwen2.5-coder-7b-instruct-q5_k_m.gguf">Qwen 2.5 Coder 7B
+                (Q5_K_M GGUF)</option>
+            <option value="bartowski/Meta-Llama-3-8B-Instruct-GGUF/Meta-Llama-3-8B-Instruct-Q4_K_M.gguf">Meta Llama 3 8B
+                (Q4_K_M GGUF)</option>
+        </optgroup>
+        <optgroup id="dynamic-searched-models" label="Discovered Low-Memory Kernels (GGUF)">
+        </optgroup>
+    </select>
+    <div class="meta-desc">The search automatically filters for light, pre-quantized files under 6GB to prevent system
+        crashes.</div>
+
+    <label>Input Code Payload or Prompt Text:</label>
+    <textarea id="prompt-payload" placeholder="Paste your code file snippet or instruction here..."></textarea>
+
+    <div class="option-row">
+        <input type="checkbox" id="toggle-lora" checked>
+        <label for="toggle-lora" style="margin: 0; display: inline;">Activate Low-Rank Adaptation Classifier Matrices
+            (use_lora)</label>
+    </div>
+
+    <button id="trigger-inference">Dispatch Text Stream Sequence</button>
+
+    <label>Active Output Stream Terminal:</label>
+    <div id="output-panel">Waiting for stream transaction initialization...</div>
+
+    <script>
+        // 📡 Search Callback Architecture Implementation Pass
+        document.getElementById('trigger-search').addEventListener('click', async () => {
+            const query = document.getElementById('search-query').value.trim();
+            const hfToken = document.getElementById('hf-token').value.trim();
+            const targetContainer = document.getElementById('dynamic-searched-models');
+
+            if (!query) return;
+
+            targetContainer.innerHTML = '<option disabled>Searching registry maps...</option>';
+
+            const formData = new FormData();
+            formData.append('query', query);
+            formData.append('hf_token', hfToken);
+
+            try {
+                const response = await fetch('/api/models/search', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                if (!response.ok) throw new Error(`HTTP ${response.status}`);
+
+                const data = await response.json();
+                targetContainer.innerHTML = '';
+
+                if (data.results.length === 0) {
+                    targetContainer.innerHTML = '<option disabled>No safe, low-memory models matched your hardware profile.</option>';
+                    return;
+                }
+
+                data.results.forEach(m => {
+                    const option = document.createElement('option');
+                    option.value = m.computed_path;
+                    option.innerText = `📦 ${m.repo} [${m.file}] (${m.size_gb} GB)`;
+                    targetContainer.appendChild(option);
+                });
+
+                // Auto-select the first optimal discovered match
+                document.getElementById('model-select').value = data.results[0].computed_path;
+
+            } catch (err) {
+                targetContainer.innerHTML = `<option disabled>Search Matrix Exception: ${err.message}</option>`;
+            }
+        });
+
+        // 🧬 Execution Inference Loop Pass
+        document.getElementById('trigger-inference').addEventListener('click', async () => {
+            const prompt = document.getElementById('prompt-payload').value;
+            const useLora = document.getElementById('toggle-lora').checked;
+            const hfToken = document.getElementById('hf-token').value;
+            const modelPath = document.getElementById('model-select').value;
+            const outputPanel = document.getElementById('output-panel');
+
+            outputPanel.innerText = "Connecting to pipeline...";
+
+            const formData = new FormData();
+            formData.append('prompt', prompt);
+            formData.append('use_lora', useLora);
+            formData.append('hf_token', hfToken);
+            formData.append('model_path', modelPath);
+
+            try {
+                const response = await fetch('/api/spatial/multicast', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                if (!response.ok) {
+                    outputPanel.innerText = `Execution Rejected: HTTP ${response.status}`;
+                    return;
+                }
+
+                outputPanel.innerText = "";
+                const reader = response.body.getReader();
+                const decoder = new TextDecoder();
+
+                while (true) {
+                    const { value, done } = await reader.read();
+                    if (done) break;
+                    outputPanel.innerText += decoder.decode(value, { stream: true });
+                }
+            } catch (err) {
+                outputPanel.innerText = `Pipeline Network Exception: ${err.message}`;
+            }
+        });
+    </script>
+</body>
+
+</html>

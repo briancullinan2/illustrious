@@ -19,7 +19,7 @@ apt-get update && apt-get install -y python3-pip python3-venv
 
 # Force update pip safely on Ubuntu environment
 pip3 install --upgrade pip
-pip3 install -U diffusers transformers trl peft bitsandbytes accelerate fastapi uvicorn pillow torch torchvision torchaudio python-multipart
+pip3 install -U diffusers transformers trl datasets huggingface_hub llama-cpp-python peft bitsandbytes accelerate fastapi uvicorn pillow torch torchvision torchaudio python-multipart
 
 #pip install bitsandbytes --extra-index-url https://jllllll.github.io/bitsandbytes-windows-webui
 

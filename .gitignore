@@ -1,1 +1,6 @@
 ﻿node_modules
+hf_cache/hub
+hf_cache/xet
+hf_cache/.agent_harnesses.json
+hf_cache/.locks
+hf_cache/*/**

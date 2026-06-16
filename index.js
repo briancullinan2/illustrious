@@ -1,4 +1,5 @@
 // index.js
+const express = require('express');
 const { app, server, PORT, loadAppCredentials } = require('./server');
 require('./setup'); // Mounts setup wizard routes cleanly
 const { google } = require('googleapis');
@@ -108,7 +109,7 @@ app.get('/auth', requireReactiveCredentials, (req, res) => {
         prompt: 'consent',
         scope: [
             'https://www.googleapis.com/auth/userinfo.profile',
-            'https://www.googleapis.com/auth/cloud-platform'
+            //'https://www.googleapis.com/auth/cloud-platform'
         ],
     });
     res.redirect(authUrl);
@@ -182,6 +183,8 @@ app.get('/api/spatial/relay', requireReactiveCredentials, (req, res) => {
     // Execute cluster manager with hot credentials attached
     spatialRelay(req, res);
 });
+
+app.use(express.static(path.join(__dirname)));
 
 server.listen(PORT, () => {
     console.log(`🚀 Illustrious Execution Hub spinning up on http://localhost:${PORT}`);

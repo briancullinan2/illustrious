@@ -1,4 +1,5 @@
 // setup.js
+const express = require('express');
 const { app, server, GLOBAL_CRED_DIR } = require('./server'); // 👉 Clean require tracking
 const { execSync, spawn, spawnSync } = require('child_process');
 const fs = require('fs');
@@ -218,7 +219,7 @@ async function listProjectsFromGoogle(req, res) {
 // 🛰️ API ENDPOINTS
 // ==========================================
 
-app.get('/api/local-env', (req, res) => {
+app.get('/api/local-env', async (req, res) => {
 
     const activeAccount = await getActiveAccountFromGcloudCLI()
     const processedProjects = await listProjectsFromGcloudCLI(req, res)
@@ -386,3 +387,9 @@ app.post('/api/deploy-function', async (req, res) => {
 
 console.log("⚙️ Setup installer matrix endpoints successfully registered.");
 
+
+if (path.basename(process.argv[1]) === 'setup.js') {
+    // This file asset stream only mounts if 'node setup.js' was executed in the CLI
+    app.use(express.static(path.join(__dirname)));
+    console.log('📡 Static assets mounted successfully inside the active setup environment.');
+}

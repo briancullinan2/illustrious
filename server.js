@@ -34,8 +34,7 @@ function loadAppCredentials() {
     }
 }
 
-// Serve local workspace static assets (landing page, terms, privacy)
-app.use(express.static(path.join(__dirname)));
+
 
 const http = require('http');
 const server = http.createServer(app);
