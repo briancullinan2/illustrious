@@ -1,3 +1,4 @@
+import os
 import argparse
 import torch
 from pathlib import Path
@@ -15,8 +16,9 @@ from trl import SFTTrainer, SFTConfig  # 🛠️ Added SFTConfig here
 # Core Training Infrastructure Configuration
 # ============================================================================
 BASE_MODEL = "meta-llama/Meta-Llama-3-8B-Instruct"  # Or "Qwen/Qwen2.5-Coder-7B-Instruct"
-DATASET_PATH = "cloud-functions/boot-gpu/dataset.json"
-OUTPUT_DIR = "loras/code_classifier_lora"
+#DATASET_PATH = "cloud-functions/boot-gpu"
+DATASET_FOLDER = "chat_logs"
+OUTPUT_DIR = "loras/hot_ex_girlfriend"
 HF_CACHE_DIR = "hf_cache"
 
 # 🔑 Pull from your secure environment token configuration setup
@@ -33,8 +35,18 @@ HF_TOKEN = get_token()
 
 
 def run_lora_alignment(model_path = BASE_MODEL):
-    print(f"📡 Loading custom dataset from: {DATASET_PATH}")
-    dataset = load_dataset("json", data_files=DATASET_PATH, split="train")
+    # 🗂️ Collect every single .json file inside your chat_logs folder
+    log_folder_path = Path(DATASET_FOLDER)
+    json_files = [str(p) for p in log_folder_path.glob("*.json")]
+    
+    if not json_files:
+        raise FileNotFoundError(f"❌ No .json files found inside the directory: '{DATASET_FOLDER}'")
+        
+    print(f"📡 Found {len(json_files)} log profiles. Appending dataset rows dynamically...")
+    
+    # 🛠️ Hugging Face merges the list of files seamlessly into a single dataset split
+    dataset = load_dataset("json", data_files=json_files, split="train")
+    print(f"🎯 Unified dataset loaded successfully. Total training samples: {len(dataset)}")
 
     print(f"⚡ Initializing base model layers: {model_path}")
     tokenizer = AutoTokenizer.from_pretrained(model_path, cache_dir=HF_CACHE_DIR, token=HF_TOKEN)
@@ -76,7 +88,7 @@ def run_lora_alignment(model_path = BASE_MODEL):
     lora_config = LoraConfig(
         r=16,                  # Rank size
         lora_alpha=32,         # Weight scaling factor
-        target_modules=["q_proj", "v_proj", "k_proj", "o_proj"], 
+        target_modules=["q_proj", "k_proj", "v_proj", "o_proj", "gate_proj", "up_proj", "down_proj"], 
         lora_dropout=0.05,
         bias="none",
         task_type="CAUSAL_LM"
@@ -85,33 +97,63 @@ def run_lora_alignment(model_path = BASE_MODEL):
     sft_config = SFTConfig(
         output_dir="./training_outputs",
         per_device_train_batch_size=1,  
-        gradient_accumulation_steps=1,  # 🛠️ Change to 1 so it updates weights every single step
-        warmup_steps=0,                 # 🛠️ Change to 0 to skip warmup math entirely
-        max_steps=3,                    # 🛠️ Change to 3 steps total!
+        gradient_accumulation_steps=1,
+        warmup_steps=0,                 # 🛠️ Set to 0 so small datasets hit full learning rate instantly
+        #max_steps=3,
+        num_train_epochs=1,             # 🛠️ Stick to 1 pass on CPU to avoid massive processing delays
         learning_rate=2e-4,
         fp16=False,                    
         use_cpu=True,                  
-        logging_steps=1,                # 🛠️ Log every single step so you see it working
+        logging_steps=1,
         save_strategy="no",    
         report_to="none",
-        max_length=128,            # 🛠️ Shrink to 128 to make the matrix math even smaller
-        dataset_text_field="messages"  
+        max_length=128,
+        # dataset_text_field="messages"  # 🛠️ REMOVED: This was breaking your formatting_func!
     )
 
     print("🚀 Initializing SFT Trainer core pipeline...")
+
+    def formatting_prompts_func(example):
+        # SFTTrainer will pass rows from your dataset here. 
+        # Since your dataset script outputs a list of dictionaries containing "messages", 
+        # we pull that list and format it using Qwen's specific template syntax.
+        output_texts = []
+        
+        # If processing a batch (depending on dataset loading style), iterate over rows
+        if isinstance(example["messages"], list) and len(example["messages"]) > 0 and isinstance(example["messages"][0], list):
+            for messages_list in example["messages"]:
+                formatted_text = tokenizer.apply_chat_template(
+                    messages_list, 
+                    tokenize=False, 
+                    add_generation_prompt=False  # Keep False during training so it includes the assistant's answer!
+                )
+                output_texts.append(formatted_text)
+            return output_texts
+        else:
+            # Fallback for a single row execution
+            formatted_text = tokenizer.apply_chat_template(
+                example["messages"], 
+                tokenize=False, 
+                add_generation_prompt=False
+            )
+            return [formatted_text]
 
     # 🛠️ FIX: Pass the raw base_model here. TRL uses peft_config to instrument the matrices safely.
     trainer = SFTTrainer(
         model=base_model,
         train_dataset=dataset,
         peft_config=lora_config,
-        args=sft_config
+        args=sft_config,
+        formatting_func=formatting_prompts_func
     )
 
     print("🔥 Commencing weight gradient execution loops...")
     trainer.train()
 
     print(f"💾 Saving finalized code_classifier_lora matrix file states to: {OUTPUT_DIR}")
+
+    os.makedirs(OUTPUT_DIR, exist_ok=True)
+
     trainer.model.save_pretrained(OUTPUT_DIR)
     tokenizer.save_pretrained(OUTPUT_DIR)
     print("🎯 Training workflow complete.")

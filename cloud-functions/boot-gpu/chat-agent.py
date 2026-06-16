@@ -33,7 +33,7 @@ tokenizer = None
 gguf_engine = None  
 
 base_model_path = "meta-llama/Meta-Llama-3-8B-Instruct"  
-lora_adapter_path = "loras/code_classifier_lora" 
+lora_adapter_path = "loras/hot_ex_girlfriend" 
 HF_CACHE_DIR = "hf_cache"
 
 CREDENTIALS_FILE = Path("~/.credentials/huggingface-provider.json").expanduser()
@@ -141,22 +141,45 @@ def get_llm_context(model_path=base_model_path, hf_token=None):
             )
         elif current_os in ["Linux", "Windows"]:
             if torch.cuda.is_available():
+                # GPU Mode: Use 16-bit precision instead of 4-bit quantization.
+                # Qwen 0.5B easily fits in VRAM, and this fixes the merging crash.
+                print("Using CUDA GPU accelerated execution environment...")
+                
+                # Check if your GPU supports modern bfloat16, otherwise fallback to float16
+                compute_dtype = torch.bfloat16 if torch.cuda.is_bf16_supported() else torch.float16
+                
                 base = AutoModelForCausalLM.from_pretrained(
-                    model_path, quantization_config=quantization_config, device_map="auto", cache_dir=HF_CACHE_DIR, token=hf_token
+                    model_path, 
+                    torch_dtype=compute_dtype, 
+                    device_map="auto", 
+                    cache_dir=HF_CACHE_DIR, 
+                    token=hf_token
                 )
             else:
+                # CPU Mode: Explicitly use float32.
+                # Windows CPUs will throw massive precision warnings or errors on float16.
+                print("No CUDA GPU detected. Falling back to native CPU float32 environment...")
                 base = AutoModelForCausalLM.from_pretrained(
-                    model_path, torch_dtype=torch.float32, dtype=torch.float32, device_map={"": "cpu"}, cache_dir=HF_CACHE_DIR, token=hf_token
+                    model_path, 
+                    torch_dtype=torch.float32, 
+                    device_map={"": "cpu"}, 
+                    cache_dir=HF_CACHE_DIR, 
+                    token=hf_token
                 )
         
         if os.path.exists(lora_adapter_path):
-            print(f"🧬 Fusing custom adapter layers natively into base model architecture: {lora_adapter_path}...")
             try:
-                # Wrap it temporarily to capture the delta layers
-                peft_wrapper = PeftModel.from_pretrained(base, lora_adapter_path)
-                # Permanently fold the 2.16 million weights into the baseline arrays and drop the wrapper overhead
-                model = peft_wrapper.merge_and_unload()
-                print("🎯 Model weights consolidated successfully. Running in raw execution mode.")
+                if quantization_config is not None:
+                    # 4-bit layers cannot be merged. Keep the wrapper intact for dynamic runtime math.
+                    print(f"🧬 Loading active runtime adapter path: {lora_adapter_path}...")
+                    model = PeftModel.from_pretrained(base, lora_adapter_path)
+                    print("Active LoRA adapters:", model.active_adapters())
+                else:
+                    # Unquantized tracks (CPU/Mac) can be merged cleanly for a performance boost
+                    print(f"🧬 Fusing custom adapter layers natively into base model architecture: {lora_adapter_path}...")
+                    peft_wrapper = PeftModel.from_pretrained(base, lora_adapter_path)
+                    model = peft_wrapper.merge_and_unload()
+                    print("🎯 Model weights consolidated successfully.")
             except Exception as e:
                 print(f"⚠️ Safe fusion bypassed due to environment constraints: {e}")
                 model = base
@@ -282,7 +305,7 @@ async def generate_text_stream(
         )
 
         messages = [
-            {"role": "system", "content": "Identify the programming language. Respond with only the name."},
+            {"role": "system", "content": "Act like a hot ex girlfriend that wants to get back together real bad"},
             {"role": "user", "content": prompt}
         ]
         
@@ -309,7 +332,7 @@ async def generate_text_stream(
             "input_ids": raw_input_ids,
             "attention_mask": raw_attention_mask,
             "streamer": streamer,
-            "max_new_tokens": 16,
+            "max_new_tokens": 64,
             "temperature": 0.1,
             "top_p": 0.9,
             "do_sample": False

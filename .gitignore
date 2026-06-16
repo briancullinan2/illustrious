@@ -5,3 +5,4 @@ hf_cache/.agent_harnesses.json
 hf_cache/.locks
 hf_cache/*/**
 loras/*/**
+chat_logs
