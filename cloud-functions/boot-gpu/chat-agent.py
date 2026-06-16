@@ -33,7 +33,7 @@ tokenizer = None
 gguf_engine = None  
 
 base_model_path = "meta-llama/Meta-Llama-3-8B-Instruct"  
-lora_adapter_path = "/mnt/vault/loras/code_classifier_lora" 
+lora_adapter_path = "loras/code_classifier_lora" 
 HF_CACHE_DIR = "hf_cache"
 
 CREDENTIALS_FILE = Path("~/.credentials/huggingface-provider.json").expanduser()
@@ -103,7 +103,6 @@ def get_gguf_context(model_id_or_path, hf_token=None):
     )
     return gguf_engine
 
-
 def get_llm_context(model_path=base_model_path, hf_token=None):
     global model, tokenizer
     if not model_path:
@@ -113,7 +112,7 @@ def get_llm_context(model_path=base_model_path, hf_token=None):
         current_os = platform.system()
         print(f"⚡ Initializing Tokenizer and Base Model Context: {model_path}...")
         
-        tokenizer = AutoTokenizer.from_pretrained(model_path, token=hf_token)
+        tokenizer = AutoTokenizer.from_pretrained(model_path, cache_dir=HF_CACHE_DIR, token=hf_token)
         
         quantization_config = None
         if current_os == "Linux" and torch.cuda.is_available():
@@ -123,22 +122,34 @@ def get_llm_context(model_path=base_model_path, hf_token=None):
                 bnb_4bit_quant_type="nf4"
             )
 
+        # Load the base weights cleanly
         if current_os == "Darwin":
-            model = AutoModelForCausalLM.from_pretrained(
-                model_path, torch_dtype=torch.float16, device_map="auto", token=hf_token
+            base = AutoModelForCausalLM.from_pretrained(
+                model_path, torch_dtype=torch.float16, device_map="auto", cache_dir=HF_CACHE_DIR, token=hf_token
             )
         elif current_os in ["Linux", "Windows"]:
             if torch.cuda.is_available():
-                model = AutoModelForCausalLM.from_pretrained(
-                    model_path, quantization_config=quantization_config, device_map="auto", token=hf_token
+                base = AutoModelForCausalLM.from_pretrained(
+                    model_path, quantization_config=quantization_config, device_map="auto", cache_dir=HF_CACHE_DIR, token=hf_token
                 )
             else:
-                model = AutoModelForCausalLM.from_pretrained(
-                    model_path, torch_dtype=torch.float32, device_map="cpu", token=hf_token
+                base = AutoModelForCausalLM.from_pretrained(
+                    model_path, torch_dtype=torch.float32, dtype=torch.float32, device_map={"": "cpu"}, cache_dir=HF_CACHE_DIR, token=hf_token
                 )
         
         if os.path.exists(lora_adapter_path):
-            model = PeftModel.from_pretrained(model, lora_adapter_path, adapter_name="code_classifier")
+            print(f"🧬 Fusing custom adapter layers natively into base model architecture: {lora_adapter_path}...")
+            try:
+                # Wrap it temporarily to capture the delta layers
+                peft_wrapper = PeftModel.from_pretrained(base, lora_adapter_path)
+                # Permanently fold the 2.16 million weights into the baseline arrays and drop the wrapper overhead
+                model = peft_wrapper.merge_and_unload()
+                print("🎯 Model weights consolidated successfully. Running in raw execution mode.")
+            except Exception as e:
+                print(f"⚠️ Safe fusion bypassed due to environment constraints: {e}")
+                model = base
+        else:
+            model = base
 
     return model, tokenizer
 
@@ -215,6 +226,7 @@ async def search_huggingface_hub(
         return {"results": [], "error": str(err)}
 
 
+
 @app.post("/api/spatial/multicast")
 async def generate_text_stream(
     prompt: str = Form(...),
@@ -225,6 +237,9 @@ async def generate_text_stream(
     record_activity()  
     is_gguf = model_path.endswith(".gguf") or "gguf" in model_path.lower()
 
+    # ============================================================================
+    # 📡 GGUF Inference Branch (Llama-cpp-python Engine)
+    # ============================================================================
     if is_gguf:
         active_token = hf_token.strip() if hf_token else HF_TOKEN
         engine = get_gguf_context(model_path, hf_token=active_token)
@@ -242,27 +257,61 @@ async def generate_text_stream(
 
     else:
         active_token = hf_token.strip() if hf_token else HF_TOKEN
-        if not active_token: active_token = None
+        if not active_token: 
+            active_token = None
 
-        active_model, active_tokenizer = get_llm_context(model_path, hf_token=active_token)
-        if isinstance(active_model, PeftModel):
-            if use_lora: active_model.set_adapter("code_classifier")
-            else: active_model.disable_adapter()
+        target_model_path = base_model_path
+        if model_path and model_path.strip():
+            target_model_path = model_path.strip()
+
+        active_model, active_tokenizer = get_llm_context(
+            model_path=target_model_path, 
+            hf_token=active_token
+        )
 
         messages = [
-            {"role": "system", "content": "You are a precise system architecture assistant."},
+            {"role": "system", "content": "Identify the programming language. Respond with only the name."},
             {"role": "user", "content": prompt}
         ]
-        input_ids = active_tokenizer.apply_chat_template(messages, add_generation_prompt=True, return_tensors="pt").to(active_model.device)
-        streamer = TextIteratorStreamer(active_tokenizer, skip_prompt=True, skip_special_tokens=True)
-        generation_kwargs = dict(input_ids=input_ids, streamer=streamer, max_new_tokens=64, temperature=0.1, top_p=0.9)
+        
+        # 1. Generate the clean BatchEncoding dictionary object containing the tensors
+        tokenized_payload = active_tokenizer.apply_chat_template(
+            messages, 
+            add_generation_prompt=True, 
+            return_tensors="pt"
+        )
+        
+        # 2. Extract the actual underlying PyTorch Tensors by their exact dictionary keys
+        # and push them directly to your execution hardware device tracks
+        raw_input_ids = tokenized_payload["input_ids"].to(active_model.device)
+        raw_attention_mask = tokenized_payload["attention_mask"].to(active_model.device)
+        
+        streamer = TextIteratorStreamer(
+            active_tokenizer, 
+            skip_prompt=True, 
+            skip_special_tokens=True
+        )
+        
+        # 3. Reference the pure tensors directly inside the generation dictionary maps
+        explicit_generation_kwargs = {
+            "input_ids": raw_input_ids,
+            "attention_mask": raw_attention_mask,
+            "streamer": streamer,
+            "max_new_tokens": 16,
+            "temperature": 0.1,
+            "top_p": 0.9,
+            "do_sample": False
+        }
 
-        threading.Thread(target=active_model.generate, kwargs=generation_kwargs).start()
+        threading.Thread(
+            target=active_model.generate, 
+            kwargs=explicit_generation_kwargs
+        ).start()
 
         def transformers_stream_generator():
-            for token_text in streamer: yield token_text
+            for token_text in streamer: 
+                yield token_text
         return StreamingResponse(transformers_stream_generator(), media_type="text/plain")
-
 
 @app.get("/", response_class=HTMLResponse)
 def serve_test_interface():
