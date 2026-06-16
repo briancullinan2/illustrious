@@ -480,6 +480,12 @@ header h1 {
     display: none;
 }
 
+
+
+#radio-step-1:checked~#step-1,
+#radio-step-2:checked~#step-2,
+#radio-step-2-5:checked~#step-2-5,
+#radio-step-3:checked~#step-3,
 .step-panel.active {
     display: block;
     animation: fadeIn 0.4s ease-out;
@@ -990,12 +996,14 @@ p {
 }
 
 
+.wizard-container>input[type="radio"],
 #step-1 input[type="radio"] {
     visibility: collapse;
     height: 1px;
     width: 1px;
     opacity: 0;
 }
+
 
 #step-1 label {
     cursor: pointer;

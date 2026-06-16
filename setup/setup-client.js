@@ -214,14 +214,53 @@ async function loadEnvironment() {
 
 
 
+function navigateStep(stepNum, isPoppingState = false) {
+    // 1. Locate and toggle active DOM viewports
+    const targetPanel = document.getElementById(`step-${stepNum}`);
+    if (!targetPanel) {
+        console.warn(`Setup step panel '#step-${stepNum}' was not found in the studio runtime.`);
+        return;
+    }
 
-function navigateStep(stepNum) {
     document.querySelectorAll('.step-panel').forEach(panel => panel.classList.remove('active'));
-    document.getElementById(`step-${stepNum}`).classList.add('active');
+    targetPanel.classList.add('active');
+    const stepRadio = document.querySelector('#radio-step-' + stepNum)
+    if (stepRadio) {
+        stepRadio.checked = true
+    }
+
+    // 2. Compute the dynamic context title string
+    const stepLabel = String(stepNum).replace('-', '.'); // e.g., '2-5' translates cleanly to display as '2.5'
+    const newTitle = `Illustrious Setup Wizard - Step ${stepLabel}`;
+    document.title = newTitle;
+
+    // 3. Update browser address bar and history timeline state matching the path frame
+    const newHash = `#step-${stepNum}`;
+
+    if (!isPoppingState) {
+        // Push a fresh state frame onto the execution stack history record
+        window.history.pushState({ stepNum: stepNum }, newTitle, window.location.pathname + newHash);
+    }
+
+    // 4. Trigger legacy execution blocks matching step 3
     if (stepNum === 3 || stepNum === '3') {
         loadLocalFunctions(null);
     }
 }
+
+// --- Lifecycle Event Handlers ---
+
+// Handle browser Back / Forward navigation loops automatically
+window.addEventListener('popstate', (event) => {
+    if (event.state && event.state.stepNum) {
+        // Hydrate the visual frame matching historical state records without appending fresh state duplicates
+        navigateStep(event.state.stepNum, true);
+    } else if (window.location.hash) {
+        // Fallback parser if state frames are empty but hashes are present during track changes
+        const rawStep = window.location.hash.replace('#step-', '');
+        navigateStep(rawStep, true);
+    }
+});
 
 async function saveCredentials() {
     const clientId = document.getElementById('client-id').value.trim();
@@ -602,6 +641,15 @@ async function initializeLogoGeneratorStatic() {
 
         grid.appendChild(item);
     });
+
+    if (window.location.hash) {
+        // Parse the existing hash directly out of the browser location mapping context
+        const initialStep = window.location.hash.replace('#step-', '');
+        navigateStep(initialStep, false);
+    } else {
+        // Fallback default frame landing target if navigating straight to root without parameters
+        navigateStep(1, false);
+    }
 }
 
 
@@ -722,4 +770,8 @@ async function verifyHostingStatus(e) {
         }, 4000);
     }
 }
+
+
+
+
 
