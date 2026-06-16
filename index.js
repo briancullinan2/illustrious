@@ -12,7 +12,19 @@ let oauth2ClientInstance = null;
 let cachedClientId = null;
 let cachedClientSecret = null;
 
+const session = require('express-session');
 
+// 1. Ensure you have a session middleware to isolate user states
+app.use(session({
+    secret: process.env.SESSION_SECRET || 'fallback-local-dev-secret',
+    resave: false,
+    saveUninitialized: false,
+    cookie: {
+        secure: process.env.NODE_ENV === 'production',
+        httpOnly: true,
+        sameSite: 'lax' // Core protection against CSRF
+    }
+}));
 
 function serveErrorScreen(res, title, description, showSetupButton = true) {
     // FIXED: Corrected closing tags from </button> to </a>
@@ -41,8 +53,8 @@ function serveErrorScreen(res, title, description, showSetupButton = true) {
 }
 
 app.get('/', requireReactiveCredentials, (req, res) => {
-    // Check if memory has dynamic token session allocations loaded
-    if (!req.oauth2Client.credentials || !req.oauth2Client.credentials.access_token) {
+    // Check if this specific request/session has dynamic token allocations loaded
+    if (!req.session.tokens || !req.session.tokens.access_token) {
         return res.redirect('/auth');
     }
 
@@ -79,41 +91,50 @@ function requireReactiveCredentials(req, res, next) {
 
     // If the credentials changed in setup, tear down and hot-swap the OAuth client object
     if (!oauth2ClientInstance || credentials.GCP_CLIENT_ID !== cachedClientId || credentials.GCP_CLIENT_SECRET !== cachedClientSecret) {
-        console.log(`⚡ Hot-swapping active OAuth client to target project: ${credentials.PROJECT_ID}`);
 
-        oauth2ClientInstance = new google.auth.OAuth2(
+        // Instantiate a completely isolated client for this specific request thread
+        const oauth2Client = new google.auth.OAuth2(
             credentials.GCP_CLIENT_ID,
             credentials.GCP_CLIENT_SECRET,
             `http://localhost:${PORT}/oauth2callback`
         );
 
+
         cachedClientId = credentials.GCP_CLIENT_ID;
         cachedClientSecret = credentials.GCP_CLIENT_SECRET;
 
-        // Refresh global authorization default settings context
-        google.options({ auth: oauth2ClientInstance });
+        // If this specific user session already has tokens, inject them into the client
+        if (req.session && req.session.tokens) {
+            oauth2Client.setCredentials(req.session.tokens);
+        }
+
+        // Attach the isolated client directly to the request object
+        req.oauth2Client = oauth2Client;
     }
 
-    // Expose active configuration profiles down the routing stream line
-    req.gcpCredentials = credentials;
-    req.oauth2Client = oauth2ClientInstance;
+    // Fallback or explicit project ID config
+    req.gcpCredentials = {
+        PROJECT_ID: process.env.GCP_PROJECT_ID || 'illustrious-499422'
+    };
+
     next();
-};
+}
 
 
 
-// OAuth Initialization Gateway Link
 app.get('/auth', requireReactiveCredentials, (req, res) => {
     const authUrl = req.oauth2Client.generateAuthUrl({
         access_type: 'offline',
         prompt: 'consent',
         scope: [
             'https://www.googleapis.com/auth/userinfo.profile',
+            'https://www.googleapis.com/auth/userinfo.email',
             //'https://www.googleapis.com/auth/cloud-platform'
         ],
     });
     res.redirect(authUrl);
 });
+
 
 // Secure Callback Handshake Return Target Route
 app.get('/oauth2callback', requireReactiveCredentials, (req, res) => {
@@ -127,7 +148,7 @@ app.get('/oauth2callback', requireReactiveCredentials, (req, res) => {
             return serveErrorScreen(res, "Handshake Verification Collapsed", `Token mapping runtime exception: ${err.message}`, false);
         }
 
-        req.oauth2Client.setCredentials(tokens);
+        req.session.tokens = tokens;
         console.log("🎯 OAuth Access & Refresh tokens successfully locked into active memory frame!");
         res.redirect('/');
     });
@@ -142,7 +163,7 @@ app.get('/oauth2callback', requireReactiveCredentials, (req, res) => {
  */
 app.get('/api/user-profile', requireReactiveCredentials, async (req, res) => {
     try {
-        if (!req.oauth2Client.credentials.access_token) {
+        if (!req.session.tokens.access_token) {
             return res.status(401).json({ error: 'Unauthenticated session profile context.' });
         }
         res.json({ status: 'STUB', project: req.gcpCredentials.PROJECT_ID, message: 'User pipeline ready.' });

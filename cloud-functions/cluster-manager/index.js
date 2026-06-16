@@ -1,4 +1,7 @@
 // cloud-functions/cluster-manager/index.js
+const path = require('path');
+const os = require('os');
+const fs = require('fs');
 const http = require('http');
 const https = require('https');
 
@@ -23,6 +26,7 @@ exports.clusterManager = async (req, res) => {
 
     try {
         const projectId = process.env.GCP_PROJECT_ID || process.env.GCP_PROJECT;
+
         if (!projectId) {
             return res.status(500).json({ status: 'ERROR', error: 'GCP_PROJECT_ID environment variable not set' });
         }
@@ -110,10 +114,35 @@ async function evaluateWorkerPool(computeClient, projectId, zone) {
 }
 
 function getGcpClientOptions(req, projectId) {
-    let options = { project: projectId };
-    if (req.oauth2Client?.credentials?.access_token) {
-        options.authClient = req.oauth2Client;
+    // Correct the parameter to use standard 'projectId' for @google-cloud libraries
+    let options = { projectId: projectId };
+
+    // 1. Resolve path to check inside ~/.credentials/
+    const homeDir = os.homedir();
+
+    // Look for files matching format: ~/.credentials/projectId-*.json or exactly named
+    const credentialsDir = path.join(homeDir, '.credentials');
+    let keyFilePath = null;
+
+    if (fs.existsSync(credentialsDir)) {
+        const files = fs.readdirSync(credentialsDir);
+        // Find a file that begins with the targeted projectId and ends with .json
+        const matchingFile = files.find(file => file.startsWith(projectId) && file.endsWith('.json'));
+        if (matchingFile) {
+            keyFilePath = path.join(credentialsDir, matchingFile);
+        }
     }
+
+    // 2. Conditionally assign the absolute best authentication context
+    if (keyFilePath && fs.existsSync(keyFilePath)) {
+        // High priority local machine configuration link
+        options.keyFilename = keyFilePath;
+        console.log(`🔑 [AUTH ENGINE] Hot-swapped execution layer to keyfile: ${keyFilePath}`);
+    } else if (req.oauth2Client?.credentials?.access_token) {
+        // Fallback to active interactive guest session thread context
+        options.auth = req.oauth2Client;
+    }
+
     return options;
 }
 

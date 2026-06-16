@@ -49,7 +49,7 @@ exports.oauthGateway = async (req, res) => {
         prompt: 'consent',
         scope: [
             'https://www.googleapis.com/auth/userinfo.profile',
-            'https://www.googleapis.com/auth/cloud-platform'
+            //'https://www.googleapis.com/auth/cloud-platform'
         ],
     });
 

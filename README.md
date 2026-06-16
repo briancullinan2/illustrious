@@ -16,6 +16,16 @@ Instead of burning cash on idle compute, this system implements **Zero-to-One Au
 ---
 
 
+## GOALS
+
+1. There is this map set https://lvlworld.com/review/id:1937 that has both a winter and summer version. So i need to make a list of every difference, like one of those eye-for-detail games where you compare two images. Once i have that list, i will build the studio that does each of those things. Using generative neural networks in a cloud-gpu and web workers for the smaller tasks like code edits and model insertions using an LLM in a background worker and customized LORAs. this process gives me a solid scoped path for what tooling to build
+2. Import models dynamically from https://github.com/allenai/objaverse-xl lay them out using a custome spatial LORA that does things like insert a bicyle behind the bench.
+3. Convert quake 3 maps to point clouds, and add horror elements and flashing lights automatically. like the old levels are breaking down from not being maintained and its possible to fall from one world into another world and eventually into the depths of quake 3 hell.
+4. Add BSP, Play Canvas voxel pipeline, and depth based overdraw culling to this example https://sparkjs.dev/examples/splat-painter/index.html
+5. one query to the LLM should completely change a world. need to find a technology for pattern matching and texture generation so ceilings become a texture for use in the vector based (as opposed to gaussian based) world.
+
+
+
 ## WORKING!
 
 That repository is an absolute goldmine for this specific use case. Leveraging Project Euler solutions written across dozens of different languages means you get highly representative, idiomatic structural code blocks solving the exact same algorithmic math problems.

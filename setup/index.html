@@ -89,6 +89,7 @@
                     </label>
                 </div>
 
+
                 <div id="gcloud" class="service">
                     <p>We found the following projects linked to your local gcloud profile. Select the one dedicated to
                         Illustrious:</p>
@@ -97,6 +98,13 @@
                         <span class="text-muted">Missing local Google Cloud environments?</span>
                         <a href="https://cloud.google.com/sdk/docs/install" target="_blank">
                             Get gcloud SDK ↗
+                        </a>
+                    </div>
+
+                    <div class="banner-notice flex-row-between">
+                        <span class="text-muted">Need headless or production server access?</span>
+                        <a href="https://console.cloud.google.com/iam-admin/serviceaccounts" target="_blank">
+                            Create Service Account Key in Console ↗
                         </a>
                     </div>
 
@@ -113,6 +121,14 @@
                         </a>
                     </div>
 
+                    <div class="form-group-container">
+                        <label for="gcloud-provider-path" class="field-label-text">Service Account Credentials Save
+                            Path</label>
+                        <input type="text" id="gcloud-provider-path" name="gcloudProviderPath" class="input-text-field"
+                            placeholder="~/.credentials/gcloud-provider.json"
+                            value="~/.credentials/gcloud-provider.json" />
+                    </div>
+
                     <ul id="project-list" class="custom-list">
                         <li>Loading projects from shell execution...</li>
                     </ul>
@@ -122,6 +138,8 @@
                         <button class="primary" id="next-1" disabled>Select Google Project & Continue</button>
                     </div>
                 </div>
+
+
 
                 <div id="runpod" class="service">
                     <p>Provide your RunPod API credentials to integrate decentralized, bare-metal container clusters
