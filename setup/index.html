@@ -4,6 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <title>Illustrious Setup Wizard</title>
+
     <link rel="stylesheet" href="/main.css" />
 </head>
 
@@ -16,168 +17,684 @@
         </header>
 
         <div id="step-1" class="step-panel active">
-            <h2>Select Your Target Project</h2>
+            <h2>Select Your Cloud Provider</h2>
 
-            <form id="service-select">
-                <input name="cloud-service" id="gcloud-service" type="radio" checked />
-                <input name="cloud-service" id="runpod-service" type="radio" />
-                <input name="cloud-service" id="lambda-service" type="radio" />
-                <input name="cloud-service" id="vast-service" type="radio" />
-                <input name="cloud-service" id="replicate-service" type="radio" />
-                <input name="cloud-service" id="tencent-service" type="radio" />
-                <input name="cloud-service" id="paperspace-service" type="radio" />
-                <input name="cloud-service" id="coreweave-service" type="radio" />
+            <input name="cloud-service" id="gcloud-service" type="radio" checked />
+            <input name="cloud-service" id="runpod-service" type="radio" />
+            <input name="cloud-service" id="aws-service" type="radio" />
+            <input name="cloud-service" id="azure-service" type="radio" />
+            <input name="cloud-service" id="oracle-service" type="radio" />
+            <input name="cloud-service" id="ibm-service" type="radio" />
+            <input name="cloud-service" id="lambda-service" type="radio" />
+            <input name="cloud-service" id="digitalocean-service" type="radio" />
+            <input name="cloud-service" id="vultr-service" type="radio" />
+            <input name="cloud-service" id="vast-service" type="radio" />
+            <input name="cloud-service" id="replicate-service" type="radio" />
+            <input name="cloud-service" id="tencent-service" type="radio" />
+            <input name="cloud-service" id="paperspace-service" type="radio" />
+            <input name="cloud-service" id="coreweave-service" type="radio" />
 
-                <div class="scroll-grid-box">
-                    <label for="gcloud-service" class="vm-instance-card">
-                        <div class="vm-card-header">
-                            <span class="vm-card-name">Google Cloud (GCP)</span>
-                            <span class="vm-card-badge state-active">CONNECTED</span>
-                        </div>
-                        <div class="vm-card-detail">Compute Engine // T4, L4, A100 Allocations</div>
-                    </label>
-                    <label for="runpod-service" class="vm-instance-card">
-                        <div class="vm-card-header">
-                            <span class="vm-card-name">RunPod IO</span>
-                            <span class="vm-card-badge state-staging">AVAILABLE</span>
-                        </div>
-                        <div class="vm-card-detail">Serverless Containers & Dedicated Pod Silicon</div>
-                    </label>
-                    <label for="lambda-service" class="vm-instance-card">
-                        <div class="vm-card-header">
-                            <span class="vm-card-name">Lambda Labs</span>
-                            <span class="vm-card-badge state-staging">AVAILABLE</span>
-                        </div>
-                        <div class="vm-card-detail">High-Performance NVIDIA H100 GPU Clusters</div>
-                    </label>
-                    <label for="vast-service" class="vm-instance-card">
-                        <div class="vm-card-header">
-                            <span class="vm-card-name">Vast AI</span>
-                            <span class="vm-card-badge state-staging">AVAILABLE</span>
-                        </div>
-                        <div class="vm-card-detail">Decentralized P2P Bare-Metal Hardware Rental</div>
-                    </label>
-                    <label for="replicate-service" class="vm-instance-card">
-                        <div class="vm-card-header">
-                            <span class="vm-card-name">Replicate</span>
-                            <span class="vm-card-badge state-staging">AVAILABLE</span>
-                        </div>
-                        <div class="vm-card-detail">Serverless API Execution // Direct Inference Handshakes</div>
-                    </label>
-                    <label for="tencent-service" class="vm-instance-card">
-                        <div class="vm-card-header">
-                            <span class="vm-card-name">Tencent Cloud</span>
-                            <span class="vm-card-badge state-staging">AVAILABLE</span>
-                        </div>
-                        <div class="vm-card-detail">Elastic GPU Compute // Global AI Scaling Cells</div>
-                    </label>
-                    <label for="paperspace-service" class="vm-instance-card">
-                        <div class="vm-card-header">
-                            <span class="vm-card-name">Paperspace Core</span>
-                            <span class="vm-card-badge state-staging">AVAILABLE</span>
-                        </div>
-                        <div class="vm-card-detail">Dedicated Dev Machines // Persistent Linux GPU Desktop Backends
-                        </div>
-                    </label>
-                    <label for="coreweave-service" class="vm-instance-card">
-                        <div class="vm-card-header">
-                            <span class="vm-card-name">CoreWeave</span>
-                            <span class="vm-card-badge state-staging">AVAILABLE</span>
-                        </div>
-                        <div class="vm-card-detail">Enterprise Bare-Metal Inf // InfiniBand Interconnected Clusters
-                        </div>
-                    </label>
+
+            <div class="scroll-grid-box">
+                <label for="gcloud-service" class="vm-instance-card">
+                    <div class="vm-card-header">
+                        <span class="vm-card-name">
+                            <i class="bxl bx-google"></i>
+                            Google Cloud (GCP)
+                        </span>
+                        <span class="vm-card-badge state-active">CONNECTED</span>
+                    </div>
+                    <div class="vm-card-detail">Compute Engine // T4, L4, A100 Allocations</div>
+                </label>
+
+                <label for="aws-service" class="vm-instance-card">
+                    <div class="vm-card-header">
+                        <span class="vm-card-name">
+                            <i class="bxl bx-amazon"></i>
+                            Amazon Web Services
+                        </span>
+                        <span class="vm-card-badge state-staging">AVAILABLE</span>
+                    </div>
+                    <div class="vm-card-detail">EC2 UltraClusters // P4/P5 Instances & Trainium Silicon</div>
+                </label>
+
+                <label for="azure-service" class="vm-instance-card">
+                    <div class="vm-card-header">
+                        <span class="vm-card-name">
+                            <i class="bxl bx-microsoft"></i>
+                            Microsoft Azure
+                        </span>
+                        <span class="vm-card-badge state-staging">AVAILABLE</span>
+                    </div>
+                    <div class="vm-card-detail">NDv5 Series // InfiniBand Coupled NVIDIA H100 Infrastructure</div>
+                </label>
+
+                <label for="oracle-service" class="vm-instance-card">
+                    <div class="vm-card-header">
+                        <span class="vm-card-name">
+                            <i class="bx bx-cylinder"></i>
+                            Oracle Cloud (OCI)
+                        </span>
+                        <span class="vm-card-badge state-staging">AVAILABLE</span>
+                    </div>
+                    <div class="vm-card-detail">Bare Metal Compute // Dedicated Supercluster FastConnect Nodes</div>
+                </label>
+
+                <label for="ibm-service" class="vm-instance-card">
+                    <div class="vm-card-header">
+                        <span class="vm-card-name">
+                            <i class="bxl bx-meta"></i>
+                            IBM Cloud
+                        </span>
+                        <span class="vm-card-badge state-staging">AVAILABLE</span>
+                    </div>
+                    <div class="vm-card-detail">VPC Bare Metal // Next-Gen NVIDIA Tensor Core Accelerators</div>
+                </label>
+
+                <label for="runpod-service" class="vm-instance-card">
+                    <div class="vm-card-header">
+                        <span class="vm-card-name">
+                            <i class="bx bx-cube-alt"></i>
+                            RunPod IO
+                        </span>
+                        <span class="vm-card-badge state-staging">AVAILABLE</span>
+                    </div>
+                    <div class="vm-card-detail">Serverless Containers & Dedicated Pod Silicon</div>
+                </label>
+
+                <label for="lambda-service" class="vm-instance-card">
+                    <div class="vm-card-header">
+                        <span class="vm-card-name">
+                            <i class="bx bx-chip"></i>
+                            Lambda Labs
+                        </span>
+                        <span class="vm-card-badge state-staging">AVAILABLE</span>
+                    </div>
+                    <div class="vm-card-detail">High-Performance NVIDIA H100 GPU Clusters</div>
+                </label>
+
+                <label for="digitalocean-service" class="vm-instance-card">
+                    <div class="vm-card-header">
+                        <span class="vm-card-name">
+                            <i class="bxl bx-digitalocean"></i>
+                            DigitalOcean
+                        </span>
+                        <span class="vm-card-badge state-staging">AVAILABLE</span>
+                    </div>
+                    <div class="vm-card-detail">Paperspace Integration // Scalable GPU Droplet Nodes</div>
+                </label>
+
+                <label for="vultr-service" class="vm-instance-card">
+                    <div class="vm-card-header">
+                        <span class="vm-card-name">
+                            <i class="bx bx-server"></i>
+                            Vultr
+                        </span>
+                        <span class="vm-card-badge state-staging">AVAILABLE</span>
+                    </div>
+                    <div class="vm-card-detail">Cloud GPU Compute // On-Demand NVIDIA GH200 Grace Hopper</div>
+                </label>
+
+                <label for="vast-service" class="vm-instance-card">
+                    <div class="vm-card-header">
+                        <span class="vm-card-name">
+                            <i class="bx bx-network-chart"></i>
+                            Vast AI
+                        </span>
+                        <span class="vm-card-badge state-staging">AVAILABLE</span>
+                    </div>
+                    <div class="vm-card-detail">Decentralized P2P Bare-Metal Hardware Rental</div>
+                </label>
+
+                <label for="replicate-service" class="vm-instance-card">
+                    <div class="vm-card-header">
+                        <span class="vm-card-name">
+                            <i class="bx bx-terminal"></i>
+                            Replicate
+                        </span>
+                        <span class="vm-card-badge state-staging">AVAILABLE</span>
+                    </div>
+                    <div class="vm-card-detail">Serverless API Execution // Direct Inference Handshakes</div>
+                </label>
+
+                <label for="tencent-service" class="vm-instance-card">
+                    <div class="vm-card-header">
+                        <span class="vm-card-name">
+                            <i class="bx bx-globe"></i>
+                            Tencent Cloud
+                        </span>
+                        <span class="vm-card-badge state-staging">AVAILABLE</span>
+                    </div>
+                    <div class="vm-card-detail">Elastic GPU Compute // Global AI Scaling Cells</div>
+                </label>
+
+                <label for="coreweave-service" class="vm-instance-card">
+                    <div class="vm-card-header">
+                        <span class="vm-card-name">
+                            <i class="bx bx-grid"></i>
+                            CoreWeave
+                        </span>
+                        <span class="vm-card-badge state-staging">AVAILABLE</span>
+                    </div>
+                    <div class="vm-card-detail">Enterprise Bare-Metal Inf // InfiniBand Interconnected Clusters
+                    </div>
+                </label>
+            </div>
+
+
+            <div id="gcloud-container" class="service">
+                <p>We found the following projects linked to your local gcloud profile. Select the one dedicated to
+                    Illustrious:</p>
+
+                <div class="banner-notice flex-row-between">
+                    <span class="text-muted">Missing local Google Cloud environments?</span>
+                    <a href="https://cloud.google.com/sdk/docs/install" target="_blank">
+                        Get gcloud SDK ↗
+                    </a>
                 </div>
 
+                <div class="banner-notice flex-row-between">
+                    <span class="text-muted">Need headless or production server access?</span>
+                    <a href="https://console.cloud.google.com/iam-admin/serviceaccounts" target="_blank">
+                        Create Service Account Key in Console ↗
+                    </a>
+                </div>
 
-                <div id="gcloud" class="service">
-                    <p>We found the following projects linked to your local gcloud profile. Select the one dedicated to
-                        Illustrious:</p>
+                <div class="banner-card-dark">
+                    <span class="warning-label-caps">⚠️ Resource Quota Check Required:</span>
+                    <p class="margin-bottom-xs">New Compute Engine projects are strictly limited to **0 GPUs** by
+                        default.
+                        Ensure your target workspace has approved allocations for `NVIDIA_T4_GPUS` or general
+                        regional
+                        allocations before spinning up worker compute pipelines.</p>
+                    <a href="https://console.cloud.google.com/iam-admin/quotas" target="_blank" class="vm-worker-link">
+                        Adjust Account Quotas Console ↗
+                    </a>
+                </div>
 
-                    <div class="banner-notice flex-row-between">
-                        <span class="text-muted">Missing local Google Cloud environments?</span>
-                        <a href="https://cloud.google.com/sdk/docs/install" target="_blank">
-                            Get gcloud SDK ↗
-                        </a>
-                    </div>
+                <form id="google-projectselect">
 
-                    <div class="banner-notice flex-row-between">
-                        <span class="text-muted">Need headless or production server access?</span>
-                        <a href="https://console.cloud.google.com/iam-admin/serviceaccounts" target="_blank">
-                            Create Service Account Key in Console ↗
-                        </a>
-                    </div>
+                    <label class="field-label-caps">Default Virtualize Region:</label>
+                    <select id="gcloud-region">
+                        <option value="">-- Enumerating Google Regions --</option>
+                    </select>
 
-                    <div class="banner-card-dark">
-                        <span class="warning-label-caps">⚠️ Resource Quota Check Required:</span>
-                        <p class="margin-bottom-xs">New Compute Engine projects are strictly limited to **0 GPUs** by
-                            default.
-                            Ensure your target workspace has approved allocations for `NVIDIA_T4_GPUS` or general
-                            regional
-                            allocations before spinning up worker compute pipelines.</p>
-                        <a href="https://console.cloud.google.com/iam-admin/quotas" target="_blank"
-                            class="vm-worker-link">
-                            Adjust Account Quotas Console ↗
-                        </a>
-                    </div>
-
-                    <div class="form-group-container">
-                        <label for="gcloud-provider-path" class="field-label-text">Service Account Credentials Save
-                            Path</label>
-                        <input type="text" id="gcloud-provider-path" name="gcloudProviderPath" class="input-text-field"
-                            placeholder="~/.credentials/gcloud-provider.json"
-                            value="~/.credentials/gcloud-provider.json" />
-                    </div>
+                    <h2 class="field-label-caps">Select Your Target Project</h2>
 
                     <ul id="project-list" class="custom-list">
                         <li>Loading projects from shell execution...</li>
                     </ul>
 
-                    <div class="btn-row">
-                        <div></div>
-                        <button class="primary" id="next-1" disabled>Select Google Project & Continue</button>
-                    </div>
+                </form>
+                <div class="btn-row">
+                    <div></div>
+                    <button class="primary" id="next-1" disabled>Select Google Project & Continue</button>
+                </div>
+            </div>
+
+
+
+            <div id="runpod-container" class="service">
+                <p>Provide your RunPod API credentials to integrate decentralized, bare-metal container clusters
+                    straight into the Illustrious Spatial pipeline.</p>
+
+                <div class="banner-notice flex-row-between">
+                    <span class="text-muted">Need a fresh developer access key?</span>
+                    <a href="https://console.runpod.io/user/settings" target="_blank">
+                        Get RunPod API Key ↗
+                    </a>
                 </div>
 
-
-
-                <div id="runpod" class="service">
-                    <p>Provide your RunPod API credentials to integrate decentralized, bare-metal container clusters
-                        straight into the Illustrious Spatial pipeline.</p>
-
-                    <div class="banner-notice flex-row-between">
-                        <span class="text-muted">Need a fresh developer access key?</span>
-                        <a href="https://console.runpod.io/user/settings" target="_blank">
-                            Get RunPod API Key ↗
-                        </a>
-                    </div>
-
-                    <div class="banner-card-dark">
-                        <span class="warning-label-caps">⚠️ Wallet Balance Check Required:</span>
-                        <p class="margin-bottom-xs">RunPod instances operate entirely via prepaid community billing
-                            credits. If your account balance drops to **$0.00**, all active background serverless
-                            containers and persistent spot pods will be dropped instantly via resource reclamation.</p>
-                        <a href="https://www.runpod.io/console/billing" target="_blank" class="vm-worker-link">
-                            Top Up RunPod Wallet Balance ↗
-                        </a>
-                    </div>
-
-                    <form id="runpod-credentials">
-                        <label class="field-label-caps">API Secret Auth Key:</label>
-                        <input type="password" autocomplete="off" id="runpod-api-key"
-                            placeholder="rpi_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx" class="margin-bottom-xs">
-
-                        <label class="field-label-caps">Target Serverless Endpoint ID (Optional):</label>
-                        <input type="text" id="runpod-endpoint-id"
-                            placeholder="Enter endpoint identifier hash if leveraging cold-start worker pools">
-                    </form>
-
-                    <div class="btn-row">
-                        <div></div>
-                        <button class="primary" id="runpod-next">Save & Authenticate Pod Horizon</button>
-                    </div>
+                <div class="banner-card-dark">
+                    <span class="warning-label-caps">⚠️ Wallet Balance Check Required:</span>
+                    <p class="margin-bottom-xs">RunPod instances operate entirely via prepaid community billing
+                        credits. If your account balance drops to **$0.00**, all active background serverless
+                        containers and persistent spot pods will be dropped instantly via resource reclamation.</p>
+                    <a href="https://www.runpod.io/console/billing" target="_blank" class="vm-worker-link">
+                        Top Up RunPod Wallet Balance ↗
+                    </a>
                 </div>
-            </form>
+
+                <form id="runpod-credentials">
+                    <label class="field-label-caps">API Secret Auth Key:</label>
+                    <input type="password" autocomplete="off" id="runpod-api-key"
+                        placeholder="rpi_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx" class="margin-bottom-xs">
+
+                    <label class="field-label-caps">Target Serverless Endpoint ID (Optional):</label>
+                    <input type="text" id="runpod-endpoint-id"
+                        placeholder="Enter endpoint identifier hash if leveraging cold-start worker pools">
+
+
+                    <label class="field-label-caps">Default Virtualize Region:</label>
+                    <select id="runpod-region">
+                        <option value="">-- Enumerating RunPod Regions --</option>
+                    </select>
+
+                </form>
+
+                <div class="btn-row">
+                    <div></div>
+                    <button class="primary" id="runpod-next">Save & Authenticate Pod Horizon</button>
+                </div>
+            </div>
+
+
+            <div id="aws-container" class="service">
+                <p>Connect your Amazon Web Services instance profile to orchestrate EC2 UltraClusters, P4/P5 compute
+                    instances, or custom Trainium network nodes.</p>
+
+                <div class="banner-notice flex-row-between">
+                    <span class="text-muted">Need a set of access keys from IAM?</span>
+                    <a href="https://us-east-1.console.aws.amazon.com/iamv2/home#/users" target="_blank">
+                        Open AWS IAM Management Console ↗
+                    </a>
+                </div>
+
+                <div class="banner-card-dark">
+                    <span class="warning-label-caps">⚠️ Region & Spot Limit Notice:</span>
+                    <p class="margin-bottom-xs">Ensure your IAM user has explicit ec2:RunInstances permissions. GPU
+                        resource allocation availability is heavily throttled based on regional Service Quotas for
+                        "All P Spot Instance Requests".</p>
+                    <a href="https://console.aws.amazon.com/servicequotas/home" target="_blank" class="vm-worker-link">
+                        Verify AWS Service Quotas ↗
+                    </a>
+                </div>
+
+                <form id="aws-credentials">
+                    <label class="field-label-caps">AWS Access Key ID:</label>
+                    <input type="text" id="aws-access-key" placeholder="AKIAIOSFODNN7EXAMPLE" class="margin-bottom-xs">
+
+                    <label class="field-label-caps">AWS Secret Access Key:</label>
+                    <input type="password" autocomplete="off" id="aws-secret-key"
+                        placeholder="wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY" class="margin-bottom-xs">
+
+                    <label class="field-label-caps">Target Provisioning Zone / Region:</label>
+                    <select id="aws-region" class="margin-bottom-xs">
+                        <option value="">-- Awaiting API Validation Stream --</option>
+                        <option value="us-east-1">us-east-1 (N. Virginia)</option>
+                        <option value="us-west-2">us-west-2 (Oregon)</option>
+                        <option value="eu-west-1">eu-west-1 (Ireland)</option>
+                    </select>
+                </form>
+
+                <div class="btn-row">
+                    <div></div>
+                    <button class="primary" id="aws-next">Save & Authenticate AWS Cluster</button>
+                </div>
+            </div>
+
+            <div id="azure-container" class="service">
+                <p>Integrate Microsoft Azure infrastructure to scale high-performance NDv5 series clusters
+                    interconnected natively via InfiniBand fabrics.</p>
+
+                <div class="banner-notice flex-row-between">
+                    <span class="text-muted">Register an app to obtain service credentials:</span>
+                    <a href="https://portal.azure.com/#view/Microsoft_AAD_RegisteredApps/ApplicationsListBlade"
+                        target="_blank">
+                        Open Azure App Registrations ↗
+                    </a>
+                </div>
+
+                <div class="banner-card-dark">
+                    <span class="warning-label-caps">⚠️ Enterprise Core Allocation Caps:</span>
+                    <p class="margin-bottom-xs">Azure generation-5 instances require explicit N-series core
+                        allocation assignments within your subscription boundaries before network sockets can
+                        successfully initialize.</p>
+                    <a href="https://portal.azure.com/#blade/Microsoft_Azure_Capacity/QuotaMenuBlade/overview"
+                        target="_blank" class="vm-worker-link">
+                        Inspect Azure Capacity Quotas ↗
+                    </a>
+                </div>
+
+                <form id="azure-credentials">
+                    <label class="field-label-caps">Subscription ID:</label>
+                    <input type="text" id="azure-subscription-id" placeholder="00000000-0000-0000-0000-000000000000"
+                        class="margin-bottom-xs">
+
+                    <label class="field-label-caps">Tenant (Directory) ID:</label>
+                    <input type="text" id="azure-tenant-id" placeholder="00000000-0000-0000-0000-000000000000"
+                        class="margin-bottom-xs">
+
+                    <label class="field-label-caps">Client (Application) ID:</label>
+                    <input type="text" id="azure-client-id" placeholder="00000000-0000-0000-0000-000000000000"
+                        class="margin-bottom-xs">
+
+                    <label class="field-label-caps">Client Secret Key Value:</label>
+                    <input type="password" autocomplete="off" id="azure-client-secret"
+                        placeholder="Enter service principal secret string" class="margin-bottom-xs">
+
+                    <label class="field-label-caps">Target Resource Group:</label>
+                    <select id="azure-resource-group" class="margin-bottom-xs">
+                        <option value="">-- Querying Subscription Registries... --</option>
+                    </select>
+                </form>
+
+                <div class="btn-row">
+                    <div></div>
+                    <button class="primary" id="azure-next">Link Azure Cloud Framework</button>
+                </div>
+            </div>
+
+            <div id="oracle-container" class="service">
+                <p>Provision Bare Metal GPU shapes inside Oracle Cloud Infrastructure (OCI) leveraging isolated
+                    virtual cloud network boundary segments.</p>
+
+                <div class="banner-notice flex-row-between">
+                    <span class="text-muted">Retrieve tenancy coordinates and API key pairings:</span>
+                    <a href="https://cloud.oracle.com/identity/users" target="_blank">
+                        Access OCI User Settings Console ↗
+                    </a>
+                </div>
+
+                <form id="oracle-credentials">
+                    <label class="field-label-caps">Tenancy OCID:</label>
+                    <input type="text" id="oracle-tenancy-ocid" placeholder="ocid1.tenancy.oc1..xxxxxx"
+                        class="margin-bottom-xs">
+
+                    <label class="field-label-caps">User OCID:</label>
+                    <input type="text" id="oracle-user-ocid" placeholder="ocid1.user.oc1..xxxxxx"
+                        class="margin-bottom-xs">
+
+                    <label class="field-label-caps">API Private Key Contents (PEM):</label>
+                    <textarea id="oracle-private-key" placeholder="-----BEGIN RSA PRIVATE KEY-----&#10;..."
+                        class="margin-bottom-xs"></textarea>
+
+                    <label class="field-label-caps">Fingerprint String:</label>
+                    <input type="text" id="oracle-fingerprint"
+                        placeholder="aa:bb:cc:dd:ee:ff:11:22:33:44:55:66:77:88:99:00" class="margin-bottom-xs">
+
+                    <label class="field-label-caps">Compartment Assignment Boundary:</label>
+                    <select id="oracle-compartment">
+                        <option value="">-- Fetching Tenancy Compartment Tree --</option>
+                    </select>
+                </form>
+
+                <div class="btn-row">
+                    <div></div>
+                    <button class="primary" id="oracle-next">Register OCI Compute Engine</button>
+                </div>
+            </div>
+
+            <div id="ibm-container" class="service">
+                <p>Bind enterprise-tier IBM Cloud VPC backends to mount specialized bare metal architectures or
+                    secure VSI cluster slices.</p>
+
+                <div class="banner-notice flex-row-between">
+                    <span class="text-muted">Generate a dedicated infrastructure access token:</span>
+                    <a href="https://cloud.ibm.com/iam/apikeys" target="_blank">
+                        Manage IBM Cloud API Keys ↗
+                    </a>
+                </div>
+
+                <form id="ibm-credentials">
+                    <label class="field-label-caps">IBM Cloud Platform API Key:</label>
+                    <input type="password" autocomplete="off" id="ibm-api-key"
+                        placeholder="System-generated alpha-numeric token string" class="margin-bottom-xs">
+
+                    <label class="field-label-caps">Resource Group ID:</label>
+                    <input type="text" id="ibm-resource-group" placeholder="Default resource cluster token hex mapping"
+                        class="margin-bottom-xs">
+
+                    <label class="field-label-caps">Target Data Center Zone:</label>
+                    <select id="ibm-zone">
+                        <option value="">-- Awaiting Global IAM Authentication --</option>
+                    </select>
+                </form>
+
+                <div class="btn-row">
+                    <div></div>
+                    <button class="primary" id="ibm-next">Validate IBM Cluster Array</button>
+                </div>
+            </div>
+
+            <div id="lambda-container" class="service">
+                <p>Directly scale workloads across high-performance NVIDIA H100 and A100 GPU systems managed by
+                    Lambda Labs.</p>
+
+                <div class="banner-notice flex-row-between">
+                    <span class="text-muted">Acquire an API processing key:</span>
+                    <a href="https://cloud.lambdalabs.com/api-keys" target="_blank">
+                        Get Lambda Labs Secret Keys ↗
+                    </a>
+                </div>
+
+                <div class="banner-card-dark">
+                    <span class="warning-label-caps">⚠️ On-Demand Availability Constraints:</span>
+                    <p class="margin-bottom-xs">Instance provisioning requests are subject to strict data center
+                        floor stock capacity availability. Always pair code states to retry structures on request
+                        block failures.</p>
+                </div>
+
+                <form id="lambda-credentials">
+                    <label class="field-label-caps">Lambda API Secret Token Key:</label>
+                    <input type="password" autocomplete="off" id="lambda-api-key"
+                        placeholder="secret_live_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx" class="margin-bottom-xs">
+
+                    <label class="field-label-caps">Target Deploy Region Node:</label>
+                    <select id="lambda-region">
+                        <option value="">-- Loading Regional Real Estate Feeds --</option>
+                        <option value="us-east-1">us-east-1 (Virginia)</option>
+                        <option value="us-west-1">us-west-1 (California)</option>
+                        <option value="eu-west-1">eu-west-1 (Germany)</option>
+                    </select>
+                </form>
+
+                <div class="btn-row">
+                    <div></div>
+                    <button class="primary" id="lambda-next">Lock Lambda Core Session</button>
+                </div>
+            </div>
+
+            <div id="digitalocean-container" class="service">
+                <p>Integrate specialized high-compute GPU instances directly into Droplet scaling arrays via merged
+                    Paperspace pipelines.</p>
+
+                <div class="banner-notice flex-row-between">
+                    <span class="text-muted">Acquire a DigitalOcean token:</span>
+                    <a href="https://cloud.digitalocean.com/account/api/tokens" target="_blank">
+                        Generate Personal Access Token ↗
+                    </a>
+                </div>
+
+                <form id="digitalocean-credentials">
+                    <label class="field-label-caps">Bearer API Token Key (Read/Write):</label>
+                    <input type="password" autocomplete="off" id="do-api-key"
+                        placeholder="dop_v1_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx" class="margin-bottom-xs">
+
+                    <label class="field-label-caps">Project Link Association:</label>
+                    <select id="do-project-id">
+                        <option value="">-- Dynamic Extraction On Key Entry --</option>
+                    </select>
+                </form>
+
+                <div class="btn-row">
+                    <div></div>
+                    <button class="primary" id="digitalocean-next">Connect Droplet Fabric</button>
+                </div>
+            </div>
+
+            <div id="vultr-container" class="service">
+                <p>Provision cloud-side hardware pipelines using Vultr Cloud GPU slices ranging up to NVIDIA GH200
+                    Grace Hopper platforms.</p>
+
+                <div class="banner-notice flex-row-between">
+                    <span class="text-muted">Locate your account authentication details:</span>
+                    <a href="https://my.vultr.com/settings/#settingsapi" target="_blank">
+                        Access Vultr Developer API Center ↗
+                    </a>
+                </div>
+
+                <form id="vultr-credentials">
+                    <label class="field-label-caps">Vultr API Secret Token String:</label>
+                    <input type="password" autocomplete="off" id="vultr-api-key"
+                        placeholder="XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX" class="margin-bottom-xs">
+
+                    <label class="field-label-caps">Target Data Center Server Location:</label>
+                    <select id="vultr-location">
+                        <option value="">-- Running Cloud Endpoint Ping Hooks --</option>
+                    </select>
+                </form>
+
+                <div class="btn-row">
+                    <div></div>
+                    <button class="primary" id="vultr-next">Establish Vultr Array Stream</button>
+                </div>
+            </div>
+
+            <div id="vast-container" class="service">
+                <p>Leverage peer-to-peer decentralized networks via Vast AI raw hardware brokerage machines.</p>
+
+                <div class="banner-notice flex-row-between">
+                    <span class="text-muted">Locate your cluster access hashes:</span>
+                    <a href="https://vast.ai/console/cli" target="_blank">
+                        Extract Vast AI Access Token String ↗
+                    </a>
+                </div>
+
+                <div class="banner-card-dark">
+                    <span class="warning-label-caps">⚠️ Security Guardrail Advisory:</span>
+                    <p class="margin-bottom-xs">Vast AI leverages decentralized architectures. Ensure disk volume
+                        images target encrypted configurations if hosting highly confidential or proprietary
+                        weights.</p>
+                </div>
+
+                <form id="vast-credentials">
+                    <label class="field-label-caps">Vast AI CLI Access Token Key:</label>
+                    <input type="password" autocomplete="off" id="vast-api-key"
+                        placeholder="Enter hex code key parameter value string" class="margin-bottom-xs">
+                </form>
+
+                <div class="btn-row">
+                    <div></div>
+                    <button class="primary" id="vast-next">Bind Decentralized Machine Nodes</button>
+                </div>
+            </div>
+
+            <div id="replicate-container" class="service">
+                <p>Perform serverless API execution loops over containerized endpoints without managing complex VM
+                    orchestration layers.</p>
+
+                <div class="banner-notice flex-row-between">
+                    <span class="text-muted">Retrieve your authentication API string:</span>
+                    <a href="https://replicate.com/account/api-tokens" target="_blank">
+                        Extract Replicate Token Handshake ↗
+                    </a>
+                </div>
+
+                <form id="replicate-credentials">
+                    <label class="field-label-caps">Replicate API Token Key:</label>
+                    <input type="password" autocomplete="off" id="replicate-api-key"
+                        placeholder="r8_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx" class="margin-bottom-xs">
+                </form>
+
+                <div class="btn-row">
+                    <div></div>
+                    <button class="primary" id="replicate-next">Initialize Replicate Tunnel</button>
+                </div>
+            </div>
+
+            <div id="tencent-container" class="service">
+                <p>Deploy specialized global AI workloads using Tencent Cloud Elastic GPU compute nodes.</p>
+
+                <div class="banner-notice flex-row-between">
+                    <span class="text-muted">Retrieve root API identity parameters:</span>
+                    <a href="https://console.cloud.tencent.com/cam/capi" target="_blank">
+                        Manage Tencent API Secret Keys ↗
+                    </a>
+                </div>
+
+                <form id="tencent-credentials">
+                    <label class="field-label-caps">Secret ID String:</label>
+                    <input type="text" id="tencent-secret-id" placeholder="AKIDxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+                        class="margin-bottom-xs">
+
+                    <label class="field-label-caps">Secret Key String:</label>
+                    <input type="password" autocomplete="off" id="tencent-secret-key"
+                        placeholder="xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx" class="margin-bottom-xs">
+
+                    <label class="field-label-caps">Target Placement Zone Region:</label>
+                    <select id="tencent-region">
+                        <option value="">-- Querying Regional Telecom Infrastructure --</option>
+                    </select>
+                </form>
+
+                <div class="btn-row">
+                    <div></div>
+                    <button class="primary" id="tencent-next">Bind Tencent Cell Mesh</button>
+                </div>
+            </div>
+
+            <div id="paperspace-container" class="service">
+                <p>Mount high-performance persistent visual Linux desktops and low-overhead developer workspace
+                    machines.</p>
+
+                <div class="banner-notice flex-row-between">
+                    <span class="text-muted">Retrieve a persistent access handshake:</span>
+                    <a href="https://console.paperspace.com/account/api" target="_blank">
+                        Generate Paperspace API Keys ↗
+                    </a>
+                </div>
+
+                <form id="paperspace-credentials">
+                    <label class="field-label-caps">API User Key Secret String:</label>
+                    <input type="password" autocomplete="off" id="paperspace-api-key"
+                        placeholder="ps_v1_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx" class="margin-bottom-xs">
+
+                    <label class="field-label-caps">Active Workspace / Team Tenant ID:</label>
+                    <input type="text" id="paperspace-project-id"
+                        placeholder="Enter specific project container ID string assignment">
+                </form>
+
+                <div class="btn-row">
+                    <div></div>
+                    <button class="primary" id="paperspace-next">Anchor Paperspace Horizon</button>
+                </div>
+            </div>
+
+            <div id="coreweave-container" class="service">
+                <p>Orchestrate absolute bare-metal massive scale clusters over multi-tenant Kubernetes networks
+                    running over high-speed InfiniBand links.</p>
+
+                <div class="banner-notice flex-row-between">
+                    <span class="text-muted">Extract your internal infrastructure token configurations:</span>
+                    <a href="https://apps.coreweave.com/cloud/api-keys" target="_blank">
+                        Open CoreWeave Cloud API Portal ↗
+                    </a>
+                </div>
+
+                <form id="coreweave-credentials">
+                    <label class="field-label-caps">CoreWeave Master API Token Secret Key:</label>
+                    <input type="password" autocomplete="off" id="coreweave-api-key"
+                        placeholder="cw_secret_v1_xxxxxxxxxxxxxxxxxxxxxxxxxxxx" class="margin-bottom-xs">
+
+                    <label class="field-label-caps">Kubernetes Namespace Context Allocation:</label>
+                    <input type="text" id="coreweave-namespace" placeholder="tenant-space-identifier-hash"
+                        class="margin-bottom-xs">
+
+                    <label class="field-label-caps">Deploy Hardware Target Zone Area:</label>
+                    <select id="coreweave-region">
+                        <option value="">-- Awaiting Connection Authorization --</option>
+                        <option value="ord1">ORD1 (Chicago, IL)</option>
+                        <option value="las1">LAS1 (Las Vegas, NV)</option>
+                        <option value="lga1">LGA1 (New York, NY)</option>
+                    </select>
+                </form>
+
+                <div class="btn-row">
+                    <div></div>
+                    <button class="primary" id="coreweave-next">Authorize CoreWeave K8s Grid</button>
+                </div>
+            </div>
+
+
+
+            <div class="form-group-container">
+                <label for="gcloud-provider-path" class="field-label-text">
+                    Service Account Credentials Save Path</label>
+                <input type="text" id="gcloud-provider-path" name="gcloudProviderPath" class="input-text-field"
+                    placeholder="~/.credentials/gcloud-provider.json" value="~/.credentials/gcloud-provider.json" />
+            </div>
+
 
         </div>
 
@@ -275,7 +792,7 @@
 
     </div>
 
-    <script src="/setup-client.js"></script>
+    <script src="/setup/setup-client.js" defer></script>
 </body>
 
 </html>

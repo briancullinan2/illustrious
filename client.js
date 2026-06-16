@@ -1,4 +1,4 @@
-// index-client.js
+
 
 let projectConfig = {
     REGION: 'us-central1'
@@ -75,11 +75,6 @@ function testAndRedirect() {
     window.location.href = 'http://localhost:4000/auth';
 }
 
-// index-client.js
-
-// 👉 CONFIGURATION BOUNDARY: Swap this with your public deployed Cloud Function URI
-
-
 
 let activeWorkerEndpoint = null;
 let clusterPollInterval = null;
@@ -118,16 +113,16 @@ async function syncClusterHardware() {
     try {
         console.log("🔄 [CLIENT TELEMETRY] Pinging cluster manager control layer...");
         const CLUSTER_MANAGER_URL = window.projectConfig?.ACTIVE_PROJECT_ID
-            ? `https://${projectConfig.REGION}-${projectConfig.ACTIVE_PROJECT_ID}.cloudfunctions.net/clusterManager?t=${Date.now()}`
+            ? `https://${projectConfig.REGION}-${projectConfig.ACTIVE_PROJECT_ID}.cloudfunctions.net/clusterManager`
             : '/api/cluster/status';
 
-        const res = await fetch(CLUSTER_MANAGER_URL, { method: 'GET' });
+        const res = await fetch(`${CLUSTER_MANAGER_URL}?t=${Date.now()}`, { method: 'GET' });
         const data = await res.json();
 
         console.log(`📥 [CLIENT TELEMETRY] Response payload received (HTTP ${res.status}):`, data);
 
         // 📊 Route the unpacked payloads directly to your new structural UI observers
-        renderObserverQuotaTable(data.quota);
+        renderObserverQuotaTable(data.quotas);
         renderObserverVmMatrix(data.instances);
 
         if (document.getElementById('obs-zone')) {
@@ -310,9 +305,9 @@ async function triggerManualAllocationClaim() {
 
     try {
         const CLUSTER_MANAGER_URL = window.projectConfig?.ACTIVE_PROJECT_ID
-            ? `https://${projectConfig.REGION}-${projectConfig.ACTIVE_PROJECT_ID}.cloudfunctions.net/clusterManager?t=${Date.now()}`
+            ? `https://${projectConfig.REGION}-${projectConfig.ACTIVE_PROJECT_ID}.cloudfunctions.net/clusterManager`
             : '/api/cluster/status';
-        const res = await fetch(CLUSTER_MANAGER_URL, { method: 'POST' });
+        const res = await fetch(`${CLUSTER_MANAGER_URL}?t=${Date.now()}`, { method: 'POST' });
         const result = await res.json();
         console.log("📥 [MANUAL ALLOCATION COMPLETED]", result);
 
@@ -332,9 +327,9 @@ async function scaleClusterNodeUp() {
     console.log("📡 Requesting secondary parallel computational cluster allocation...");
     try {
         const CLUSTER_MANAGER_URL = projectConfig.ACTIVE_PROJECT_ID
-            ? `https://${projectConfig.REGION}-${projectConfig.ACTIVE_PROJECT_ID}.cloudfunctions.net/clusterManager?t=${Date.now()}`
+            ? `https://${projectConfig.REGION}-${projectConfig.ACTIVE_PROJECT_ID}.cloudfunctions.net/clusterManager`
             : '/api/cluster/status'
-        await fetch(CLUSTER_MANAGER_URL, { method: 'POST' });
+        await fetch(`${CLUSTER_MANAGER_URL}?t=${Date.now()}`, { method: 'POST' });
         syncClusterHardware();
     } catch (e) {
         console.error("Cluster expansion exception:", e);
@@ -390,10 +385,10 @@ async function renderMulticastScene() {
         console.log(`📡 Shipping binary canvas packet directly to GPU engine: ${activeWorkerEndpoint}`);
 
         const RELAY_MANAGER_URL = projectConfig.ACTIVE_PROJECT_ID
-            ? `https://${projectConfig.REGION}-${projectConfig.ACTIVE_PROJECT_ID}.cloudfunctions.net/spatialRelay?t=${Date.now()}`
+            ? `https://${projectConfig.REGION}-${projectConfig.ACTIVE_PROJECT_ID}.cloudfunctions.net/spatialRelay`
             : '/api/spatial/relay'
         // 3. Fire payload across the private data network boundary straight into Python FastAPI
-        const response = await fetch(RELAY_MANAGER_URL, {
+        const response = await fetch(`${RELAY_MANAGER_URL}?t=${Date.now()}`, {
             method: 'POST',
             headers: {
                 // Tell the Cloud Function where to forward the payload!

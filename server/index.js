@@ -1,7 +1,8 @@
-// index.js
+
 const express = require('express');
-const { app, server, PORT, loadAppCredentials } = require('./server');
-require('./setup'); // Mounts setup wizard routes cleanly
+const { requireReactiveCredentials } = require('../cloud-functions/cluster-manager/host-google.js')
+const { app, server, PORT, serveErrorScreen } = require('./server.js');
+require('../setup/setup.js'); // Mounts setup wizard routes cleanly
 const { google } = require('googleapis');
 const { execSync } = require('child_process');
 const path = require('path');
@@ -26,32 +27,6 @@ app.use(session({
     }
 }));
 
-function serveErrorScreen(res, title, description, showSetupButton = true) {
-    // FIXED: Corrected closing tags from </button> to </a>
-    const actionButton = showSetupButton
-        ? `<a class="primary err-action-btn" href="/setup">Launch Setup Wizard</a>`
-        : `<a class="secondary err-action-btn" href="/">Return Home</a>`;
-
-    return res.status(400).send(`
-        <!DOCTYPE html>
-        <html>
-        <head>
-            <title>${title} // Illustrious Error</title>
-            <link rel="stylesheet" href="/main.css" />
-        </head>
-        <body class="error-screen-body">
-            <div class="error-dialog">
-                <h2 class="error-dialog-title">⚠️ ${title}</h2>
-                <p class="error-dialog-text">${description}</p>
-                <div class="err-action-wrapper">
-                    ${actionButton}
-                </div>
-            </div>
-        </body>
-        </html>
-    `);
-}
-
 app.get('/', requireReactiveCredentials, (req, res) => {
     // Check if this specific request/session has dynamic token allocations loaded
     if (!req.session.tokens || !req.session.tokens.access_token) {
@@ -59,7 +34,7 @@ app.get('/', requireReactiveCredentials, (req, res) => {
     }
 
     // Serve your beautiful separate index.html studio canvas file from disk
-    const appIndex = path.join(__dirname, 'index.html');
+    const appIndex = path.join(__dirname, '..', 'index.html');
     if (fs.existsSync(appIndex)) {
         return res.sendFile(appIndex);
     }
@@ -77,48 +52,6 @@ app.get('/', requireReactiveCredentials, (req, res) => {
 });
 
 
-
-function requireReactiveCredentials(req, res, next) {
-    const credentials = loadAppCredentials();
-
-    if (!credentials) {
-        return serveErrorScreen(
-            res,
-            "GCP Credentials Missing",
-            "No active workspace tracking record found inside your system directory boundary. Please initialize environment configurations before accessing the studio."
-        );
-    }
-
-    // If the credentials changed in setup, tear down and hot-swap the OAuth client object
-    if (!oauth2ClientInstance || credentials.GCP_CLIENT_ID !== cachedClientId || credentials.GCP_CLIENT_SECRET !== cachedClientSecret) {
-
-        // Instantiate a completely isolated client for this specific request thread
-        const oauth2Client = new google.auth.OAuth2(
-            credentials.GCP_CLIENT_ID,
-            credentials.GCP_CLIENT_SECRET,
-            `http://localhost:${PORT}/oauth2callback`
-        );
-
-
-        cachedClientId = credentials.GCP_CLIENT_ID;
-        cachedClientSecret = credentials.GCP_CLIENT_SECRET;
-
-        // If this specific user session already has tokens, inject them into the client
-        if (req.session && req.session.tokens) {
-            oauth2Client.setCredentials(req.session.tokens);
-        }
-
-        // Attach the isolated client directly to the request object
-        req.oauth2Client = oauth2Client;
-    }
-
-    // Fallback or explicit project ID config
-    req.gcpCredentials = {
-        PROJECT_ID: process.env.GCP_PROJECT_ID || 'illustrious-499422'
-    };
-
-    next();
-}
 
 
 
@@ -173,9 +106,9 @@ app.get('/api/user-profile', requireReactiveCredentials, async (req, res) => {
 });
 
 
-const { clusterManager } = require('./cloud-functions/cluster-manager');
-const { bootGpu } = require('./cloud-functions/boot-gpu');
-const { spatialRelay } = require('./cloud-functions/spatial-relay');
+const { clusterManager } = require('../cloud-functions/cluster-manager');
+const { bootGpu } = require('../cloud-functions/boot-gpu');
+const { spatialRelay } = require('../cloud-functions/spatial-relay');
 
 app.get('/api/cluster/allocate', requireReactiveCredentials, (req, res) => {
     process.env.GCP_PROJECT_ID = req.gcpCredentials.PROJECT_ID;
@@ -205,7 +138,7 @@ app.get('/api/spatial/relay', requireReactiveCredentials, (req, res) => {
     spatialRelay(req, res);
 });
 
-app.use(express.static(path.join(__dirname)));
+app.use(express.static(path.join(__dirname, '..')));
 
 server.listen(PORT, () => {
     console.log(`🚀 Illustrious Execution Hub spinning up on http://localhost:${PORT}`);

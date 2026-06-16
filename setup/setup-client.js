@@ -1,5 +1,129 @@
 let selectedProjectId = '';
 let credentialData
+// Complete layout routing matrix containing all 13 platforms
+// Complete layout routing matrix with expanded GPU-heavy availability data
+const providerRoutingStrategy = {
+    "gcloud-service": {
+        type: "preview",
+        default: "us-central1 (Iowa / GPU-Heavy Core Node)",
+        knownRegions: [
+            "us-central1 (Iowa / T4, L4, A100, H100)",
+            "us-east4 (N. Virginia / A100 Pool)",
+            "us-west1 (Oregon / L4 Accelerator Cells)",
+            "europe-west4 (Netherlands / Enterprise Core Array)"
+        ]
+    },
+    "aws-service": {
+        type: "preview",
+        default: "us-east-1 (N. Virginia / P4-P5 UltraCluster)",
+        knownRegions: [
+            "us-east-1 (N. Virginia / H100, A100 Nodes)",
+            "us-west-2 (Oregon / Trainium & P4 Cluster)",
+            "eu-west-1 (Ireland / European GPU Hub)"
+        ]
+    },
+    "azure-service": {
+        type: "preview",
+        default: "eastus (Virginia / NDv5 Series Core)",
+        knownRegions: [
+            "eastus (Virginia / NDv5 H100 Core)",
+            "southcentralus (Texas / NDv4 A100 Compute)",
+            "westeurope (Netherlands / High-Performance Grid)"
+        ]
+    },
+    "oracle-service": { type: "authenticated", placeholder: "-- Awaiting Compartment & Tenancy OCID Stream --" },
+    "ibm-service": { type: "authenticated", placeholder: "-- Awaiting Global IAM Authentication --" },
+    "runpod-service": { type: "authenticated", placeholder: "-- Awaiting Verified API Token Authorization --" },
+    "lambda-service": {
+        type: "static",
+        data: [
+            "us-east-1 (Virginia / H100, A100 Array)",
+            "us-west-1 (California / Tensor Core Spot)",
+            "eu-west-1 (Germany / European Compute Node)"
+        ]
+    },
+    "digitalocean-service": {
+        type: "preview",
+        default: "nyc3 (New York Region / GPU Droplet Pool)",
+        knownRegions: [
+            "nyc3 (New York / Baseline GPU droplets)",
+            "ams3 (Amsterdam / Euro Dev Droplet Array)",
+            "sfo3 (San Francisco / West Coast Core)"
+        ]
+    },
+    "vultr-service": {
+        type: "static",
+        data: [
+            "ewr (New Jersey Area / GH200 Grace Hopper)",
+            "lax (Los Angeles, CA / HGX H100 Hub)",
+            "ams (Amsterdam / Euro Bare-Metal Slices)",
+            "nrt (Tokyo, Japan / Asia-Pac Tensor Node)",
+            "mxp (Milan, Italy / Southern Europe Edge)"
+        ]
+    },
+    "vast-service": {
+        type: "static",
+        data: ["global-pool (Dynamic P2P Orchestration Zone / Variable Capacity)"]
+    },
+    "replicate-service": {
+        type: "static",
+        data: ["serverless-global (Zero-Server Orchestration Matrix / Global Edge)"]
+    },
+    "tencent-service": {
+        type: "preview",
+        default: "ap-guangzhou (Guangzhou Accelerator Cell)",
+        knownRegions: [
+            "ap-guangzhou (Guangzhou / Tier-1 AI Grid)",
+            "ap-shanghai (Shanghai / Core Inference Cluster)",
+            "na-siliconvalley (Silicon Valley / Western Edge Cells)",
+            "na-ashburn (Ashburn / Eastern Pipeline Nodes)"
+        ]
+    },
+    "paperspace-service": { type: "authenticated", placeholder: "-- Awaiting Workspace Team Tenant ID --" },
+    "coreweave-service": { type: "authenticated", placeholder: "-- Awaiting K8s Namespace Access Handshake --" }
+};
+
+/**
+ * Initializes and loops through all configurations on startup 
+ * to fill option items before user interaction blocks take over.
+ */
+function initProviderDropdowns() {
+    Object.keys(providerRoutingStrategy).forEach(serviceId => {
+        const containerPrefix = serviceId.split('-')[0];
+        const selectDropdown = document.querySelector(`#${containerPrefix}-container select`);
+
+        if (!selectDropdown) return;
+
+        const strategy = providerRoutingStrategy[serviceId];
+
+        // Core prompt string injected as the default interactive handle
+        let htmlPayload = `<option value="" selected>Select Deployment Target Zone...</option>`;
+
+        if (strategy.type === "static") {
+            htmlPayload += strategy.data
+                .map(region => `<option value="${region}">${region}</option>`)
+                .join('');
+            selectDropdown.innerHTML = htmlPayload;
+        }
+        else if (strategy.type === "preview") {
+            // Include the single default, followed by known public fallback clusters
+            htmlPayload += `<option value="${strategy.default}">${strategy.default} [Primary]</option>`;
+            htmlPayload += strategy.knownRegions
+                .filter(r => r !== strategy.default) // Deduplicate primary
+                .map(region => `<option value="${region}">${region}</option>`)
+                .join('');
+            htmlPayload += `<option value="" disabled>-- Provide secret access keys to unlock complete region map --</option>`;
+            selectDropdown.innerHTML = htmlPayload;
+        }
+        else if (strategy.type === "authenticated") {
+            selectDropdown.innerHTML = `
+                <option value="" disabled selected>${strategy.placeholder}</option>
+            `;
+        }
+    });
+}
+
+
 
 
 async function loadEnvironment() {
@@ -48,8 +172,48 @@ async function loadEnvironment() {
         }
     });
 
+
+    const credMap = credentialData.providerCredentials;
+
+    Object.keys(credMap).forEach(serviceId => {
+        // Find the label card linked to this radio input ID
+        const radioInput = document.getElementById(serviceId);
+        if (!radioInput) return;
+
+        // Target the companion badge component next to the layout string
+        const card = document.querySelector(`label[for="${serviceId}"]`);
+        if (!card) return;
+
+        const badge = card.querySelector('.vm-card-badge');
+        const details = card.querySelector('.vm-card-detail');
+        const serviceContainer = document.querySelector('#' + serviceId.split('-')[0] + '-container')
+        const apiKeyBox = serviceContainer ? serviceContainer.querySelector('[type="password"]') : null
+
+        if (credMap[serviceId]) {
+            // Hot swap state class styles to green/active indicator
+            badge.textContent = "READY";
+            badge.className = "vm-card-badge state-active";
+
+            if (apiKeyBox) {
+                apiKeyBox.value = credMap[serviceId]
+            }
+        } else {
+            // Retain fallbacks if configuration is completely vacant
+            if (serviceId !== 'gcloud-service') { // Skip default connected dev states
+                badge.textContent = "AVAILABLE";
+                badge.className = "vm-card-badge state-staging";
+            }
+        }
+    });
+
+
+
+
     loadLocalFunctions(credentialData.functions)
 }
+
+
+
 
 function navigateStep(stepNum) {
     document.querySelectorAll('.step-panel').forEach(panel => panel.classList.remove('active'));
@@ -368,7 +532,13 @@ function initializeLogoGenerator() {
 }
 
 
-function initializeLogoGeneratorStatic() {
+async function initializeLogoGeneratorStatic() {
+
+    await loadEnvironment();
+
+    await initProviderDropdowns();
+
+
     const grid = document.getElementById('logo-grid');
     if (!grid) return;
     grid.innerHTML = '';
@@ -434,20 +604,14 @@ function initializeLogoGeneratorStatic() {
     });
 }
 
-// Clean initialization cycle hook
+
+
 if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', initializeLogoGeneratorStatic);
+    document.addEventListener('DOMContentLoaded', () => setTimeout(initializeLogoGeneratorStatic, 200));
 } else {
-    initializeLogoGeneratorStatic();
+    setTimeout(initializeLogoGeneratorStatic, 200);
 }
 
-// Intercept your project selection execution loop to clean up runtime bindings
-async function initWizard() {
-    await loadEnvironment();
-    // Your interface hooks run smoothly on initial payload fetch
-}
-
-initWizard();
 
 document.getElementById('back-3').addEventListener('click', navigateStep.bind(null, '2-5'))
 document.getElementById('next-3').addEventListener('click', testAndRedirect)
@@ -468,14 +632,94 @@ document.getElementById('oauth-secrets').addEventListener('submit', (e) => {
     return false
 })
 
-document.getElementById('service-select').addEventListener('submit', (e) => {
+Array.from(document.querySelectorAll('#step-1 form')).forEach(form => form.addEventListener('submit', (e) => {
     e.preventDefault()
     e.stopPropagation()
     return false
-})
+}))
 
 document.getElementById('install-func-btn').addEventListener('click', deploySelectedFunction)
 document.getElementById('install-all-btn').addEventListener('click', deployAllFunctions)
 
 
+
+document.querySelector('#step-1 .scroll-grid-box').addEventListener('click', verifyHostingStatus);
+
+
+
+async function verifyHostingStatus(e) {
+    const selectedCard = e.target ? e.target.closest('label[for]') : null;
+    if (!selectedCard) return;
+
+    const providerId = selectedCard.getAttribute('for'); // Target ID: 'runpod-service'
+    const containerPrefix = providerId.split('-')[0];    // Prefix String: 'runpod'
+    const targetContainer = document.getElementById(`${containerPrefix}-container`);
+
+    if (!targetContainer) return;
+
+    // Dynamically query all input parameters inside the form
+    const formElement = targetContainer.querySelector('form');
+    if (!formElement) return;
+
+    const inputFields = formElement.querySelectorAll('input, select, textarea');
+    const fieldsPayload = {};
+
+    inputFields.forEach(input => {
+        // Construct clear keys based on input id conventions (e.g., 'runpod-api-key' -> 'api_key')
+        const dynamicKey = input.id.replace(`${containerPrefix}-`, '').replace('-', '_');
+        fieldsPayload[dynamicKey] = input.value;
+    });
+
+    // Provide immediate visual feedback on the selector button container
+    const actionButton = targetContainer.querySelector('.btn-row button');
+    const nativeButtonText = actionButton ? actionButton.textContent : '';
+    if (actionButton) actionButton.textContent = "Verifying Handshake Status Matrix...";
+
+    try {
+        const response = await fetch('/api/cluster/verify-and-save', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                providerId: providerId,
+                fields: fieldsPayload
+            })
+        });
+
+        const data = await response.json();
+
+        if (!response.ok || data.error) {
+            throw new Error(data.error || 'Pipeline authentication handshake failed.');
+        }
+
+        // Hydrate dropdown elements dynamically if regional validation metadata returned
+        if (data.meta && data.meta.regions) {
+            const regionSelect = targetContainer.querySelector('select');
+            if (regionSelect) {
+                regionSelect.innerHTML = data.meta.regions
+                    .map(r => `<option value="${r}">${r}</option>`)
+                    .join('');
+            }
+        }
+
+        if (actionButton) {
+            actionButton.textContent = "Configuration Synchronized ✓";
+            actionButton.style.borderColor = "var(--accent)";
+        }
+
+    } catch (error) {
+        console.error(`Handshake Collision Error for ${providerId}:`, error.message);
+        if (actionButton) {
+            actionButton.textContent = `Error: ${error.message}`;
+            actionButton.style.borderColor = "var(--red)";
+        }
+    } finally {
+        // Reset action labels smoothly after a brief configuration validation hold
+        setTimeout(() => {
+            if (actionButton) {
+                actionButton.textContent = nativeButtonText;
+                actionButton.style.borderColor = '';
+            }
+        }, 4000);
+    }
+}
 

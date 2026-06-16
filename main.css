@@ -1,6 +1,6 @@
-/* ============================================================================
-   Illustrious Global Design Context Tokens
-   ============================================================================ */
+@import url(/theme/boxicons.min.css);
+@import url(/theme/boxicons-brands.min.css);
+
 :root {
     --bg: #101014;
     --bg-darker: #0d0d11;
@@ -33,6 +33,9 @@
     --yellow-orange: #ffaa00;
     --terminal-green: #33ff33;
     --link-blue: #00bcff;
+
+    --global-height: 1.6em;
+
 }
 
 /* ============================================================================
@@ -66,7 +69,7 @@ hr {
 #control-panel,
 #cloud-observer {
     width: 320px;
-    height: 50vh;
+    height: 80vh;
     /* Establishes our strict viewport height ratio */
     background: var(--panel);
     color: var(--text);
@@ -84,7 +87,7 @@ hr {
     /* Vertical Center Core Engine Rules */
     position: fixed;
     top: 50%;
-    margin-top: -25vh;
+    margin-top: -40vh;
     /* Negative offset equal to half the container height */
 
     /* Dedicated position layout transition properties */
@@ -163,6 +166,7 @@ label {
     margin-top: 12px;
 }
 
+select,
 textarea,
 input[type="text"],
 input[type="password"] {
@@ -174,8 +178,58 @@ input[type="password"] {
     color: #fff;
     font-family: monospace;
     font-size: 14px;
-    transition: border-color 0.2s;
+    transition: border-color 0.2s, box-shadow 0.2s;
     resize: none;
+    outline: none;
+}
+
+/* Focused states for uniform layout highlight */
+select:focus,
+textarea:focus,
+input[type="text"]:focus,
+input[type="password"]:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 8px var(--accent-muted);
+}
+
+/* --- Fancy Select Specific Overrides --- */
+select {
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    cursor: pointer;
+    /* Extra padding on the right so text doesn't hit your custom arrow indicator */
+    padding-right: 40px;
+
+    /* Elegant SVG indicator arrow mapped using your design tokens */
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%2300ffcc' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'><polyline points='6 9 12 15 18 9'></polyline></svg>");
+    background-repeat: no-repeat;
+    background-position: right 14px center;
+    background-size: 16px;
+}
+
+/* Ensure the disabled placeholder state looks dim */
+select:invalid,
+select option[value=""] {
+    color: var(--text-dim);
+}
+
+/* * Dropdown Menu Context Options Panel
+ * Note: Modern Chromium browsers honor background/color values on native options, 
+ * keeping your console aesthetics unified.
+ */
+select option {
+    background-color: var(--panel);
+    color: var(--text);
+    padding: 12px;
+    font-family: monospace;
+}
+
+/* Cleans up default system selections in specific browser variants */
+select option:checked,
+select option:hover {
+    background-color: var(--panel-active) !important;
+    color: var(--accent) !important;
 }
 
 textarea {
@@ -726,6 +780,7 @@ p {
     max-height: 200px;
     overflow-y: scroll;
     overflow-x: hidden;
+    min-height: 100px;
 }
 
 /* ============================================================================
@@ -738,6 +793,8 @@ p {
     margin-bottom: 6px;
     text-transform: uppercase;
     letter-spacing: 0.5px;
+    font-weight: normal;
+    margin-top: 12px;
 }
 
 .warning-label-caps {
@@ -921,35 +978,44 @@ p {
     cursor: pointer;
 }
 
-
-#step-1 input:nth-of-type(1):checked~.scroll-grid-box .vm-instance-card:nth-child(1),
-#step-1 input:nth-of-type(2):checked~.scroll-grid-box .vm-instance-card:nth-child(2),
-#step-1 input:nth-of-type(3):checked~.scroll-grid-box .vm-instance-card:nth-child(3),
-#step-1 input:nth-of-type(4):checked~.scroll-grid-box .vm-instance-card:nth-child(4),
-#step-1 input:nth-of-type(5):checked~.scroll-grid-box .vm-instance-card:nth-child(5),
-#step-1 input:nth-of-type(6):checked~.scroll-grid-box .vm-instance-card:nth-child(6),
-#step-1 input:nth-of-type(7):checked~.scroll-grid-box .vm-instance-card:nth-child(7),
-#step-1 input:nth-of-type(8):checked~.scroll-grid-box .vm-instance-card:nth-child(8),
-#step-1 input:nth-of-type(9):checked~.scroll-grid-box .vm-instance-card:nth-child(9) {
+#gcloud-service:checked~.scroll-grid-box [for="gcloud-service"],
+#aws-service:checked~.scroll-grid-box [for="aws-service"],
+#azure-service:checked~.scroll-grid-box [for="azure-service"],
+#oracle-service:checked~.scroll-grid-box [for="oracle-service"],
+#ibm-service:checked~.scroll-grid-box [for="ibm-service"],
+#runpod-service:checked~.scroll-grid-box [for="runpod-service"],
+#lambda-service:checked~.scroll-grid-box [for="lambda-service"],
+#digitalocean-service:checked~.scroll-grid-box [for="digitalocean-service"],
+#vultr-service:checked~.scroll-grid-box [for="vultr-service"],
+#vast-service:checked~.scroll-grid-box [for="vast-service"],
+#replicate-service:checked~.scroll-grid-box [for="replicate-service"],
+#tencent-service:checked~.scroll-grid-box [for="tencent-service"],
+#paperspace-service:checked~.scroll-grid-box [for="paperspace-service"],
+#coreweave-service:checked~.scroll-grid-box [for="coreweave-service"] {
     background: var(--accent-muted);
+    border-color: var(--accent);
 }
 
 #step-1 .service {
     display: none;
 }
 
-#step-1 input:nth-of-type(1):checked~.service:nth-child(1 of .service),
-#step-1 input:nth-of-type(2):checked~.service:nth-child(2 of .service),
-#step-1 input:nth-of-type(3):checked~.service:nth-child(3 of .service),
-#step-1 input:nth-of-type(4):checked~.service:nth-child(4 of .service),
-#step-1 input:nth-of-type(5):checked~.service:nth-child(5 of .service),
-#step-1 input:nth-of-type(6):checked~.service:nth-child(6 of .service),
-#step-1 input:nth-of-type(7):checked~.service:nth-child(7 of .service),
-#step-1 input:nth-of-type(8):checked~.service:nth-child(8 of .service),
-#step-1 input:nth-of-type(9):checked~.service:nth-child(9 of .service) {
+#gcloud-service:checked~#gcloud-container,
+#aws-service:checked~#aws-container,
+#azure-service:checked~#azure-container,
+#oracle-service:checked~#oracle-container,
+#ibm-service:checked~#ibm-container,
+#runpod-service:checked~#runpod-container,
+#lambda-service:checked~#lambda-container,
+#digitalocean-service:checked~#digitalocean-container,
+#vultr-service:checked~#vultr-container,
+#vast-service:checked~#vast-container,
+#replicate-service:checked~#replicate-container,
+#tencent-service:checked~#tencent-container,
+#paperspace-service:checked~#paperspace-container,
+#coreweave-service:checked~#coreweave-container {
     display: block;
 }
-
 
 #step-1 .scroll-grid-box {
     max-height: none;
@@ -978,7 +1044,21 @@ p {
     color: #fff;
     font-weight: bold;
     font-size: 11px;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
 }
+
+.vm-card-name i {
+    font-size: 18px;
+    vertical-align: middle;
+    color: var(--text-dim);
+}
+
+.vm-instance-card:hover .vm-card-name i {
+    color: var(--accent);
+}
+
 
 .vm-card-badge {
     background: rgba(0, 0, 0, 0.5);
@@ -1077,4 +1157,145 @@ p {
 
 .func-status-badge.local {
     color: #4a4a5a;
+}
+
+#cloud-observer input[type="checkbox"] {
+    appearance: none;
+    -webkit-appearance: none;
+    width: 60px;
+    max-width: 60px;
+    height: calc(var(--global-height) + 4px);
+    background-color: var(--panel-hover);
+    border: 2px solid var(--border);
+    border-radius: 50px;
+    position: relative;
+    cursor: pointer;
+    transition: background-color 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease-in-out;
+    outline: none;
+    box-shadow: 1px 2px 5px rgba(0, 0, 0, 0.5);
+    align-items: center;
+    display: flex;
+    padding: 0;
+    font-weight: bold;
+}
+
+/* The sliding dot (thumb) */
+#cloud-observer input[type="checkbox"]::before {
+    content: "";
+    position: absolute;
+    top: 2px;
+    left: 3px;
+    width: calc(var(--global-height) - 4px);
+    height: calc(var(--global-height) - 4px);
+    background-color: var(--text);
+    border-radius: 50%;
+    transition: transform 0.3s ease;
+    box-shadow: -1px -2px 5px inset rgb(from var(--panel) r g b / 50%);
+}
+
+#cloud-observer input[type="checkbox"]::after {
+    content: "OFF";
+    position: relative;
+    left: calc(100% - 25px);
+    font-size: 12px;
+    color: var(--text-dim);
+    transition: left 0.3s ease, color 0.3s ease;
+}
+
+/* Active state (Background turns accent) */
+#cloud-observer input[type="checkbox"]:checked {
+    background-color: var(--accent);
+    border-color: rgb(from var(--accent) r g b / 50%);
+    box-shadow: 1px 2px 3px rgb(from var(--text) r g b / 50%);
+}
+
+#cloud-observer input[type="checkbox"]:checked:focus {
+    background-color: var(--accent);
+    border-color: rgb(from var(--accent) r g b / 50%);
+}
+
+#cloud-observer input[type="checkbox"]:checked::after {
+    content: "ON";
+    left: 5px;
+    color: var(--bg-darkest);
+}
+
+/* Slide the dot over when checked */
+#cloud-observer input[type="checkbox"]:checked::before {
+    transform: translateX(calc(60px - var(--global-height) - 4px));
+}
+
+/* Focus state for accessibility */
+#cloud-observer input[type="checkbox"]:focus-visible {
+    box-shadow: 0 0 0 2px rgb(from var(--accent) r g b / 50%);
+}
+
+/* Container wrapper layout */
+.local-model-section {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    padding: 12px 0;
+}
+
+.local-model-label {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    color: var(--text);
+    font-size: 14px;
+    cursor: pointer;
+}
+
+.download-progress-container {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    width: 100%;
+}
+
+/* Base progress bar reset */
+#local-model-progress {
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    height: 6px;
+    flex-grow: 1;
+    border: none;
+    background-color: var(--bg-darkest);
+    border-radius: 3px;
+    overflow: hidden;
+}
+
+/* --- WebKit (Chrome, Safari, Edge, Opera) Styles --- */
+#local-model-progress::-webkit-progress-bar {
+    background-color: var(--bg-darkest);
+    border-radius: 3px;
+}
+
+#local-model-progress::-webkit-progress-value {
+    background-color: var(--accent);
+    border-radius: 3px;
+    box-shadow: 0 0 8px var(--accent);
+    transition: width 0.3s ease;
+}
+
+/* --- Gecko (Firefox) Styles --- */
+#local-model-progress::-moz-progress-bar {
+    background-color: var(--accent);
+    border-radius: 3px;
+    box-shadow: 0 0 8px var(--accent);
+    transition: padding-left 0.3s ease;
+    /* Firefox animation trick */
+}
+
+/* Progress Text Styling */
+#local-model-progress-text {
+    font-family: monospace;
+    font-size: 12px;
+    color: var(--accent);
+    min-width: 35px;
+    text-align: right;
+    font-weight: bold;
+    text-shadow: 0 0 4px var(--accent-muted);
 }

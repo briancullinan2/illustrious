@@ -46,8 +46,6 @@
         </div>
         <button id="multicast-scene">Multicast Image Pipeline</button>
     </div>
-
-
     <div id="cloud-observer">
         <h2 class="observer-header">
 
@@ -99,6 +97,17 @@
             </div>
         </div>
 
+        <div class="local-model-section">
+            <label class="local-model-label">
+                <input type="checkbox" id="local-model-toggle">
+                <span>Run your own local model</span>
+            </label>
+            <div class="download-progress-container">
+                <progress id="local-model-progress" value="0" max="100"></progress>
+                <span id="local-model-progress-text">0%</span>
+            </div>
+        </div>
+
         <div id="manual-allocation-tray">
             <button id="claim-instance">
                 Claim A GPU Instance
@@ -115,7 +124,7 @@
 
 
 
-    <script src="/index-client.js"></script>
+    <script src="/client.js"></script>
 </body>
 
 </html>

@@ -1,6 +1,7 @@
 // setup.js
 const express = require('express');
-const { app, server, GLOBAL_CRED_DIR } = require('./server'); // 👉 Clean require tracking
+const { authenticateCloudProvider, CLOUD_PROVIDER_KEYS } = require('../cloud-functions/cluster-manager/cloud-manager.js');
+const { app, server, GLOBAL_CRED_DIR, serveErrorScreen } = require('../server/server.js');
 const { execSync, spawn, spawnSync } = require('child_process');
 const fs = require('fs');
 const path = require('path');
@@ -47,7 +48,7 @@ function getGcloudData(cmd) {
 
 function getLocalFunctions() {
     let items = [];
-    const functionsDir = path.join(__dirname, 'cloud-functions');
+    const functionsDir = path.join(__dirname, '..', 'cloud-functions');
 
     if (!fs.existsSync(functionsDir)) {
         return items;
@@ -65,41 +66,18 @@ function getLocalFunctions() {
 
 // Explicitly serve your setup.html view layout over the clean /setup route path
 app.get('/setup', (req, res) => {
-    const templatePath = path.join(__dirname, 'setup', 'index.html');
+    const templatePath = path.join(__dirname, '..', 'setup', 'index.html');
     try {
         let htmlContent = fs.readFileSync(templatePath, 'utf8');
         const activeAccount = getGcloudData('gcloud config get-value account') || 'Anonymous Profile Context';
         htmlContent = htmlContent.replace('{{AUTH_STATUS_INITIAL}}', activeAccount);
         res.send(htmlContent);
     } catch (err) {
-        res.status(500).send(`Configuration asset missing at root/setup/index.html: ${err.message}`);
+        res.status(500).send(serveErrorScreen(res, 'Configuration Asset Missing', `Configuration asset missing at root/setup/index.html: ${err.message}`));
     }
 });
 
 
-async function getActiveAccountFromGoogle() {
-    const authHeader = req.headers.authorization;
-    let authenticatedAccount = "API Token Session";
-
-    if (!authHeader) {
-        return res.status(400).json({ error: "Missing active OAuth2 Authorization Bearer token context." });
-    }
-
-    const identityResponse = await fetch('https://openidconnect.googleapis.com/v1/userinfo', {
-        method: 'GET',
-        headers: { 'Authorization': authHeader }
-    });
-
-    if (identityResponse.ok) {
-        const profile = await identityResponse.json();
-        // Pull the user email safely (matches what 'gcloud config get-value account' outputs)
-        authenticatedAccount = profile.email || "API Token Session";
-    } else {
-        console.warn("⚠️ Token lacks profile/email scopes. Cascading to fallback label identity.");
-    }
-
-    return authenticatedAccount
-}
 
 async function getActiveAccountFromGcloudCLI() {
     const activeAccount = getGcloudData('gcloud config get-value account');
@@ -149,75 +127,103 @@ async function listProjectsFromGcloudCLI() {
 
 
 
-async function listProjectsFromGoogle(req, res) {
-    const authHeader = req.headers.authorization;
 
-    if (!authHeader) {
-        return res.status(400).json({ error: "Missing active OAuth2 Authorization Bearer token context." });
-    }
-
-    let projects = [];
+app.post('/api/cluster/verify-and-save', async (req, res) => {
+    const { providerId, fields } = req.body;
 
     try {
-        // 📡 Query the Live Google Cloud Resource Manager REST Gateway
-        const gcpResponse = await fetch('https://cloudresourcemanager.googleapis.com/v1/projects', {
-            method: 'GET',
-            headers: {
-                'Authorization': authHeader, // Passes "Bearer ya29.xxxxxxxx..."
-                'Accept': 'application/json'
-            }
-        });
+        const provider = CLOUD_PROVIDER_KEYS.find(p => p.id === providerId);
+        if (!provider) return res.status(400).json({ error: 'Unknown platform target.' });
 
-        if (gcpResponse.ok) {
-            const data = await gcpResponse.json();
-            // Map the REST response format ('projects') to align with your setup
-            projects = data.projects || [];
-        } else {
-            const errDetails = await gcpResponse.text();
-            console.error(`🚨 GCP Resource Manager API rejected access: ${errDetails}`);
+        // Single normalized method call works uniformly for Google, RunPod, or AWS
+        const authStatus = await authenticateCloudProvider(providerId, fields);
+
+        // Commit configuration states directly to disk on success
+        if (authStatus.success && provider.file) {
+            if (!fs.existsSync(GLOBAL_CRED_DIR)) fs.mkdirSync(GLOBAL_CRED_DIR, { recursive: true });
+            const targetFilePath = path.join(GLOBAL_CRED_DIR, provider.file);
+
+            let existingData = {};
+            if (fs.existsSync(targetFilePath)) {
+                try { existingData = JSON.parse(fs.readFileSync(targetFilePath, 'utf8')); } catch (e) { }
+            }
+
+            const cleanFields = { ...fields };
+            Object.keys(cleanFields).forEach(k => {
+                if (String(cleanFields[k]).includes('••••') || cleanFields[k] === '') cleanFields[k] = existingData[k] || '';
+            });
+
+            fs.writeFileSync(targetFilePath, JSON.stringify({ ...existingData, ...cleanFields }, null, 4), 'utf8');
         }
-    } catch (apiErr) {
-        console.error(`❌ Connection failed against GCP API endpoint: ${apiErr.message}`);
+
+        // Returns { success: true, meta: { account, projects, activeVMs, quotas } }
+        res.json(authStatus);
+
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
+
+
+function scanCloudCredentials() {
+
+    const providerStatusMap = {};
+
+    // Ensure directory existence before looping execution blocks
+    if (!fs.existsSync(GLOBAL_CRED_DIR)) {
+        CLOUD_PROVIDER_KEYS.forEach(p => providerStatusMap[p.id] = null);
+        return providerStatusMap;
     }
 
-    // Processing the local file matrix cross-reference checks identically...
-    const processedProjects = projects.map(p => {
-        const expectedCredFile = path.join(GLOBAL_CRED_DIR, `${p.projectId}.json`);
-        let hasSavedCreds = false;
-        let maskedClientId = "";
-        let maskedClientSecret = "";
+    const directoryFiles = fs.readdirSync(GLOBAL_CRED_DIR);
 
-        if (fs.existsSync(expectedCredFile)) {
-            try {
-                const creds = JSON.parse(fs.readFileSync(expectedCredFile, 'utf8'));
-                hasSavedCreds = true;
+    for (const provider of CLOUD_PROVIDER_KEYS) {
+        try {
+            let hint = null;
 
-                if (creds.GCP_CLIENT_ID) {
-                    maskedClientId = `...${creds.GCP_CLIENT_ID.slice(-4)}`;
+            // Handle Dynamic Google Regex Key Scan
+            if (provider.pattern) {
+                const matchFile = directoryFiles.find(file => provider.pattern.test(file));
+                if (matchFile) {
+                    const fullPath = path.join(GLOBAL_CRED_DIR, matchFile);
+                    const rawData = JSON.parse(fs.readFileSync(fullPath, 'utf8'));
+                    // Display project name/id safely as the operational hint
+                    hint = rawData.project_id || matchFile.split('-')[0];
                 }
-                if (creds.GCP_CLIENT_SECRET) {
-                    maskedClientSecret = `...${creds.GCP_CLIENT_SECRET.slice(-4)}`;
+            }
+            // Handle standard JSON configuration files
+            else if (provider.file && fs.existsSync(path.join(GLOBAL_CRED_DIR, provider.file))) {
+                const fullPath = path.join(GLOBAL_CRED_DIR, provider.file);
+                const rawData = JSON.parse(fs.readFileSync(fullPath, 'utf8'));
+                const primarySecret = rawData[provider.key];
+
+                if (primarySecret && typeof primarySecret === 'string') {
+                    const cleanSecret = primarySecret.trim();
+                    if (cleanSecret.length > 4) {
+                        hint = `•••• ${cleanSecret.slice(-4)}`;
+                    } else {
+                        hint = `•••• Active`;
+                    }
                 }
-            } catch (e) { }
+            }
+
+            providerStatusMap[provider.id] = hint;
+
+        } catch (err) {
+            // Log parse errors internally but don't crash, report back as unconfigured
+            providerStatusMap[provider.id] = null;
         }
+    }
 
-        return {
-            id: p.projectId,
-            name: p.name,
-            exists: hasSavedCreds,
-            clientIdMask: maskedClientId,
-            clientSecretMask: maskedClientSecret
-        };
-    });
-
-    return processedProjects
+    return providerStatusMap;
 }
 
 
 
-// ==========================================
-// 🛰️ API ENDPOINTS
-// ==========================================
+
+
+
 
 app.get('/api/local-env', async (req, res) => {
 
@@ -231,7 +237,9 @@ app.get('/api/local-env', async (req, res) => {
         projects: processedProjects,
         autoSelectId: autoSelectProject,
         credentialPath: GLOBAL_CRED_DIR + path.sep,
-        functions: getLocalFunctions()
+        functions: getLocalFunctions(),
+        providerCredentials: scanCloudCredentials(),
+
     });
 });
 
@@ -250,7 +258,7 @@ app.post('/api/save-credentials', (req, res) => {
     }
 
     const projectSpecificFile = path.join(GLOBAL_CRED_DIR, `${projectId}.json`);
-    const activeProjectAnchorFile = path.join(__dirname, 'illustrious-config.json');
+    const activeProjectAnchorFile = path.join(__dirname, '..', 'illustrious-config.json');
     fs.writeFileSync(activeProjectAnchorFile, JSON.stringify({ REGION: DEFAULT_REGION, ACTIVE_PROJECT_ID: projectId }, null, 2));
 
     if (fs.existsSync(projectSpecificFile)) {
@@ -274,7 +282,7 @@ app.post('/api/save-credentials', (req, res) => {
         PROJECT_ID: projectId,
         GCP_CLIENT_ID: clientId,
         GCP_CLIENT_SECRET: clientSecret,
-        REDIRECT_URI: redirectUri || 'http://localhost:4000/', // Lock it inside your ~/.credentials profile record
+        REDIRECT_URI: redirectUri || 'http://localhost:4000/',
         REGION: DEFAULT_REGION,
         FUNCTIONS_URL: `https://${DEFAULT_REGION}-${projectId}.cloudfunctions.net/bootGpu`
     };
@@ -334,7 +342,7 @@ app.post('/api/deploy-function', async (req, res) => {
     }
 
     const projectCreds = JSON.parse(fs.readFileSync(expectedCredFile, 'utf8'));
-    const functionSourceDir = path.join(__dirname, 'cloud-functions', functionName);
+    const functionSourceDir = path.join(__dirname, '..', 'cloud-functions', functionName);
     const entryPoint = functionName.replace(/-([a-z])/g, (g) => g[1].toUpperCase());
 
     streamLog(`\n📡 Preparing deployment matrix for: ${functionName}...\n`);
@@ -346,7 +354,7 @@ app.post('/api/deploy-function', async (req, res) => {
         }
 
         const projectCreds = JSON.parse(fs.readFileSync(expectedCredFile, 'utf8'));
-        const functionSourceDir = path.join(__dirname, 'cloud-functions', functionName);
+        const functionSourceDir = path.join(__dirname, '..', 'cloud-functions', functionName);
         const entryPoint = functionName.replace(/-([a-z])/g, (g) => g[1].toUpperCase());
 
         streamLog(`\n📡 Preparing deployment matrix for: ${functionName}...\n`);
