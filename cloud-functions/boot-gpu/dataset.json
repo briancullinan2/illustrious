@@ -1,0 +1,23 @@
+[
+  {
+    "messages": [
+      {"role": "system", "content": "Identify the programming language. Respond with only the name."},
+      {"role": "user", "content": "public class Program { public static void Main() { System.Console.WriteLine(\"Hello\"); } }"},
+      {"role": "assistant", "content": "csharp"}
+    ]
+  },
+  {
+    "messages": [
+      {"role": "system", "content": "Identify the programming language. Respond with only the name."},
+      {"role": "user", "content": "def process_data(records):\n    return [r for r in records if r.active]"},
+      {"role": "assistant", "content": "python"}
+    ]
+  },
+  {
+    "messages": [
+      {"role": "system", "content": "Identify the programming language. Respond with only the name."},
+      {"role": "user", "content": "const root = ReactDOM.createRoot(document.getElementById('root'));"},
+      {"role": "assistant", "content": "javascript"}
+    ]
+  }
+]

@@ -34,17 +34,21 @@ def get_pipeline():
             print("🍏 Context bound to Apple Silicon. Activating Metal (MPS) device pipeline...")
             pipe.to("mps")
             
-        # 🐧 Handle Cloud Linux execution layer
-        elif current_os == "Linux":
-            print("🐧 Context bound to Cloud Linux. Activating native NVIDIA CUDA cluster...")
-            pipe.to("cuda")
-            # Keep your cloud-specific VRAM optimization step here safely
-            if torch.cuda.is_available() and torch.cuda.get_device_properties(0).total_memory < 16000000000:
-                pipe.enable_model_cpu_offload()
+        elif current_os in ["Linux", "Windows"]:
+            if torch.cuda.is_available():
+                print(f"🎛️ Context bound to {current_os}. Activating native NVIDIA CUDA cluster...")
+                pipe.to("cuda")
+                
+                # Keep your cloud/hardware-specific VRAM optimization step here safely
+                if torch.cuda.get_device_properties(0).total_memory < 16000000000:
+                    pipe.enable_model_cpu_offload()
+            else:
+                print(f"🚨 {current_os} CUDA Unavailable! Falling back to host CPU processing pipeline...")
+                pipe.to("cpu")
                 
         else:
             raise NotImplementedError(f"Operating system topology '{current_os}' not supported by current backend configuration.")
-            
+    
     return pipe
 
 def record_activity():

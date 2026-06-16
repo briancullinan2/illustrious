@@ -75,12 +75,38 @@ app.get('/setup', (req, res) => {
     }
 });
 
-// ==========================================
-// 🛰️ API ENDPOINTS
-// ==========================================
 
-app.get('/api/local-env', (req, res) => {
+async function getActiveAccountFromGoogle() {
+    const authHeader = req.headers.authorization;
+    let authenticatedAccount = "API Token Session";
+
+    if (!authHeader) {
+        return res.status(400).json({ error: "Missing active OAuth2 Authorization Bearer token context." });
+    }
+
+    const identityResponse = await fetch('https://openidconnect.googleapis.com/v1/userinfo', {
+        method: 'GET',
+        headers: { 'Authorization': authHeader }
+    });
+
+    if (identityResponse.ok) {
+        const profile = await identityResponse.json();
+        // Pull the user email safely (matches what 'gcloud config get-value account' outputs)
+        authenticatedAccount = profile.email || "API Token Session";
+    } else {
+        console.warn("⚠️ Token lacks profile/email scopes. Cascading to fallback label identity.");
+    }
+
+    return authenticatedAccount
+}
+
+async function getActiveAccountFromGcloudCLI() {
     const activeAccount = getGcloudData('gcloud config get-value account');
+    return activeAccount
+}
+
+
+async function listProjectsFromGcloudCLI() {
     const rawProjects = getGcloudData('gcloud projects list --format="json"');
 
     let projects = [];
@@ -117,6 +143,85 @@ app.get('/api/local-env', (req, res) => {
         };
     });
 
+    return processedProjects
+}
+
+
+
+async function listProjectsFromGoogle(req, res) {
+    const authHeader = req.headers.authorization;
+
+    if (!authHeader) {
+        return res.status(400).json({ error: "Missing active OAuth2 Authorization Bearer token context." });
+    }
+
+    let projects = [];
+
+    try {
+        // 📡 Query the Live Google Cloud Resource Manager REST Gateway
+        const gcpResponse = await fetch('https://cloudresourcemanager.googleapis.com/v1/projects', {
+            method: 'GET',
+            headers: {
+                'Authorization': authHeader, // Passes "Bearer ya29.xxxxxxxx..."
+                'Accept': 'application/json'
+            }
+        });
+
+        if (gcpResponse.ok) {
+            const data = await gcpResponse.json();
+            // Map the REST response format ('projects') to align with your setup
+            projects = data.projects || [];
+        } else {
+            const errDetails = await gcpResponse.text();
+            console.error(`🚨 GCP Resource Manager API rejected access: ${errDetails}`);
+        }
+    } catch (apiErr) {
+        console.error(`❌ Connection failed against GCP API endpoint: ${apiErr.message}`);
+    }
+
+    // Processing the local file matrix cross-reference checks identically...
+    const processedProjects = projects.map(p => {
+        const expectedCredFile = path.join(GLOBAL_CRED_DIR, `${p.projectId}.json`);
+        let hasSavedCreds = false;
+        let maskedClientId = "";
+        let maskedClientSecret = "";
+
+        if (fs.existsSync(expectedCredFile)) {
+            try {
+                const creds = JSON.parse(fs.readFileSync(expectedCredFile, 'utf8'));
+                hasSavedCreds = true;
+
+                if (creds.GCP_CLIENT_ID) {
+                    maskedClientId = `...${creds.GCP_CLIENT_ID.slice(-4)}`;
+                }
+                if (creds.GCP_CLIENT_SECRET) {
+                    maskedClientSecret = `...${creds.GCP_CLIENT_SECRET.slice(-4)}`;
+                }
+            } catch (e) { }
+        }
+
+        return {
+            id: p.projectId,
+            name: p.name,
+            exists: hasSavedCreds,
+            clientIdMask: maskedClientId,
+            clientSecretMask: maskedClientSecret
+        };
+    });
+
+    return processedProjects
+}
+
+
+
+// ==========================================
+// 🛰️ API ENDPOINTS
+// ==========================================
+
+app.get('/api/local-env', (req, res) => {
+
+    const activeAccount = await getActiveAccountFromGcloudCLI()
+    const processedProjects = await listProjectsFromGcloudCLI(req, res)
     const autoSelectProject = processedProjects.find(p => p.exists)?.id || "";
 
     res.json({
