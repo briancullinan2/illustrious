@@ -47,10 +47,17 @@ def run_lora_alignment(model_path = BASE_MODEL):
     # 🛠️ Hugging Face merges the list of files seamlessly into a single dataset split
     dataset = load_dataset("json", data_files=json_files, split="train")
     print(f"🎯 Unified dataset loaded successfully. Total training samples: {len(dataset)}")
+    
+    # Slice it heavily so it finishes in a couple of hours on your CPU cores
+    dataset = dataset.shuffle(seed=42)
+    dataset = dataset.select(range(150)) # 150 samples is plenty for a style injection
+    
+    print(f"🎯 Pruned dataset down to {len(dataset)} examples for host CPU training stability.")
 
     print(f"⚡ Initializing base model layers: {model_path}")
     tokenizer = AutoTokenizer.from_pretrained(model_path, cache_dir=HF_CACHE_DIR, token=HF_TOKEN)
     tokenizer.pad_token = tokenizer.eos_token
+    torch.set_num_threads(4)
 
     # 🎛️ Dynamic Hardware Allocation Layer
     if torch.cuda.is_available():
@@ -99,15 +106,15 @@ def run_lora_alignment(model_path = BASE_MODEL):
         per_device_train_batch_size=1,  
         gradient_accumulation_steps=1,
         warmup_steps=0,                 # 🛠️ Set to 0 so small datasets hit full learning rate instantly
-        #max_steps=3,
-        num_train_epochs=1,             # 🛠️ Stick to 1 pass on CPU to avoid massive processing delays
+        max_steps=3,
+        #num_train_epochs=1,             # 🛠️ Stick to 1 pass on CPU to avoid massive processing delays
         learning_rate=2e-4,
         fp16=False,                    
         use_cpu=True,                  
         logging_steps=1,
         save_strategy="no",    
         report_to="none",
-        max_length=128,
+        max_length=64,
         # dataset_text_field="messages"  # 🛠️ REMOVED: This was breaking your formatting_func!
     )
 

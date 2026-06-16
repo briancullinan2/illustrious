@@ -332,7 +332,7 @@ async def generate_text_stream(
             "input_ids": raw_input_ids,
             "attention_mask": raw_attention_mask,
             "streamer": streamer,
-            "max_new_tokens": 64,
+            "max_new_tokens": 1000,
             "temperature": 0.1,
             "top_p": 0.9,
             "do_sample": False
