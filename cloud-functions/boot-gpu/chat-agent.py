@@ -50,7 +50,6 @@ def load_stored_hf_token():
 
 HF_TOKEN = load_stored_hf_token()
 
-
 def get_gguf_context(model_id_or_path, hf_token=None):
     global gguf_engine
     if Llama is None:
@@ -60,11 +59,11 @@ def get_gguf_context(model_id_or_path, hf_token=None):
     model_id_or_path = model_id_or_path.replace("__", "/")
     
     if gguf_engine is not None:
-        # If model is already loaded, drop out cleanly
         return gguf_engine
 
     resolved_path = model_id_or_path
     
+    # 1. Handle remote hub downloads if a raw file structure isn't local
     if "/" in model_id_or_path and not os.path.exists(model_id_or_path):
         try:
             print(f"📡 Resolving GGUF target file from Hugging Face Hub: {model_id_or_path}...")
@@ -95,8 +94,21 @@ def get_gguf_context(model_id_or_path, hf_token=None):
         gpu_layers = -1  
         print("🍏 Metal available. Offloading full GGUF stack to Apple Silicon.")
         
+    # 2. 🛠️ PARITY CHECK: Look for a matching converted GGUF LoRA file
+    # We target the .gguf variant of your adapter output directory mapping
+    gguf_lora_target = "loras/code_classifier_lora.gguf"
+    active_lora_path = None
+    
+    if os.path.exists(gguf_lora_target):
+        print(f"🧬 GGUF LoRA target detected at '{gguf_lora_target}'. Hot-swapping adapter pathways...")
+        active_lora_path = gguf_lora_target
+    else:
+        print("⚠️ No GGUF adapter patch found. Running vanilla model inference tracks.")
+
+    # 3. Instantiate the execution kernel with the active conditional path mapping
     gguf_engine = Llama(
         model_path=resolved_path,
+        lora_path=active_lora_path,  # 🛠️ Injects your custom classification rules if the file is present
         n_ctx=2048,        
         n_gpu_layers=gpu_layers,
         verbose=False      
@@ -312,6 +324,8 @@ async def generate_text_stream(
             for token_text in streamer: 
                 yield token_text
         return StreamingResponse(transformers_stream_generator(), media_type="text/plain")
+    
+
 
 @app.get("/", response_class=HTMLResponse)
 def serve_test_interface():
