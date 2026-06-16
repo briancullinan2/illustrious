@@ -116,6 +116,22 @@ hr {
 
 #control-panel>*,
 #cloud-observer>* {
+    flex-grow: 0;
+    flex-basis: min-content;
+}
+
+
+#scene-builder {
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+}
+
+#scene-builder>button {
+    flex-grow: 0;
+}
+
+#scene-builder>textarea {
     flex-grow: 1;
 }
 
@@ -336,7 +352,7 @@ button:disabled {
     background: var(--yellow);
     color: #000;
     font-size: 11px;
-    padding: 8px;
+    padding: 10px;
     font-weight: bold;
     width: 100%;
     border: none;
@@ -782,6 +798,13 @@ p {
     overflow-x: hidden;
     min-height: 100px;
 }
+
+#welcome-banner {
+    flex-grow: 0;
+    white-space-collapse: collapse;
+    text-wrap: nowrap;
+}
+
 
 /* ============================================================================
    Thematic Text Alignment & Notification Blocks

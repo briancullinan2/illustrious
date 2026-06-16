@@ -97,6 +97,7 @@ async function authenticateCloudProvider(providerId, payload) {
 
 
 module.exports = {
+    PROVIDER_HANDLERS,
     CLOUD_PROVIDER_KEYS,
     authenticateCloudProvider,
     GLOBAL_CRED_DIR

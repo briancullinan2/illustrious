@@ -34,10 +34,10 @@
             </a>
 
         </h2>
+        {{USER}}
         <div id="project-selector">Connecting to Google Cloud...</div>
-        <hr />
         <h3>Scene Construction</h3>
-        <div>
+        <div id="scene-builder">
             <label>Prompt Slice:</label>
             <textarea id="prompt-input">An elephant on a red balloon</textarea>
             <label>Position Box (X, Y, W, H %):</label>
@@ -99,7 +99,7 @@
 
         <div class="local-model-section">
             <label class="local-model-label">
-                <input type="checkbox" id="local-model-toggle">
+                <input type="checkbox" checked id="local-model-toggle">
                 <span>Run your own local model</span>
             </label>
             <div class="download-progress-container">
