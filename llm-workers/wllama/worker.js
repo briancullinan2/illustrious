@@ -103,6 +103,25 @@ self.onmessage = async (e) => {
 
             const modelBlob = new Blob([myCachedArrayBuffer], { type: 'application/octet-stream' });
 
+            //const loraBuffer = (await getRecord(DB_STORE_NAME, payload.loraUrl, GGUF_DATABASE))?.contents;
+            //const loraBlob = new Blob([loraBuffer], { type: 'application/octet-stream' });
+
+            /*
+            git clone https://github.com/ggerganov/llama.cpp.git
+            cd llama.cpp
+            pip install -r requirements/requirements-convert-lora.txt
+            python convert-lora-to-gguf.py /path/to/your/OUTPUT_DIR --outfile /path/to/your/output_folder/my_adapter.gguf
+            */
+
+
+            /*
+            python export-lora.py \
+              --model-base /path/to/your/base_model.gguf \
+              --lora /path/to/your/my_adapter.gguf \
+              --outfile /path/to/your/final_merged_model.gguf
+            */
+
+
             if (!wllama) {
                 wllama = new Wllama(
                     {
@@ -129,6 +148,12 @@ self.onmessage = async (e) => {
             ], {
                 n_ctx: 2048,
                 n_threads: 4,
+                lora: [
+                    {
+                        data: loraBlob,
+                        scale: 1.0, // You can dial the strength of this specific training set up or down!
+                    }
+                ]
             });
 
             self.postMessage({ type: 'MODEL_READY' });

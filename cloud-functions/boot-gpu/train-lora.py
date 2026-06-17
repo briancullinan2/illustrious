@@ -166,6 +166,21 @@ def run_lora_alignment(model_path = BASE_MODEL):
     print("🎯 Training workflow complete.")
 
 
+#baked
+
+#from transformers import AutoModelForCausalLM
+#from peft import PeftModel
+
+# 1. Load baseline parameters
+#base_model = AutoModelForCausalLM.from_pretrained("base_model_dir")
+
+# 2. Layer the PEFT adapter matrices directly over the base architecture 
+#model = PeftModel.from_pretrained(base_model, "code_classifier_lora")
+
+# 3. Permanent Fusion: Collapses the low-rank adapters directly into the core weights
+#merged_model = model.merge_and_unload()
+
+
     
 
 if __name__ == "__main__":

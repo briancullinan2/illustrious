@@ -28,6 +28,28 @@ const FS_FILE = (ST_FILE << 12) + FS_DEFAULT;
 const FS_DIR = (ST_DIR << 12) + FS_DEFAULT;
 
 
+function inspectAndProfileModel(activeSession) {
+    const inputs = activeSession.inputNames;
+    const outputs = activeSession.outputNames;
+
+    // 1. Text-to-Image (Stable Diffusion / UNet)
+    if (inputs.includes('sample') && inputs.includes('timestep') && inputs.includes('encoder_hidden_states')) {
+        return { type: 'IMAGE_GENERATION_UNET', framework: 'StableDiffusion' };
+    }
+    // 2. Text-to-Image (Vae Decoder step)
+    if (inputs.includes('latent_sample') || (inputs.length === 1 && inputs[0].includes('latent'))) {
+        return { type: 'IMAGE_GENERATION_VAE', framework: 'StableDiffusion' };
+    }
+    // 3. Text-to-Text Large Language Model (Raw execution layer)
+    if (inputs.includes('input_ids') && inputs.includes('attention_mask')) {
+        return { type: 'TEXT_GENERATION_LLM', framework: 'CausalLM' };
+    }
+
+    // Default fallback for custom architectures
+    return { type: 'GENERIC_INFERENCE_TENSOR', framework: 'Unknown' };
+}
+
+
 
 async function compileInferenceSession(modelBuffer, dataBuffer = null, dataFileName = 'model_quantized.onnx_data') {
     self.postMessage({ type: 'COMPILING_MODEL' });
@@ -38,13 +60,11 @@ async function compileInferenceSession(modelBuffer, dataBuffer = null, dataFileN
         executionMode: 'parallel',
         enableMemPattern: true,
         enableCpuMemArena: false,
-        // Critical for reducing copies
         preferredOutputLocation: {
-            'present.*': 'gpu-buffer',   // keep KV on GPU
+            'present.*': 'gpu-buffer',
             'logits': 'gpu-buffer'
         },
-        // Extra tuning
-        logSeverityLevel: 3,  // reduce logging noise
+        logSeverityLevel: 3,
     };
 
     if (dataBuffer) {
@@ -55,16 +75,172 @@ async function compileInferenceSession(modelBuffer, dataBuffer = null, dataFileN
     const activeSession = await ort.InferenceSession.create(modelBuffer, options);
     const end = performance.now();
 
-    console.log(`[Worker] Session ready in ${(end - start).toFixed(2)}ms`);
-    console.log('[Worker] Inputs:', activeSession.inputNames.slice(0, 8), '...');
+    // 👉 Auto-profile the session boundaries
+    const profile = inspectAndProfileModel(activeSession);
+
+    console.log(`[Worker] ${profile.type} Session compiled successfully in ${(end - start).toFixed(2)}ms`);
+    console.log('[Worker] Inputs:', activeSession.inputNames);
     console.log('[Worker] Outputs:', activeSession.outputNames);
+
+    // Attach the runtime profile metadata right onto the instance object
+    activeSession.modelProfile = profile;
 
     return activeSession;
 }
 
 
+
+// Re-usable model tracker configurations 
+let activeSession = null;
+let activeGenModel = null; // Store high-level generative contexts here
+let activeTokenizer = null;
+
+async function compileInferenceSessionNew(modelBuffer, dataBuffer = null, dataFileName = 'model_quantized.onnx_data') {
+    self.postMessage({ type: 'COMPILING_MODEL' });
+
+    // 1. Stand up a quick lightweight metadata session to peek at the model graph properties
+    const peekSession = await ort.InferenceSession.create(modelBuffer, { 
+        executionProviders: ['cpu'], // Fast CPU read just for inspecting node lists
+        logSeverityLevel: 3 
+    });
+    
+    const profile = inspectAndProfileModel(peekSession);
+    console.log(`[Worker] Detected Model Profile Signature: ${profile.type}`);
+
+    // 2. Branch pipelines based on model target criteria
+    if (profile.type === 'TEXT_GENERATION_LLM') {
+        console.log('%c[Worker] Initializing optimized GenerativeModel pipeline...', 'color: #2196f3;');
+        
+        // Clear old sessions out of scope
+        if (activeSession) activeSession = null;
+        
+        // Create the specialized generative engine context path
+        // (If external data parameters exist, pass them via options array configurations)
+        const genOptions = dataBuffer ? { externalData: [{ data: dataBuffer, path: dataFileName }] } : {};
+        
+        activeGenModel = await ort.GenerativeModel.create(modelBuffer, genOptions);
+
+
+
+        /*
+        pip install olive-ai
+
+        # Compress and reformat the PEFT matrix states down into an explicit .onnx_adapter file
+        olive convert-adapters \
+            --adapter_path /path/to/code_classifier_lora \
+            --output_path /path/to/output_folder/my_adapter.onnx_adapter \
+            --dtype float32
+        */
+
+        /*
+        const model = await ort.GenerativeModel.create('/models/base_model.onnx');
+
+        // 2. Point to your tiny split adapter asset files
+        await model.loadAdapter('/models/code_writer.onnx_adapter', 'coder');
+        await model.loadAdapter('/models/creative.onnx_adapter', 'writer');
+
+        // 3. Hot-swap the active weights on the fly based on current task criteria!
+        generator.setActiveAdapter('coder');
+        */
+
+
+
+        activeGenModel.modelProfile = profile;
+        
+        return activeGenModel;
+    } else {
+        console.log('%c[Worker] Initializing standard low-level InferenceSession pipeline...', 'color: #9c27b0;');
+        if (activeGenModel) activeGenModel = null;
+
+        const options = {
+            executionProviders: ['webgpu'],
+            graphOptimizationLevel: 'all',
+            executionMode: 'parallel',
+            enableMemPattern: true,
+            enableCpuMemArena: false,
+            preferredOutputLocation: { 'present.*': 'gpu-buffer', 'logits': 'gpu-buffer' },
+            logSeverityLevel: 3,
+        };
+
+        if (dataBuffer) {
+            options.externalData = [{ data: dataBuffer, path: dataFileName }];
+        }
+
+        activeSession = await ort.InferenceSession.create(modelBuffer, options);
+        activeSession.modelProfile = profile;
+        
+        return activeSession;
+    }
+}
+
+
+async function RunGenerativeModel(payload) {
+    try {
+        const { input_text, max_new_tokens = 256, temperature = 0.0, top_k = 40, top_p = 0.95 } = payload;
+
+        if (!activeGenModel) {
+            throw new Error("GenerativeModel context engine is not compiled or currently initialized.");
+        }
+
+        // 1. Direct sequence encoding pass using the model's native properties
+        const inputTokens = await tokenizer.encode(input_text);
+
+        // 2. Instantiate runtime tracking loops using the generative configuration properties
+        const generatorParams = await activeGenModel.createGeneratorParams(inputTokens);
+        
+        // Pass your typical text execution constraints cleanly
+        generatorParams.setSearchParam('max_length', inputTokens.length + max_new_tokens);
+        generatorParams.setSearchParam('temperature', temperature);
+        generatorParams.setSearchParam('top_k', top_k);
+        generatorParams.setSearchParam('top_p', top_p);
+
+        // Instantiate the local state iterator tracking node
+        const generator = await activeGenModel.createGenerator(generatorParams);
+        
+        console.log("%c[Worker] Auto-regressive hardware acceleration thread looping initialized.", "color: #4caf50;");
+
+        // 3. Inference execution loop
+        while (!generator.isDone()) {
+            // Evaluates matrix arrays entirely on the GPU block 
+            await generator.computeNextLogits();
+            await generator.generateNextToken();
+
+            // Fetch the last individual token ID generated in this step
+            const lastTokenSequence = generator.getLastTokens();
+            const nextTokenId = lastTokenSequence[lastTokenSequence.length - 1];
+
+            // Decode just that single token segment instantly
+            const deltaText = await tokenizer.decode([nextTokenId]);
+
+            // Flush out your delta segment straight back to your UI canvas layer
+            self.postMessage({
+                type: 'TOKEN_STREAM',
+                payload: { 
+                    delta: deltaText, 
+                    tokenId: nextTokenId 
+                }
+            });
+        }
+
+        // 4. Cleanup internal memory allocation pointers 
+        generator.dispose();
+        generatorParams.dispose();
+
+        self.postMessage({ type: 'GENERATION_COMPLETE' });
+
+    } catch (err) {
+        console.error("🚨 Generative pipeline failed:", err);
+        self.postMessage({ type: 'ERROR', payload: { message: err.message + '\n' + (err.stack || '') } });
+    }
+}
+
+
+
+
 let cachedWebGPU = undefined;
 let tokenizer
+
+
 
 
 async function RunModel(payload) {
