@@ -198,23 +198,23 @@ async function getActiveAccountFromGoogle(req, clientOpts) {
 }
 
 async function fetchTelemetry(config, req) {
-    console.log(`[DEBUG: fetchTelemetry] Entry trace initialized.`);
-    console.log(`[DEBUG: fetchTelemetry] Raw Incoming Config Payload:`, JSON.stringify(config));
+    console.log(`[Telemetry] Entry trace initialized.`);
+    console.log(`[Telemetry] Raw Incoming Config Payload:`, JSON.stringify(config));
 
     // Fix 1: Pre-evaluate target project token identity to resolve configuration fallbacks early
     const initialConfigProjectId = config?.project_id || config?.projectId;
 
-    console.log(`[DEBUG: fetchTelemetry] Intercepting options state setup before dispatching network tasks...`);
+    console.log(`[Telemetry] Intercepting options state setup before dispatching network tasks...`);
     // Pass the initial project context down to resolve filesystem keys early
     const clientOpts = getGcpClientOptions(req, initialConfigProjectId);
 
-    console.log(`[DEBUG: fetchTelemetry] Resolving Active Google Account...`);
+    console.log(`[Telemetry] Resolving Active Google Account...`);
     const authenticatedAccount = await getActiveAccountFromGoogle(req, clientOpts);
-    console.log(`[DEBUG: fetchTelemetry] Resolved Account: ${authenticatedAccount}`);
+    console.log(`[Telemetry] Resolved Account: ${authenticatedAccount}`);
 
     // If we have no active identity context, halt execution before wasting network requests
     if (authenticatedAccount === "Unauthenticated Session") {
-        console.error(`[DEBUG: fetchTelemetry BOUNDARY FAILURE] Security validation failed: Unauthenticated credentials payload context.`);
+        console.error(`[DEBUG: Telemetry BOUNDARY FAILURE] Security validation failed: Unauthenticated credentials payload context.`);
         return {
             authenticated: false,
             status: 'UNAUTHENTICATED',
@@ -233,13 +233,13 @@ async function fetchTelemetry(config, req) {
     }
 
 
-    console.log(`[DEBUG: fetchTelemetry] Fetching Project Matrix List from Google...`);
+    console.log(`[Telemetry] Fetching Project Matrix List from Google...`);
     const processedProjects = await listProjectsFromGoogle(req, clientOpts);
-    console.log(`[DEBUG: fetchTelemetry] Found ${processedProjects?.length || 0} project entries on disk/session.`);
+    console.log(`[Telemetry] Found ${processedProjects?.length || 0} project entries on disk/session.`);
 
 
     // Explicitly print the entire dataset structure to see exactly what is floating around in memory
-    console.log(`[DEBUG: fetchTelemetry] Complete Projects Array:`, JSON.stringify(processedProjects, null, 2));
+    console.log(`[Telemetry] Complete Projects Array:`, JSON.stringify(processedProjects, null, 2));
 
     // Extract the project ID from the loaded keyfile metadata explicitly
     let keyfileProjectId = null;
@@ -263,7 +263,7 @@ async function fetchTelemetry(config, req) {
     // Dynamic resolution hierarchy: configuration string, matched array object, or direct keyfile fallback
     const targetProjectId = initialConfigProjectId || matchedProject?.id || keyfileProjectId;
 
-    console.log(`[DEBUG: fetchTelemetry] Comprehensive Project Evaluation Table:`);
+    console.log(`[Telemetry] Comprehensive Project Evaluation Table:`);
     console.log(`   ├─ Incoming Config Token String:   ${initialConfigProjectId || 'NOT PROVIDED'}`);
     console.log(`   ├─ Active Keyfile Disk Reference:   ${keyfileProjectId || 'NOT FOUND'}`);
     console.log(`   ├─ API Array Intersection Match:   ${matchedProject ? JSON.stringify(matchedProject) : 'NONE'}`);
@@ -271,7 +271,7 @@ async function fetchTelemetry(config, req) {
 
     const targetZone = config?.zone || 'us-central1-a';
     const targetRegion = targetZone.split('-').slice(0, 2).join('-');
-    console.log(`[DEBUG: fetchTelemetry] Geometric Layout -> Zone: ${targetZone} | Region: ${targetRegion}`);
+    console.log(`[Telemetry] Geometric Layout -> Zone: ${targetZone} | Region: ${targetRegion}`);
 
     let activeVMs = [];
     let quotaInfo = null;
@@ -279,7 +279,7 @@ async function fetchTelemetry(config, req) {
     let poolMessage = 'Hardware infrastructure loop verified.';
 
     if (!targetProjectId) {
-        console.warn(`[DEBUG: fetchTelemetry BOUNDARY FAILURE] targetProjectId evaluated to empty. Halting downstream API calls.`);
+        console.warn(`[DEBUG: Telemetry BOUNDARY FAILURE] targetProjectId evaluated to empty. Halting downstream API calls.`);
         return {
             authenticated: true,
             status: 'UNCONFIGURED',
@@ -293,45 +293,45 @@ async function fetchTelemetry(config, req) {
     }
 
     try {
-        console.log(`[DEBUG: fetchTelemetry] Dynamically loading Google Cloud Compute SDK clients...`);
+        console.log(`[Telemetry] Dynamically loading Google Cloud Compute SDK clients...`);
         const { InstancesClient, RegionsClient, DisksClient } = require('@google-cloud/compute');
 
-        console.log(`[DEBUG: fetchTelemetry] Instantiating SDK Clients with pre-built options matrix payload.`);
+        console.log(`[Telemetry] Instantiating SDK Clients with pre-built options matrix payload.`);
         const computeClient = new InstancesClient(clientOpts);
         const disksClient = new DisksClient(clientOpts);
 
         // 1. Fetch raw, complete quota dictionary object
-        console.log(`[DEBUG: fetchTelemetry API CALL] Dispatching verifyGpuQuota to Regions Client...`);
+        console.log(`[DEBUG: Telemetry API CALL] Dispatching verifyGpuQuota to Regions Client...`);
         quotaInfo = await verifyGpuQuota(RegionsClient, targetProjectId, targetRegion);
-        console.log(`[DEBUG: fetchTelemetry API SUCCESS] Received Quotas payload. Size: ${Object.keys(quotaInfo || {}).length} metrics tracked.`);
+        console.log(`[DEBUG: Telemetry API SUCCESS] Received Quotas payload. Size: ${Object.keys(quotaInfo || {}).length} metrics tracked.`);
 
         // 2. Fire background zombie drive cleanups
         if (typeof purgeStaleStagingDisks === 'function') {
-            console.log(`[DEBUG: fetchTelemetry PIPELINE] Launching async purgeStaleStagingDisks drive routine...`);
+            console.log(`[DEBUG: Telemetry PIPELINE] Launching async purgeStaleStagingDisks drive routine...`);
             purgeStaleStagingDisks(disksClient, targetProjectId, targetZone).catch(err =>
                 console.warn("[CLEANUP TRACE] Background drive purger stalled:", err.message)
             );
         } else {
-            console.log(`[DEBUG: fetchTelemetry] Skipping storage purges. 'purgeStaleStagingDisks' function definition missing in frame.`);
+            console.log(`[Telemetry] Skipping storage purges. 'purgeStaleStagingDisks' function definition missing in frame.`);
         }
 
         // 3. Evaluate worker pool instances natively
-        console.log(`[DEBUG: fetchTelemetry API CALL] Dispatching evaluateWorkerPool to Instances Client...`);
+        console.log(`[DEBUG: Telemetry API CALL] Dispatching evaluateWorkerPool to Instances Client...`);
         activeVMs = await evaluateWorkerPool(computeClient, targetProjectId, targetZone);
-        console.log(`[DEBUG: fetchTelemetry API SUCCESS] Received VM compute frame payload array. Total instances parsed: ${activeVMs?.length || 0}`);
+        console.log(`[DEBUG: Telemetry API SUCCESS] Received VM compute frame payload array. Total instances parsed: ${activeVMs?.length || 0}`);
 
         const activeWorkers = activeVMs.filter(node => ['RUNNING', 'PROVISIONING', 'STAGING'].includes(node.status));
         console.log(`[POOL ANALYSIS] Active/Staging nodes count: ${activeWorkers.length}`);
 
         // 4. Intercept state grids for blocked recovery locks
-        console.log(`[DEBUG: fetchTelemetry] Checking compute stack for structural node gridlocks...`);
+        console.log(`[Telemetry] Checking compute stack for structural node gridlocks...`);
         const lingeringNode = activeVMs.find(n => ['STOPPING', 'TERMINATED', 'STOPPED'].includes(n.status));
         if (lingeringNode) {
             console.log(`[HOLD] Gridlock detected on item: ${lingeringNode.name} Status: ${lingeringNode.status}`);
             poolStatus = 'POOL_BLOCKED';
             poolMessage = `Hardware pool stalled. Reason: ${lingeringNode.diagnostic || 'Node requires a cloud hypervisor clear.'}`;
         } else {
-            console.log(`[DEBUG: fetchTelemetry] Zero compute pool locks caught.`);
+            console.log(`[Telemetry] Zero compute pool locks caught.`);
         }
 
     } catch (err) {
@@ -351,7 +351,7 @@ async function fetchTelemetry(config, req) {
         };
     }
 
-    console.log(`[DEBUG: fetchTelemetry] Constructing pipeline return payload...`);
+    console.log(`[Telemetry] Constructing pipeline return payload...`);
     return {
         authenticated: true,
         status: poolStatus,

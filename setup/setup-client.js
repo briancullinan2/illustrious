@@ -1,5 +1,5 @@
 let selectedProjectId = '';
-let credentialData
+
 // Complete layout routing matrix containing all 13 platforms
 // Complete layout routing matrix with expanded GPU-heavy availability data
 const providerRoutingStrategy = {
@@ -128,7 +128,7 @@ function initProviderDropdowns() {
 
 async function loadEnvironment() {
     const res = await fetch('/api/local-env?t=' + Date.now());
-    credentialData = await res.json();
+    const credentialData = await res.json();
     document.getElementById('auth-status').innerText = 'Profile Account: ' + credentialData.account;
 
     const listContainer = document.getElementById('project-list');
@@ -173,48 +173,50 @@ async function loadEnvironment() {
     });
 
 
-    const credMap = credentialData.providerCredentials;
 
-    Object.keys(credMap).forEach(serviceId => {
-        // Find the label card linked to this radio input ID
-        const radioInput = document.getElementById(serviceId);
-        if (!radioInput) return;
-
-        // Target the companion badge component next to the layout string
-        const card = document.querySelector(`label[for="${serviceId}"]`);
-        if (!card) return;
-
-        const badge = card.querySelector('.vm-card-badge');
-        const details = card.querySelector('.vm-card-detail');
-        const serviceContainer = document.querySelector('#' + serviceId.split('-')[0] + '-container')
-        const apiKeyBox = serviceContainer ? serviceContainer.querySelector('[type="password"]') : null
-
-        if (credMap[serviceId]) {
-            // Hot swap state class styles to green/active indicator
-            badge.textContent = "READY";
-            badge.className = "vm-card-badge state-active";
-
-            if (apiKeyBox) {
-                apiKeyBox.value = credMap[serviceId]
-            }
-        } else {
-            // Retain fallbacks if configuration is completely vacant
-            if (serviceId !== 'gcloud-service') { // Skip default connected dev states
-                badge.textContent = "AVAILABLE";
-                badge.className = "vm-card-badge state-staging";
-            }
-        }
-    });
-
-
-
+    Object.keys(credentialData.providerCredentials).forEach(serviceId => {
+        updateCredentialHint(serviceId, credentialData.providerCredentials[serviceId])
+    })
 
     loadLocalFunctions(credentialData.functions)
 }
 
 
+function updateCredentialHint(serviceId, hint) {
 
-function navigateStep(stepNum, isPoppingState = false) {
+    // Find the label card linked to this radio input ID
+    const radioInput = document.getElementById(serviceId);
+    if (!radioInput) return;
+
+    // Target the companion badge component next to the layout string
+    const card = document.querySelector(`label[for="${serviceId}"]`);
+    if (!card) return;
+
+    const badge = card.querySelector('.vm-card-badge');
+    const details = card.querySelector('.vm-card-detail');
+    const serviceContainer = document.querySelector('#' + serviceId.split('-')[0] + '-container')
+    const apiKeyBox = serviceContainer ? serviceContainer.querySelector('[type="password"]') : null
+
+    if (hint) {
+        // Hot swap state class styles to green/active indicator
+        badge.textContent = "READY";
+        badge.className = "vm-card-badge state-active";
+
+        if (apiKeyBox) {
+            apiKeyBox.value = hint
+        }
+    } else {
+        // Retain fallbacks if configuration is completely vacant
+        if (serviceId !== 'gcloud-service') { // Skip default connected dev states
+            badge.textContent = "AVAILABLE";
+            badge.className = "vm-card-badge state-staging";
+        }
+    }
+}
+
+
+
+function navigateStep(stepNum, event, isPoppingState = false) {
     // 1. Locate and toggle active DOM viewports
     const targetPanel = document.getElementById(`step-${stepNum}`);
     if (!targetPanel) {
@@ -258,7 +260,7 @@ window.addEventListener('popstate', (event) => {
     } else if (window.location.hash) {
         // Fallback parser if state frames are empty but hashes are present during track changes
         const rawStep = window.location.hash.replace('#step-', '');
-        navigateStep(rawStep, true);
+        navigateStep(rawStep, event, true);
     }
 });
 
@@ -571,7 +573,7 @@ function initializeLogoGenerator() {
 }
 
 
-async function initializeLogoGeneratorStatic() {
+async function initializeLogoGeneratorStatic(event) {
 
     await loadEnvironment();
 
@@ -645,19 +647,19 @@ async function initializeLogoGeneratorStatic() {
     if (window.location.hash) {
         // Parse the existing hash directly out of the browser location mapping context
         const initialStep = window.location.hash.replace('#step-', '');
-        navigateStep(initialStep, false);
+        navigateStep(initialStep, event, false);
     } else {
         // Fallback default frame landing target if navigating straight to root without parameters
-        navigateStep(1, false);
+        navigateStep(1, event, false);
     }
 }
 
 
 
 if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', () => setTimeout(initializeLogoGeneratorStatic, 200));
+    document.addEventListener('DOMContentLoaded', (event) => setTimeout(initializeLogoGeneratorStatic.bind(null, event), 200));
 } else {
-    setTimeout(initializeLogoGeneratorStatic, 200);
+    setTimeout(initializeLogoGeneratorStatic.bind(null, null), 200);
 }
 
 
@@ -667,7 +669,8 @@ document.getElementById('back-2').addEventListener('click', navigateStep.bind(nu
 document.getElementById('next-25').addEventListener('click', navigateStep.bind(null, 3))
 document.getElementById('back-1').addEventListener('click', navigateStep.bind(null, 1))
 document.getElementById('next-2').addEventListener('click', saveCredentials)
-document.getElementById('next-1').addEventListener('click', navigateStep.bind(null, 2))
+
+
 document.getElementById('callback-uri-display').addEventListener('click', () => {
     document.getElementById('callback-uri-display').select();
     document.execCommand('copy');
@@ -691,22 +694,27 @@ document.getElementById('install-all-btn').addEventListener('click', deployAllFu
 
 
 
+document.querySelector('#step-1').addEventListener('click', verifyHostingStatus);
+
 document.querySelector('#step-1 .scroll-grid-box').addEventListener('click', verifyHostingStatus);
 
 
 
 async function verifyHostingStatus(e) {
     const selectedCard = e.target ? e.target.closest('label[for]') : null;
-    if (!selectedCard) return;
+    const parentContainer = e.target && e.target.closest('button') ? e.target.closest('div[id*="-container"]') : null;
 
-    const providerId = selectedCard.getAttribute('for'); // Target ID: 'runpod-service'
-    const containerPrefix = providerId.split('-')[0];    // Prefix String: 'runpod'
-    const targetContainer = document.getElementById(`${containerPrefix}-container`);
+    if (!selectedCard && !parentContainer) return;
+    e.stopPropagation()
 
-    if (!targetContainer) return;
+    const providerId = selectedCard?.getAttribute('for') || parentContainer?.id.replace('-container', '-service');
+    const containerPrefix = providerId?.replace('-service', '');    // Prefix String: 'runpod'
+    const serviceContainer = parentContainer || document.getElementById(`${containerPrefix}-container`);
+
+    if (!serviceContainer) return;
 
     // Dynamically query all input parameters inside the form
-    const formElement = targetContainer.querySelector('form');
+    const formElement = serviceContainer.querySelector('form');
     if (!formElement) return;
 
     const inputFields = formElement.querySelectorAll('input, select, textarea');
@@ -719,7 +727,7 @@ async function verifyHostingStatus(e) {
     });
 
     // Provide immediate visual feedback on the selector button container
-    const actionButton = targetContainer.querySelector('.btn-row button');
+    const actionButton = serviceContainer.querySelector('.btn-row button');
     const nativeButtonText = actionButton ? actionButton.textContent : '';
     if (actionButton) actionButton.textContent = "Verifying Handshake Status Matrix...";
 
@@ -741,7 +749,7 @@ async function verifyHostingStatus(e) {
 
         // Hydrate dropdown elements dynamically if regional validation metadata returned
         if (data.meta && data.meta.regions) {
-            const regionSelect = targetContainer.querySelector('select');
+            const regionSelect = serviceContainer.querySelector('select');
             if (regionSelect) {
                 regionSelect.innerHTML = data.meta.regions
                     .map(r => `<option value="${r}">${r}</option>`)
@@ -754,12 +762,24 @@ async function verifyHostingStatus(e) {
             actionButton.style.borderColor = "var(--accent)";
         }
 
+        const apiKeyBox = serviceContainer ? serviceContainer.querySelector('[type="password"]') : null
+        if (apiKeyBox) {
+            updateCredentialHint(providerId, `•••• ${apiKeyBox.value.slice(-4)}`)
+        }
+
+        if (parentContainer) {
+            navigateStep('2')
+        }
+
+
     } catch (error) {
-        console.error(`Handshake Collision Error for ${providerId}:`, error.message);
+        console.error(`Handshake Collision Error for ${providerId}:`, error);
         if (actionButton) {
             actionButton.textContent = `Error: ${error.message}`;
             actionButton.style.borderColor = "var(--red)";
         }
+        updateCredentialHint(providerId, null)
+
     } finally {
         // Reset action labels smoothly after a brief configuration validation hold
         setTimeout(() => {

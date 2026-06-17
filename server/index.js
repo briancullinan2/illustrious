@@ -20,7 +20,7 @@ const SESSIONS_DIR = path.join(CREDENTIALS_DIR, 'sessions'); // Isolated folder 
 const hasFileStore = false
 try {
     if (!fs.existsSync(SESSIONS_DIR)) {
-        fs.mkdirSync(SESSIONS_DIR)
+        fs.mkdirSync(SESSIONS_DIR, { recursive: true })
     }
     hasFileStore = true
 }
@@ -141,6 +141,30 @@ app.use(session({
 
 // 2. Automatic Dictionary Lookup Middleware
 app.use((req, res, next) => {
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Range');
+    res.setHeader('Access-Control-Expose-Headers', 'Content-Length, Content-Range');
+
+    // Essential for SharedArrayBuffer / Cross-Origin Isolation
+    res.setHeader('Cross-Origin-Opener-Policy', 'same-origin');
+    res.setHeader('Cross-Origin-Embedder-Policy', 'require-corp');
+
+    // This tells the browser it's okay to load this resource 
+    // even when the requesting page has a COEP policy
+    res.setHeader('Cross-Origin-Resource-Policy', 'cross-origin');
+
+    res.setHeader('Content-Security-Policy', "script-src 'self' 'unsafe-eval' 'sha256-iN7wpJdxHlpujRppkOA8N0+Mzp0ZqZr3lCtxM00Y63c='; worker-src 'self' blob:;");
+
+    res.setHeader('Permissions-Policy', 'cross-origin-isolated=(*)');
+
+    // Handle preflight OPTIONS requests immediately
+    if (req.method === 'OPTIONS') {
+        res.statusCode = 204;
+        return res.end();
+    }
+
+
     if (!req.session.tokens && req.session.userEmail) {
         const dictionary = loadAllUsersDictionary();
         const userTokens = dictionary[req.session.userEmail];
@@ -336,6 +360,6 @@ app.use(express.static(path.join(__dirname, '..')));
 server.listen(PORT, () => {
     console.log(`🚀 Illustrious Execution Hub spinning up on http://localhost:${PORT}`);
     try {
-        execSync(`start http://localhost:${PORT}`);
+        //execSync(`start http://localhost:${PORT}`);
     } catch (e) { }
 });

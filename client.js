@@ -1,4 +1,5 @@
 
+const DEFAULT_MODEL = 'onnx-community/bge-small-en-v1.5-ONNX'
 
 let projectConfig = {
     REGION: 'us-central1'
@@ -94,6 +95,13 @@ document.addEventListener("DOMContentLoaded", () => {
     syncClusterHardware();
     // Maintain a steady 10-second monitoring cycle over cluster health matrices
     clusterPollInterval = setInterval(syncClusterHardware, 10000);
+
+    if (toggleCheckbox.checked) {
+        worker.postMessage({
+            type: 'LOAD_MODEL',
+            payload: { modelUrl: DEFAULT_MODEL }
+        });
+    }
 });
 
 
@@ -122,7 +130,7 @@ async function syncClusterHardware() {
         console.log(`📥 [CLIENT TELEMETRY] Response payload received (HTTP ${res.status}):`, data);
 
         // 📊 Route the unpacked payloads directly to your new structural UI observers
-        renderObserverQuotaTable(data.quotas);
+        renderObserverQuotaTable(data);
         renderObserverVmMatrix(data.instances);
 
         if (document.getElementById('obs-zone')) {
@@ -230,29 +238,84 @@ async function renderMulticastScene() {
     // TODO: Execute fetch POST against /api/cluster/allocate to spin the deployed gcloud GPU function
 }
 
-function renderObserverQuotaTable(quotaReport) {
+
+
+function renderObserverQuotaTable(masterPayload) {
     const tableBody = document.getElementById('quota-telemetry-rows');
     if (!tableBody) return;
 
-    if (!quotaReport || Object.keys(quotaReport).length === 0) {
+    // Guard rail if server payload context is entirely vacant or missing inner structural mappings
+    if (!masterPayload || !masterPayload.success || !masterPayload.meta || !masterPayload.meta.services) {
+        tableBody.innerHTML = `<tr><td colspan="4" class="quota-empty-alert">No cloud infrastructure systems verified online.</td></tr>`;
+        return;
+    }
+
+    const services = masterPayload.meta.services;
+    let rowsHtml = '';
+    let processedMetricsCount = 0;
+
+    // Loop through every provider service entry present in the consolidated object
+    for (const [serviceName, serviceData] of Object.entries(services)) {
+        // If a service completely failed its handshake, render a distinct warning alert row for it
+        if (serviceData.success === false || !serviceData.quotas) {
+            rowsHtml += `
+                <tr class="quota-row-error text-danger-muted">
+                    <td class="quota-cell-metric">⚠️ [${serviceName}] Telemetry Offlined</td>
+                    <td colspan="3" class="quota-cell-error-message">${serviceData.error || 'Pipeline data vacant.'}</td>
+                </tr>
+            `;
+            processedMetricsCount++;
+            continue;
+        }
+
+        const quotas = serviceData.quotas;
+
+        // Pattern A: Flattened / Single Property Layout (e.g., RunPod Wallet Matrix)
+        if (quotas.metricName !== undefined) {
+            const availabilityClass = parseFloat(String(quotas.available).replace(/[^0-9.-]+/g, '')) <= 0
+                ? 'status-critical-text'
+                : 'status-optimal-text';
+
+            rowsHtml += `
+                <tr class="quota-row quota-provider-${serviceName}">
+                    <td class="quota-cell-metric">
+                        <span class="provider-badge badge-runpod">[RunPod]</span> ${quotas.metricName}
+                    </td>
+                    <td class="quota-cell-value text-white">${quotas.inUse || quotas.usage || '$0.00'}</td>
+                    <td class="quota-cell-value text-muted-dark">${quotas.limit || 'N/A'}</td>
+                    <td class="quota-cell-value ${availabilityClass}">${quotas.available}</td>
+                </tr>
+            `;
+            processedMetricsCount++;
+        }
+        // Pattern B: Keyed Dictionary Layout Object (e.g., Google Cloud Engine GPU limits map)
+        else {
+            for (const [metricName, metrics] of Object.entries(quotas)) {
+                // Safely convert properties to floats for exact mathematical threshold checks
+                const availNum = parseFloat(String(metrics.available).replace(/[^0-9.-]+/g, '')) || 0;
+                const availabilityClass = availNum < 1 ? 'status-critical-text' : 'status-optimal-text';
+
+                rowsHtml += `
+                    <tr class="quota-row quota-provider-${serviceName}">
+                        <td class="quota-cell-metric">
+                            <span class="provider-badge badge-gcloud">[GCloud]</span> ${metricName.replace(/_/g, ' ')}
+                        </td>
+                        <td class="quota-cell-value text-white">${metrics.usage}</td>
+                        <td class="quota-cell-value text-muted-dark">${metrics.limit}</td>
+                        <td class="quota-cell-value ${availabilityClass}">${metrics.available}</td>
+                    </tr>
+                `;
+                processedMetricsCount++;
+            }
+        }
+    }
+
+    // Secondary backstop verification if loop completes but no valid elements matched
+    if (processedMetricsCount === 0) {
         tableBody.innerHTML = `<tr><td colspan="4" class="quota-empty-alert">No active GPU quotas verified in this region.</td></tr>`;
         return;
     }
 
-    let rowsHtml = '';
-    for (const [metricName, metrics] of Object.entries(quotaReport)) {
-        // Apply conditional structural class strings based on availability
-        const availabilityClass = metrics.available < 1 ? 'status-critical-text' : 'status-optimal-text';
-
-        rowsHtml += `
-            <tr class="quota-row">
-                <td class="quota-cell-metric">${metricName}</td>
-                <td class="quota-cell-value text-white">${metrics.usage}</td>
-                <td class="quota-cell-value text-muted-dark">${metrics.limit}</td>
-                <td class="quota-cell-value ${availabilityClass}">${metrics.available}</td>
-            </tr>
-        `;
-    }
     tableBody.innerHTML = rowsHtml;
 }
 
@@ -297,6 +360,8 @@ function renderObserverVmMatrix(instances) {
         `;
     }).join('');
 }
+
+
 
 async function triggerManualAllocationClaim() {
     console.log("🚀 [MANUAL SYSTEM ALLOCATION] Bypassing automatic manager timers...");
@@ -484,3 +549,77 @@ document.getElementById('control-switch').addEventListener('click', e => {
     document.getElementById('control-panel').classList.add('active');
     return false;
 });
+
+
+const worker = new Worker('/onnx/worker.js');
+const progressElement = document.getElementById('local-model-progress');
+const progressText = document.getElementById('local-model-progress-text');
+const generalProgressElement = document.getElementById('general-progress');
+const generalProgressText = document.getElementById('general-progress-text');
+const toggleCheckbox = document.getElementById('local-model-toggle');
+
+toggleCheckbox.addEventListener('change', (e) => {
+    if (e.target.checked) {
+        worker.postMessage({
+            type: 'LOAD_MODEL',
+            payload: { modelUrl: DEFAULT_MODEL }
+        });
+    }
+});
+
+worker.onmessage = function (e) {
+    const { type, payload } = e.data;
+
+    if (type === 'DOWNLOAD_PROGRESS') {
+        progressElement.value = payload.percent;
+        progressText.textContent = `${payload.percent}%`;
+        generalProgressElement.value = payload.percent;
+        generalProgressText.textContent = `${payload.percent}%`;
+    }
+    else if (type === 'COMPILING_MODEL') {
+        progressText.textContent = 'Compiling GPU pipelines...';
+        generalProgressText.textContent = 'Compiling GPU pipelines...';
+    }
+    else if (type === 'MODEL_READY') {
+        progressText.textContent = 'Ready';
+        progressElement.value = 100;
+        generalProgressText.textContent = 'Ready';
+        generalProgressElement.value = 100;
+    }
+    else if (type === 'ERROR') {
+        console.error('Worker Engine Error:', payload.message);
+        progressText.textContent = 'Error';
+        generalProgressText.textContent = 'Error';
+    }
+    else if (type === 'INFERENCE_COMPLETE') {
+        const embeddings = payload.outputs.last_hidden_state.data;
+        const dimensions = payload.outputs.last_hidden_state.dims;
+
+        console.log('Received embedding chunk vector array:', embeddings);
+        // Stream this vector chunk directly to your vector storage/processing layer
+        renderOrIndexChunk(embeddings, dimensions);
+    }
+    else if(type === 'TOKEN_STREAM') {
+        const outputElement = document.getElementById('output-display-container');
+        outputElement.textContent += payload.delta;
+        outputElement.scrollTop = outputElement.scrollHeight;
+    }
+};
+
+async function handleGenerate() {
+    const promptText = document.getElementById('prompt-input').value;
+    const outputElement = document.getElementById('output-display-container');
+
+    outputElement.textContent = promptText;
+
+    worker.postMessage({
+        type: 'START_GENERATION',
+        payload: {
+            input_text: promptText,
+            max_new_tokens: 1000,
+            temperature: 0.8,
+            top_k: 40
+        }
+    });
+}
+

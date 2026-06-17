@@ -1,6 +1,6 @@
 // setup.js
 const express = require('express');
-const { authenticateCloudProvider, CLOUD_PROVIDER_KEYS } = require('../cloud-functions/cluster-manager/cloud-manager.js');
+const { authenticateCloudProvider, CLOUD_PROVIDER_KEYS, loadCredentialsForProvider } = require('../cloud-functions/cluster-manager/cloud-manager.js');
 const { app, server, GLOBAL_CRED_DIR, serveErrorScreen } = require('../server/server.js');
 const { execSync, spawn, spawnSync } = require('child_process');
 const fs = require('fs');
@@ -126,45 +126,54 @@ async function listProjectsFromGcloudCLI() {
 }
 
 
-
-
 app.post('/api/cluster/verify-and-save', async (req, res) => {
     const { providerId, fields } = req.body;
 
     try {
+        // 1. Initial platform check (Allow Google Cloud which doesn't use a static file property)
         const provider = CLOUD_PROVIDER_KEYS.find(p => p.id === providerId);
-        if (!provider) return res.status(400).json({ error: 'Unknown platform target.' });
+        if (!provider) {
+            console.error(`🛑 [VERIFY REJECTED] Unknown platform target requested: ${providerId}`);
+            return res.status(400).json({ error: 'Unknown platform target.' });
+        }
 
-        // Single normalized method call works uniformly for Google, RunPod, or AWS
-        const authStatus = await authenticateCloudProvider(providerId, fields);
+        // 2. Fetch existing credentials configuration if a file layout is managed for it
+        const existingData = loadCredentialsForProvider(providerId);
 
-        // Commit configuration states directly to disk on success
+        // 3. Resolve masking boundaries from the UI elements
+        const cleanFields = { ...fields };
+        Object.keys(cleanFields).forEach(k => {
+            if (String(cleanFields[k]).includes('••••') || cleanFields[k] === '') {
+                cleanFields[k] = existingData[k] || '';
+            }
+        });
+
+        // 4. Fire live handshake verification using the clean flat keys
+        const authStatus = await authenticateCloudProvider(providerId, cleanFields);
+
+        // 5. Commit states to local filesystem dictionary ONLY if it utilizes a file profile target
         if (authStatus.success && provider.file) {
-            if (!fs.existsSync(GLOBAL_CRED_DIR)) fs.mkdirSync(GLOBAL_CRED_DIR, { recursive: true });
+            if (!fs.existsSync(GLOBAL_CRED_DIR)) {
+                fs.mkdirSync(GLOBAL_CRED_DIR, { recursive: true });
+            }
             const targetFilePath = path.join(GLOBAL_CRED_DIR, provider.file);
 
-            let existingData = {};
-            if (fs.existsSync(targetFilePath)) {
-                try { existingData = JSON.parse(fs.readFileSync(targetFilePath, 'utf8')); } catch (e) { }
-            }
-
-            const cleanFields = { ...fields };
-            Object.keys(cleanFields).forEach(k => {
-                if (String(cleanFields[k]).includes('••••') || cleanFields[k] === '') cleanFields[k] = existingData[k] || '';
-            });
-
-            fs.writeFileSync(targetFilePath, JSON.stringify({ ...existingData, ...cleanFields }, null, 4), 'utf8');
+            fs.writeFileSync(
+                targetFilePath,
+                JSON.stringify({ ...existingData, ...cleanFields }, null, 4),
+                'utf8'
+            );
+            console.log(`📝 [SETUP SUCCESS] Local file profile synchronized for: ${providerId}`);
         }
 
         // Returns { success: true, meta: { account, projects, activeVMs, quotas } }
-        res.json(authStatus);
+        return res.json(authStatus);
 
     } catch (err) {
-        res.status(500).json({ error: err.message });
+        console.error(`❌ [SETUP EXCEPTION] Verification loop broken for ${providerId}:`, err);
+        return res.status(500).json({ error: err.message });
     }
 });
-
-
 
 function scanCloudCredentials() {
 
@@ -198,13 +207,17 @@ function scanCloudCredentials() {
                 const rawData = JSON.parse(fs.readFileSync(fullPath, 'utf8'));
                 const primarySecret = rawData[provider.key];
 
-                if (primarySecret && typeof primarySecret === 'string') {
+                // FIX: Explicitly ensure the secret actually exists, is a string, and contains actual characters
+                if (primarySecret && typeof primarySecret === 'string' && primarySecret.trim().length > 0) {
                     const cleanSecret = primarySecret.trim();
                     if (cleanSecret.length > 4) {
                         hint = `•••• ${cleanSecret.slice(-4)}`;
                     } else {
                         hint = `•••• Active`;
                     }
+                } else {
+                    // If the key is an empty string, null, or whitespace, it's NOT configured
+                    hint = null;
                 }
             }
 

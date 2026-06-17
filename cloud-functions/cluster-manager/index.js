@@ -1,4 +1,4 @@
-const { GLOBAL_CRED_DIR } = require('./cloud-manager.js')
+const { GLOBAL_CRED_DIR, loadCredentialsForProvider, CLOUD_PROVIDER_KEYS, normalizePayloadWithDisk } = require('./cloud-manager.js')
 const { verifyGpuQuota, evaluateWorkerPool, getGcpClientOptions } = require('./host-google.js')
 const path = require('path');
 const os = require('os');
@@ -13,6 +13,63 @@ const CONFIG = {
     BOOT_GPU_URL: process.env.BOOT_GPU_FUNCTION_URL
 };
 
+
+const PROVIDER_HANDLERS = {
+    'runpod-service': require('./host-runpod.js'),
+    'gcloud-service': require('./host-google.js')
+};
+
+// Global in-memory cache map to store telemetry states across all providers
+const telemetryCache = {
+    // Structure per provider: 
+    // 'provider-id': { data: null, expiresAt: 0, inflight: null }
+};
+
+
+
+// Updated getCoalescedTelemetry to make sure results are written immediately to the memory cache object
+function getCoalescedTelemetry(providerId, handler, config) {
+    if (!telemetryCache[providerId]) {
+        telemetryCache[providerId] = { data: null, expiresAt: 0, inflight: null };
+    }
+
+    const cache = telemetryCache[providerId];
+    const now = Date.now();
+
+    if (cache.data && now < cache.expiresAt) {
+        return Promise.resolve(cache.data);
+    }
+
+    if (cache.inflight) {
+        return cache.inflight;
+    }
+
+    console.log(`📡 [CACHE MISS] Dispatching live telemetry fetch for: ${providerId}`);
+    cache.inflight = handler.fetchTelemetry(config)
+        .then(result => {
+            // Update cache memory instantly on resolution
+            cache.data = result;
+            cache.expiresAt = Date.now() + (10 * 60 * 1000);
+            cache.inflight = null;
+            return result;
+        })
+        .catch(err => {
+            cache.inflight = null;
+            console.error(`⚠️ [TELEMETRY FAILURE] Provider ${providerId} failed:`, err.message);
+
+            // Build a clean, un-nested flat error payload so it doesn't break JSON serialization
+            const errorPayload = {
+                success: false,
+                provider: providerId,
+                error: err.message || 'Unknown execution trace failure.'
+            };
+            cache.data = errorPayload; // Save the error to cache so it populates the dashboard fields
+            return errorPayload;
+        });
+
+    return cache.inflight;
+}
+
 exports.clusterManager = async (req, res) => {
     res.set('Access-Control-Allow-Origin', '*');
     res.set('Access-Control-Allow-Methods', 'GET, OPTIONS');
@@ -23,69 +80,55 @@ exports.clusterManager = async (req, res) => {
     }
 
     console.log("------------------------------------------------------------");
-    console.log(`📡 [MANAGER LOG] Incoming target execution sequence initiated.`);
+    console.log(`📡 [MANAGER LOG] Monolithic multi-provider evaluation triggered.`);
 
     try {
-        const projectId = process.env.GCP_PROJECT_ID || process.env.GCP_PROJECT;
+        const providerKeys = Object.keys(PROVIDER_HANDLERS);
 
-        if (!projectId) {
-            return res.status(500).json({ status: 'ERROR', error: 'GCP_PROJECT_ID environment variable not set' });
-        }
+        const taskPromises = providerKeys.map(key => {
+            const flatConfig = normalizePayloadWithDisk(key, {});
 
+            console.log(`🔑 [CREDENTIAL CHECK] Provider: ${key} | Keys Loaded: [${Object.keys(flatConfig).join(', ') || 'NONE'}]`);
 
-        const clientOptions = getGcpClientOptions(req, projectId);
-        const { InstancesClient, DisksClient, RegionsClient } = require('@google-cloud/compute');
-        const computeClient = new InstancesClient(clientOptions);
-        const disksClient = new DisksClient(clientOptions);
+            return getCoalescedTelemetry(key, PROVIDER_HANDLERS[key], flatConfig)
+                .then(result => ({ key, result }));
+        });
 
-        // 1. Determine active running zone based on capacity state checks
-        const targetZone = await resolveZoneTelemetry(computeClient, projectId);
-        console.log(`🌍 [ZONE RESOLUTION] Routing engine operations straight to: ${targetZone}`);
+        // 1. Race to catch whichever returns first
+        const fastestResponse = await Promise.race(taskPromises);
+        console.log(`⚡ [RACE WINNER] First telemetry block yielded by: ${fastestResponse.key}`);
 
-        // Extract the regional code block out of the active zone string (e.g., 'us-central1-a' -> 'us-central1')
-        const targetRegion = targetZone.split('-').slice(0, 2).join('-');
+        // 2. Allow a tiny macro-task delay (0ms) so that any synchronously resolving companion promises 
+        // can save their payload modifications directly into the telemetryCache mapping
+        await new Promise(resolve => setTimeout(resolve, 0));
 
-        let quotaInfo
-        try {
-            quotaInfo = await verifyGpuQuota(RegionsClient, projectId, targetRegion);
-        } catch (quotaErr) {
-            console.warn(`🛑 [QUOTA HALT] Cluster manager intercepted strict resource boundaries: ${quotaErr.message}`);
-            return res.status(403).json({
-                status: 'QUOTA_EXCEEDED',
-                message: quotaErr.message,
-                remediation: "https://console.cloud.google.com/iam-admin/quotas",
-                zone: targetZone
-            });
-        }
+        const aggregatedMeta = {
+            authenticated: true,
+            status: "AGGREGATED_LOAD",
+            providersCount: providerKeys.length,
+            services: {}
+        };
 
-        // Fire background routine to drop old zombie seeder boot disks out of our quotas
-        purgeStaleStagingDisks(disksClient, projectId, targetZone).catch(err =>
-            console.warn("⚠️ [CLEANUP TRACE] Background drive purger stalled:", err.message)
-        );
-
-        // 2. Parse active pool nodes across threads
-        const instancePool = await evaluateWorkerPool(computeClient, projectId, targetZone);
-        const activeWorkers = instancePool.filter(node => ['RUNNING', 'PROVISIONING', 'STAGING'].includes(node.status));
-        console.log(`📊 [POOL ANALYSIS] Active/Staging nodes count: ${activeWorkers.length}`);
-
-        if (activeWorkers.length === 0) {
-            console.log("🌌 [POOL DEPLETED] Zero active components online.");
-            return handleEmptyPoolEvaluation(res, instancePool, targetZone, quotaInfo);
-        }
+        // 3. Re-read directly from the master telemetryCache map for ALL providers
+        providerKeys.forEach(key => {
+            const cacheEntry = telemetryCache[key];
+            if (cacheEntry && cacheEntry.data) {
+                aggregatedMeta.services[key] = cacheEntry.data;
+            } else if (key === fastestResponse.key) {
+                aggregatedMeta.services[key] = fastestResponse.result;
+            }
+        });
 
         return res.status(200).json({
-            status: 'POOL_AVAILABLE',
-            instances: instancePool,
-            zone: targetZone
+            success: true,
+            meta: aggregatedMeta
         });
 
     } catch (err) {
-        console.error("❌ [CRITICAL BREAK] Cluster manager enumeration loop snapped:", err);
-        return res.status(500).json({ status: 'ERROR', error: err.message });
+        console.error("❌ [CRITICAL BREAK] Monolithic manager compilation failed:", err);
+        return res.status(500).json({ success: false, error: err.message });
     }
 };
-
-
 
 function handleEmptyPoolEvaluation(res, instancePool, zone, quotaInfo) {
     console.log("🌌 [POOL VACANT] Zero operational assets currently online.");
