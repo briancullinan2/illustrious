@@ -189,19 +189,19 @@ const getBounceRegistry = {
 
 
 async function putRecord(storeName, record, dbName = null, noBounce = false) {
-    return await debounceRecords(storeName, 'path', record, null, null, dbName, MODE = 'put', noBounce)
+    return await debounceRecords(storeName, 'path', record, null, null, dbName, 'put', noBounce)
 }
 
 
 
 async function getRecord(storeName, record, dbName = null, noBounce = false) {
-    return await debounceRecords(storeName, 'path', record, null, null, dbName, MODE = 'get', noBounce)
+    return await debounceRecords(storeName, 'path', record, null, null, dbName, 'get', noBounce)
 }
 
 
 
 async function queryIndex(storeName, indexName, exactIndex = null, lower = null, upper = null, dbName = null, noBounce = false) {
-    return await debounceRecords(storeName, indexName, exactIndex, lower, upper, dbName, MODE = 'query', noBounce)
+    return await debounceRecords(storeName, indexName, exactIndex, lower, upper, dbName, 'query', noBounce)
 }
 
 
@@ -476,4 +476,20 @@ function globToRegex(pattern) {
 
     // Match either from the root of the repository or as a segment within it
     return new RegExp(`^(?:.*\\/)?${regexStr}$`, "i");
+}
+
+export {
+    getDB,
+    getDatabaseMetadata,
+    deleteOldDatabase,
+    needsInstall,
+    setupDatabase,
+    putRecord,
+    getRecord,
+    queryIndex,
+    readAll,
+    findVirtualFiles,
+    globToRegex,
+    DB_SCHEME,
+    DB_STORE_NAME
 }

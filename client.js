@@ -1,6 +1,7 @@
 
 //const DEFAULT_MODEL = 'onnx-community/bge-small-en-v1.5-ONNX'
-const DEFAULT_MODEL = 'onnx-community/Qwen2.5-0.5B-Instruct'
+//const DEFAULT_MODEL = 'onnx-community/Qwen2.5-0.5B-Instruct'
+const DEFAULT_MODEL = 'HuggingFaceTB/SmolLM2-360M-Instruct-GGUF'
 
 
 let projectConfig = {
@@ -82,30 +83,6 @@ function testAndRedirect() {
 let activeWorkerEndpoint = null;
 let clusterPollInterval = null;
 let clusterConnectionActive = false;
-
-document.addEventListener("DOMContentLoaded", () => {
-    console.log("🚀 Illustrious Client Canvas Layer Mounted.");
-    initializeClusterStatus();
-
-    // 👉 Only render the administrative config wheel if running locally
-    if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
-        injectSetupSettingsCog();
-    }
-
-
-    // Immediately poll cluster health parameters on page entrance
-    syncClusterHardware();
-    // Maintain a steady 10-second monitoring cycle over cluster health matrices
-    clusterPollInterval = setInterval(syncClusterHardware, 10000);
-
-    if (toggleCheckbox.checked) {
-        worker.postMessage({
-            type: 'LOAD_MODEL',
-            payload: { modelUrl: DEFAULT_MODEL }
-        });
-    }
-});
-
 
 /**
  * Synchronize and parse global cluster node pool configurations from Google Cloud
@@ -221,24 +198,6 @@ function toggleManualBootTray(shouldShow) {
     if (tray) tray.style.display = shouldShow ? 'block' : 'none';
 }
 
-
-async function renderMulticastScene() {
-    const stage = document.getElementById('canvas-stage');
-    const prompt = document.getElementById('prompt-input').value;
-
-    console.log(`📡 Dispatched Multicast Execution Target Chain...`);
-
-    if (stage) {
-        stage.innerHTML = `
-            <div class="stage-generating-box">
-                <span>⚡ Committing Multicast Engine Generation Loop...</span>
-                <span class="stage-prompt-subtext">"${prompt}"</span>
-            </div>
-        `;
-    }
-
-    // TODO: Execute fetch POST against /api/cluster/allocate to spin the deployed gcloud GPU function
-}
 
 
 
@@ -553,7 +512,6 @@ document.getElementById('control-switch').addEventListener('click', e => {
 });
 
 
-const worker = new Worker('/onnx/worker.js');
 const progressElement = document.getElementById('local-model-progress');
 const progressText = document.getElementById('local-model-progress-text');
 const generalProgressElement = document.getElementById('general-progress');
@@ -561,15 +519,34 @@ const generalProgressText = document.getElementById('general-progress-text');
 const toggleCheckbox = document.getElementById('local-model-toggle');
 
 toggleCheckbox.addEventListener('change', (e) => {
-    if (e.target.checked) {
+    if (e.target.checked && !worker) {
+        bootWllamaWorker()
+    }
+});
+
+let worker
+
+
+async function bootWllamaWorker() {
+    const workerUrl = '/llm-workers/wllama/worker.js';   // direct path
+
+    worker = new Worker(workerUrl, { type: 'module' });
+
+    worker.onerror = (err) => console.error("Worker error:", err);
+    worker.onmessage = workerResponseInterface;
+
+    // Optional: preload
+    const toggle = document.getElementById('local-model-toggle');
+    if (toggle?.checked) {
         worker.postMessage({
             type: 'LOAD_MODEL',
             payload: { modelUrl: DEFAULT_MODEL }
         });
     }
-});
+}
 
-worker.onmessage = function (e) {
+
+function workerResponseInterface(e) {
     const { type, payload } = e.data;
 
     if (type === 'DOWNLOAD_PROGRESS') {
@@ -601,12 +578,38 @@ worker.onmessage = function (e) {
         // Stream this vector chunk directly to your vector storage/processing layer
         renderOrIndexChunk(embeddings, dimensions);
     }
-    else if(type === 'TOKEN_STREAM') {
+    else if (type === 'TOKEN_STREAM') {
         const outputElement = document.getElementById('output-display-container');
         outputElement.textContent += payload.delta;
         outputElement.scrollTop = outputElement.scrollHeight;
     }
+    else if (type === 'GENERATION_COMPLETE') {
+        //debugger
+    }
 };
+
+
+document.addEventListener("DOMContentLoaded", () => {
+    console.log("🚀 Illustrious Client Canvas Layer Mounted.");
+    initializeClusterStatus();
+
+    // 👉 Only render the administrative config wheel if running locally
+    if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+        injectSetupSettingsCog();
+    }
+
+
+    // Immediately poll cluster health parameters on page entrance
+    syncClusterHardware();
+    // Maintain a steady 10-second monitoring cycle over cluster health matrices
+    clusterPollInterval = setInterval(syncClusterHardware, 10000);
+
+    if (toggleCheckbox.checked) {
+        bootWllamaWorker()
+    }
+});
+
+
 
 async function handleGenerate() {
     const promptText = document.getElementById('prompt-input').value;
