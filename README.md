@@ -57,12 +57,13 @@ These represent the dynamic dimensions, global overrides, syntax hooks, and prim
 | `fh` | Full Height | The complete vertical footprint along the Z-axis. |
 | `hh` | Half Height | Vertical midpoint offset along the Z-axis. |
 | **`-%`** | Negative Scale | Inverts geometry data or acts as a subtraction mask (CSG Difference). |
-| **`sym(X)`** | Lateral Symmetry | Evaluates the block twice: once at `+X` and once at `-X` relative to center. |
-| **`surf`** | Surface Anchor | Snaps the child object's pivot directly flush to the parent's outer crust/hull. |
-| **`@0`** | Origin Anchor | Explicitly references the very first object (the global scene root). |
-| **`@N`** | Target Anchor Pointer | Explicitly references the $N$-th object generated in the current block stream. |
-| **`abs`** | Absolute Space Flag | Completely detaches the block from anchor bounding metrics; switches to world units. |
-| **`@idx`** | Internal Loop Counter Index | Evaluates index variables inside sequential layout paths to cleanly increment array layouts. |
+| **`abs`** | Coordinate Override Flag | **Absolute Space:** Fully detaches the current object from the relative bounding metrics of the anchor chain; switches to raw metric coordinates directly in global world space. |
+| **`@0`** | Static Reference Pointer | **Global Scene Root:** Short-circuits the local stacking chain to calculate distance, scale, or height properties relative to the absolute origin object of the entire canvas. |
+| **`@N`** | Index Reference Pointer | **Target Anchor Jump:** Forces the layout engine to reference the dimensions and positions of the $N$-th item generated in the block stream instead of the immediate parent block. |
+| **`@0, @1`** | Interpolation Selector | **Multi-Anchor Midpoint:** Instructs the parser to compute the bounding centroids of both referenced objects, split the vector difference, and locate the child at the exact spatial median. |
+| **`@idx`** | Iteration Index | **Loop Counter Step:** Pulls the current index loop integer from a sequential path string, allowing linear incremental spacing along an axis (e.g., `fw * @idx`). |
+| **`sym(X)`** | Rotational/Lateral Operator | **Symmetric Mirror:** Triggers a dual-evaluation loop inside the engine, passing a positive translation string ($+X$) and an identical inverted translation string ($-X$) across the center line. |
+| **`surf`** | Raycast Alignment Operator | **Surface Snapping:** Directs the engine to cast a bounding hull ray to find the outer crust/polygon boundary of the parent mesh, aligning the child’s pivot flush against the outer geometry wall. |
 | **`sphere`** | Primitive Target | Standard UV Sphere or Icosahedron procedural baseline vertex array. |
 | **`cone`** | Primitive Target | Radial circular footprint base tapering uniformly to a single polar coordinate apex. |
 | **`box`** | Primitive Target | Six-sided rectangular cuboid mesh primitive. |
@@ -72,7 +73,9 @@ These represent the dynamic dimensions, global overrides, syntax hooks, and prim
 | **`crescent`** | Primitive Target | Dual offset intersecting arc profiles configured for structural arches or lunar splines. |
 | **`mesh`** | Vertex Attribute | Signals the instantiation of a raw complex target asset hull instead of a primitive. |
 | **`noise`** | Displacement Attribute | Quantifies an interactive amplitude float passed directly to fragment/vertex shaders for surface distortion (e.g., fuzz, rust). |
-
+| **`terrain`** | Primitive Base Target | Instantiates a high-scale procedural ground mesh utilizing custom height maps or vertex-displacement matrices. |
+| **`twist(axis, deg)`** | Deformation Modifier | Iteratively rotates vertex coordinates along a specified local bounding box axis (`x`, `y`, or `z`) by a fixed degree parameter. |
+| **`taper(axis, factor)`** | Deformation Modifier | Progressively scales down the orthogonal profile of a primitive mesh as it approaches the terminal coordinate of the chosen bounding axis. |
 
 ---
 
@@ -785,6 +788,514 @@ ws     ::= [ \t]+
   }
 ]
 ```
+
+
+#### F. Complex Queries and Room Building
+
+
+```json
+
+[
+  {
+    "messages": [
+      {"role": "user", "content": "An elongated sphere with fuzzy stuff on top, with two smaller flat spheres on the side about 20% the size of the first sphere, and a rounded cone in the middle front, and a depressed skinny moon underneath about 15% tall and 50% wide for a mouth."},
+      {"role": "assistant", "content": "[sphere][0,0,0,0,0,0,[1,1,1.5]][sphere][0,0,fh,0,0,0,[1,1,0.2],noise=0.3][sphere][sym(fw),0,hh,0,0,0,0.2][cone][0,hd,hh,0,0,0,0.25][crescent][0,hd+0.05,hh*0.5,0,0,0,[-0.5,1,-0.15]]"}
+    ]
+  },
+  {
+    "messages": [
+      {"role": "user", "content": "A teddy bear where the torso is a bigger sphere, a slightly smaller head sphere on top, and the two feet capsules stick out straight from the bottom front profile like it is sitting down."},
+      {"role": "assistant", "content": "[sphere][0,0,0,0,0,0,1.5][sphere][0,0,fh,0,0,0,1][capsule][sym(hw*0.6),hd,-hh+0.2,90,0,0,0.4]"}
+    ]
+  },
+  {
+    "messages": [
+      {"role": "user", "content": "A bathroom containing a bowl shape depressed into a counter block to serve as a sink, a tiny box soap dish tucked in the front right corner, and a cylinder pipe with a flat round shower head sticking out of three fourths up the wall."},
+      {"role": "assistant", "content": "[box][0,0,0,0,0,0,[3,2,1]][sphere][0,0,hh,0,0,0,[-0.6,0.6,-0.4]][box][fw-0.2,fd-0.2,hh,0,0,0,0.15][cylinder][0,-bd,hh*1.5,0,0,0,[0.1,0.1,1.5]][cylinder][0,-bd+0.3,fh*0.75,90,0,0,[0.4,0.4,0.05]]"}
+    ]
+  },
+  {
+    "messages": [
+      {"role": "user", "content": "A bedroom setup with a large mattress block, and a stylized couch placed right in the back left corner of the room layout space."},
+      {"role": "assistant", "content": "[box][0,0,0,0,0,0,[2,2.5,0.4]][box][-4fw,-4fd,0,0,0,0,[1.5,0.8,0.6]]"}
+    ]
+  },
+  {
+    "messages": [
+      {"role": "user", "content": "A standard computer desk with a flat monitor screen, and a keyboard arranged directly in front of the screen anchor profile."},
+      {"role": "assistant", "content": "[box][0,0,0,0,0,0,[3,1.5,1]][box][0,0,fh,0,0,0,[1.2,0.1,0.8]][box][0,-fd,fh,0,0,0,[0.8,0.3,0.02]]"}
+    ]
+  },
+  {
+    "messages": [
+      {"role": "user", "content": "A procedural tree with a cylinder trunk that tapers down by half along the vertical Z axis, topped by three separate overlapping foliage spheres."},
+      {"role": "assistant", "content": "[cylinder][0,0,0,0,0,0,[0.4,0.4,3],taper=(z,0.5)][sphere][0,0,fh,0,0,0,1.5][sphere][hw,0,fh-0.5,0,0,0,1][sphere][-hw,0,fh-0.5,0,0,0,1]"}
+    ]
+  },
+  {
+    "messages": [
+      {"role": "user", "content": "A medieval castle tower cylinder with a hollowed out doorway arch at its bottom front base, and a spiky cone roof capping the peak profile."},
+      {"role": "assistant", "content": "[cylinder][0,0,0,0,0,0,[1.5,1.5,4]][crescent][0,hd,0,0,0,0,[-0.4,1,-0.8]][cone][0,0,fh,0,0,0,1.7]"}
+    ]
+  },
+  {
+    "messages": [
+      {"role": "user", "content": "A classical sword primitive assembly featuring a long thin blade box, a crossguard cylinder wrapped around its base, and a small sphere pommel underneath."},
+      {"role": "assistant", "content": "[box][0,0,0,0,0,0,[0.1,0.02,3]][cylinder][0,0,-hh,90,0,0,[0.6,0.1,0.1]][sphere][0,0,-hh-0.2,0,0,0,0.15]"}
+    ]
+  },
+  {
+    "messages": [
+      {"role": "user", "content": "A dining room arrangement featuring a large flat table slab, four chair models arrayed on both sides, and a chandelier torus hanging far above the absolute center."},
+      {"role": "assistant", "content": "[box][0,0,0,0,0,0,[3,1.5,0.1]][chair][sym(hw),hd,0,0,0,0,1][chair][sym(hw),-hd,0,0,0,0,1][torus][abs][0,0,4.0,0,0,0,1.2]"}
+    ]
+  },
+  {
+    "messages": [
+      {"role": "user", "content": "A stylized corkscrew cylinder twisted forty five degrees along the primary Z axis footprint."},
+      {"role": "assistant", "content": "[cylinder][0,0,0,0,0,0,[0.3,0.3,2.5],twist=(z,45)]"}
+    ]
+  },
+  {
+    "messages": [
+      {"role": "user", "content": "A desktop desk lamp with a base disc cylinder, a long slender neck capsule, and a cone spotlight shell perched on the top forward edge facing down."},
+      {"role": "assistant", "content": "[cylinder][0,0,0,0,0,0,[0.4,0.4,0.05]][capsule][0,0,fh,0,15,0,[0.08,0.08,1.2]][cone][0,hd,fh,45,0,0,0.3]"}
+    ]
+  },
+  {
+    "messages": [
+      {"role": "user", "content": "A rowboat crescent shell containing two flat box bench slabs encased completely within its interior longitudinal layout."},
+      {"role": "assistant", "content": "[crescent][0,0,0,90,0,0,[1,3,0.5]][box][0,hd*0.3,0,0,0,0,[0.8,0.2,0.1]][box][0,-hd*0.3,0,0,0,0,[0.8,0.2,0.1]]"}
+    ]
+  },
+  {
+    "messages": [
+      {"role": "user", "content": "A modular campfire layout with three logs arranged in a row, and a spiky conical fire primitive sprouting from the crest of the center log structure."},
+      {"role": "assistant", "content": "[cylinder][0,0,0,90,0,0,[0.15,0.15,1]][cylinder][fw*@idx,0,0,90,0,0,[0.15,0.15,1]][cylinder][fw*@idx,0,0,90,0,0,[0.15,0.15,1]][cone][@1][0,0,fh,0,0,0,0.8,noise=0.5]"}
+    ]
+  },
+  {
+    "messages": [
+      {"role": "user", "content": "A low poly sci fi gun barrel cylinder that tapers sharply at the muzzle end, with a laser box scope sitting directly on top of the rear framework."},
+      {"role": "assistant", "content": "[cylinder][0,0,0,0,90,0,[0.2,0.2,2],taper=(y,0.3)][box][0,-hd*0.5,fh,0,0,0,[0.1,0.4,0.1]]"}
+    ]
+  },
+  {
+    "messages": [
+      {"role": "user", "content": "A backyard playground kit containing a swing set frame, and an absolute space sandbox platform shifted 5 units up on a structural deck mountain profile."},
+      {"role": "assistant", "content": "[mesh][0,0,0,0,0,0,2][box][abs][4.0,4.0,5.0,0,0,0,[3,3,0.2]]"}
+    ]
+  },
+  {
+    "messages": [
+      {"role": "user", "content": "A laboratory flask bottle composed of a flat bottom cylinder, an elongated cone midsection stacked on top, and a narrow cylinder neck trailing out the peak."},
+      {"role": "assistant", "content": "[cylinder][0,0,0,0,0,0,[1,1,0.2]][cone][0,0,fh,0,0,0,[0.8,0.8,1.2],taper=(z,0.1)][cylinder][0,0,fh,0,0,0,[0.15,0.15,0.5]]"}
+    ]
+  },
+  {
+    "messages": [
+      {"role": "user", "content": "A mechanical wheel capsule with a rough tread pattern noise map applied to its primary rotational contact edge."},
+      {"role": "assistant", "content": "[capsule][0,0,0,0,90,0,1,noise=0.25]"}
+    ]
+  },
+  {
+    "messages": [
+      {"role": "user", "content": "A living room corner detailing a large television monitor screen block, flanked closely on both sides by tall skinny soundbars."},
+      {"role": "assistant", "content": "[box][0,0,0,0,0,0,[2,0.1,1.2]][box][sym(fw+0.1),0,hh,0,0,0,[0.2,0.2,1.5]]"}
+    ]
+  },
+  {
+    "messages": [
+      {"role": "user", "content": "A fountain array with a large circular torus pool base at world origin, and an elongated cone geyser shooting straight up out of the exact center midpoint layout space."},
+      {"role": "assistant", "content": "[torus][0,0,0,90,0,0,2.5][cone][0,0,0,0,0,0,[0.3,0.3,4]]"}
+    ]
+  },
+  {
+    "messages": [
+      {"role": "user", "content": "A small generic coffee cup cylinder resting near a sprawling office keyboard configuration block context."},
+      {"role": "assistant", "content": "[box][0,0,0,0,0,0,[1.2,0.4,0.05]][cylinder][2fw,0,0,0,0,0,0.25]"}
+    ]
+  }
+]
+```
+
+
+#### G. Terrian and Outdoor Generations
+```json
+[
+  {
+    "messages": [
+      {"role": "user", "content": "A vast mountain terrain landscape with a tiny pine tree sitting exactly at the absolute coordinate origin."},
+      {"role": "assistant", "content": "[terrain][0,0,0,0,0,0,[20,20,5],noise=0.8][pine_tree][abs][0,0,0,0,0,0,0.25]"}
+    ]
+  },
+  {
+    "messages": [
+      {"role": "user", "content": "A flat grassy field terrain with a row of three street lamps lined up one after another starting from the center front surface."},
+      {"role": "assistant", "content": "[terrain][0,0,0,0,0,0,[15,15,0.1]][lamp][0,fd,0,0,0,0,1][lamp][fw*@idx,0,0,0,0,0,1][lamp][fw*@idx,0,0,0,0,0,1]"}
+    ]
+  },
+  {
+    "messages": [
+      {"role": "user", "content": "A rugged desert terrain with a massive boulder rock placed far to the left, and an absolute override car shifted 10 units out along the positive X axis."},
+      {"role": "assistant", "content": "[terrain][0,0,0,0,0,0,[30,30,2],noise=0.4][rock][-4fw,0,0,0,0,0,4][car][abs][10.0,0,0,0,0,0,1]"}
+    ]
+  },
+  {
+    "messages": [
+      {"role": "user", "content": "A park scene terrain containing a wooden bench in the middle front, with a huge oak tree sprouting from the crest directly behind that bench."},
+      {"role": "assistant", "content": "[terrain][0,0,0,0,0,0,[10,10,0.1]][bench][0,hd,0,0,0,0,1][tree][0,-fd,0,0,0,0,3]"}
+    ]
+  },
+  {
+    "messages": [
+      {"role": "user", "content": "A village landscape terrain featuring a large stone church house at the center, flanked directly on its left and right sides by long sections of fence walls."},
+      {"role": "assistant", "content": "[terrain][0,0,0,0,0,0,[40,40,0.5]][church][0,0,0,0,0,0,5][fence][sym(fw),0,0,0,0,0,1]"}
+    ]
+  },
+  {
+    "messages": [
+      {"role": "user", "content": "A small island terrain with a lighthouse cylinder structure standing on its peak vertical ceiling, looking sideways right."},
+      {"role": "assistant", "content": "[terrain][0,0,0,0,0,0,[8,8,3],noise=0.6][cylinder][0,0,fh,0,90,0,[1,1,4]]"}
+    ]
+  },
+  {
+    "messages": [
+      {"role": "user", "content": "A smooth landscape plane with an absolute coordinate platform shifted 5 units up, and a flying drone capsule hovering over that platform plane."},
+      {"role": "assistant", "content": "[terrain][0,0,0,0,0,0,[50,50,0.1]][box][abs][0,0,5.0,0,0,0,1][capsule][0,0,fh+0.5,0,0,0,0.3]"}
+    ]
+  },
+  {
+    "messages": [
+      {"role": "user", "content": "A dense forest terrain setup featuring a central campfire structure cone, surrounded completely by four distinct pine trees on the diagonal front and back perimeter profiles."},
+      {"role": "assistant", "content": "[terrain][0,0,0,0,0,0,[25,25,0.2]][cone][0,0,0,0,0,0,0.5,noise=0.3][pine_tree][fw,fd,0,0,0,0,1.5][pine_tree][-fw,fd,0,0,0,0,1.5][pine_tree][fw,-fd,0,0,0,0,1.5][pine_tree][-fw,-fd,0,0,0,0,1.5]"}
+    ]
+  },
+  {
+    "messages": [
+      {"role": "user", "content": "An outdoor cemetery terrain with a stone tombstone box near the middle front, and an old dead tree peeking out from behind it, tucked slightly back and scaled down by half."},
+      {"role": "assistant", "content": "[terrain][0,0,0,0,0,0,[12,12,0.1]][box][0,hd,0,0,0,0,[0.6,0.2,0.8]][tree][hw,-hd,hh,0,0,0,0.5]"}
+    ]
+  },
+  {
+    "messages": [
+      {"role": "user", "content": "A simple rolling hills terrain with a lone wooden cabin house standing at the origin center profile, flipped backwards and upside down."},
+      {"role": "assistant", "content": "[terrain][0,0,0,0,0,0,[20,20,1.5],noise=0.5][house][0,0,0,-90,0,0,2]"}
+    ]
+  },
+  {
+    "messages": [
+      {"role": "user", "content": "A street scene terrain with an absolute disconnect truck asset positioned 15 units out along the longitudinal Y axis, facing sideways looking left."},
+      {"role": "assistant", "content": "[terrain][0,0,0,0,0,0,[30,10,0.1]][truck][abs][0,15.0,0,0,-90,0,1.5]"}
+    ]
+  },
+  {
+    "messages": [
+      {"role": "user", "content": "A low poly stylized mountain terrain path with a small crescent bridge arch spanning right between a rock on the left and a rock on the right."},
+      {"role": "assistant", "content": "[terrain][0,0,0,0,0,0,[35,15,4],noise=0.7][rock][-3fw,0,0,0,0,0,2][rock][3fw,0,0,0,0,0,2][crescent][@1,@2][0,0,0,0,0,0,1.2]"}
+    ]
+  },
+  {
+    "messages": [
+      {"role": "user", "content": "A flat concrete square courtyard terrain with a generic sculpture sphere encased completely within an architectural torus loop matching its absolute center vector."},
+      {"role": "assistant", "content": "[terrain][0,0,0,0,0,0,[15,15,0.1]][torus][0,0,0,90,0,0,2][sphere][0,0,0,0,0,0,0.5]"}
+    ]
+  },
+  {
+    "messages": [
+      {"role": "user", "content": "A high elevation mountain peak terrain that tapers sharply along the vertical axis, with a cross signpost capsule protruding directly out of its apex peek normal vector."},
+      {"role": "assistant", "content": "[terrain][0,0,0,0,0,0,[10,10,8],taper=(z,0.1)][capsule][0,0,fh+0.1,0,0,0,0.5]"}
+    ]
+  },
+  {
+    "messages": [
+      {"role": "user", "content": "A quiet garden terrain with a flower plant sitting near the front edge of a central stone well cylinder layout structure."},
+      {"role": "assistant", "content": "[terrain][0,0,0,0,0,0,[10,10,0.1]][cylinder][0,0,0,0,0,0,[1.2,1.2,0.8]][plant][0,-fd,0,0,0,0,0.4]"}
+    ]
+  },
+  {
+    "messages": [
+      {"role": "user", "content": "A highway strip terrain with four identical barricade boxes lined up one after another in a row starting far to the left profile away from the main lane."},
+      {"role": "assistant", "content": "[terrain][0,0,0,0,0,0,[4,40,0.1]][box][-4fw,0,0,0,0,0,0.6][box][fw*@idx,0,0,0,0,0,0.6][box][fw*@idx,0,0,0,0,0,0.6][box][fw*@idx,0,0,0,0,0,0.6]"}
+    ]
+  },
+  {
+    "messages": [
+      {"role": "user", "content": "A rocky cavern terrain floor with an inverted dome sphere divet carved directly out of the center map space to create a deep circular fire pit crater mesh layout."},
+      {"role": "assistant", "content": "[terrain][0,0,0,0,0,0,[20,20,1],noise=0.3][sphere][0,0,0,0,0,0,[-1,1,-0.3]]"}
+    ]
+  },
+  {
+    "messages": [
+      {"role": "user", "content": "A farm patch terrain layout space with a tractor vehicle parked tightly packed against the rear surface profile of a massive red barn house block asset."},
+      {"role": "assistant", "content": "[terrain][0,0,0,0,0,0,[30,30,0.1]][house][0,0,0,0,0,0,[4,3,3]][tractor][0,-fd,0,0,0,0,1]"}
+    ]
+  },
+  {
+    "messages": [
+      {"role": "user", "content": "A wavy sand dune desert terrain with a single palm tree primitive tilted and slanted at a forty five degree angle near the center profile."},
+      {"role": "assistant", "content": "[terrain][0,0,0,0,0,0,[25,25,1.8],noise=0.55][tree][0,0,0,0,0,45,1.2]"}
+    ]
+  },
+  {
+    "messages": [
+      {"role": "user", "content": "A clean courtyard paving terrain with a rectangular bench resting a short distance to the right of an ornate fountain basin statue mesh centerpiece asset."},
+      {"role": "assistant", "content": "[terrain][0,0,0,0,0,0,[16,16,0.1]][mesh][0,0,0,0,0,0,1.8][bench][2fw,0,0,0,0,0,0.75]"}
+    ]
+  }
+]
+```
+
+
+#### H. Camera Coordination for Scene Changes
+
+```json
+
+[
+  {
+    "messages": [
+      {
+        "role": "user",
+        "content": "Looking at the scene from a frontal perspective, place a flat ground terrain, a tall box wall standing upright at the back, and a small sphere sitting dead center on the floor right in front of the wall."
+      },
+      {
+        "role": "assistant",
+        "content": "[terrain][0,0,0,0,0,0,1][box][0,hd,-hh,0,0,0,[fw,0.1,fh]][sphere][0,0,0,0,0,0,0.5]"
+      }
+    ]
+  },
+  {
+    "messages": [
+      {
+        "role": "user",
+        "content": "From a top-down bird's-eye view, layout a square courtyard using four box walls arranged in a perfect square outline around the origin, matching each other's outer depth and width footprints."
+      },
+      {
+        "role": "assistant",
+        "content": "[box][0,fd,0,0,0,0,[fw,0.2,fh]][box][0,-fd,0,0,0,0,[fw,0.2,fh]][box][-fw,0,0,0,0,90,[fw,0.2,fh]][box][fw,0,0,0,0,90,[fw,0.2,fh]]"
+      }
+    ]
+  },
+  {
+    "messages": [
+      {
+        "role": "user",
+        "content": "Imagine viewing the scene from directly behind. Place a main cylinder pillar at the center, then drop a small tracking sphere flush against its rear surface facing the observer."
+      },
+      {
+        "role": "assistant",
+        "content": "[cylinder][0,0,0,0,0,0,1][sphere][0,-hd,0,0,0,0,0.2,surf]"
+      }
+    ]
+  },
+  {
+    "messages": [
+      {
+        "role": "user",
+        "content": "In a side profile view from the right, create a long horizontal capsule pipe stretching along the Y-axis, with a box support bracket clamped directly beneath its frontmost edge."
+      },
+      {
+        "role": "assistant",
+        "content": "[capsule][0,0,0,0,90,0,[0.5,0.5,fd]][box][0,hd,-hh,0,0,0,[0.8,0.8,0.8]]"
+      }
+    ]
+  },
+  {
+    "messages": [
+      {
+        "role": "user",
+        "content": "From an isometric high angle, layout a three-step staircase using three sequential boxes that increment both forward along the Y-axis and upward along the Z-axis using iteration indices."
+      },
+      {
+        "role": "assistant",
+        "content": "[box][0,fd*@idx,fh*@idx,0,0,0,1][box][0,fd*@idx,fh*@idx,0,0,0,1][box][0,fd*@idx,fh*@idx,0,0,0,1]"
+      }
+    ]
+  },
+  {
+    "messages": [
+      {
+        "role": "user",
+        "content": "Looking straight down from the ceiling, position a central circular torus ring, and place two small button spheres mirrored symmetrically on both the left and right outer flanks."
+      },
+      {
+        "role": "assistant",
+        "content": "[torus][0,0,0,0,0,0,2][sphere][sym(hw+0.5),0,0,0,0,0,0.3]"
+      }
+    ]
+  },
+  {
+    "messages": [
+      {
+        "role": "user",
+        "content": "From a worm's-eye view looking straight up from underground, place a massive flat box ceiling slab, and suspend a sharp cone pointing straight down at the camera from the ceiling's absolute center surface."
+      },
+      {
+        "role": "assistant",
+        "content": "[box][0,0,fh,0,0,0,[fw,fd,0.2]][cone][0,0,-hh,0,180,0,1,surf]"
+      }
+    ]
+  },
+  {
+    "messages": [
+      {
+        "role": "user",
+        "content": "Setting up a frontal perspective frame, place a low wide defensive box wall, and use a negative scale cylinder to punch a clean circular arch tunnel directly through its center base."
+      },
+      {
+        "role": "assistant",
+        "content": "[box][0,0,0,0,0,0,[5,0.5,2]][cylinder][0,0,-hh,90,0,0,[0.8,0.8,-1]]"
+      }
+    ]
+  },
+  {
+    "messages": [
+      {
+        "role": "user",
+        "content": "Behind the main structure, take the first two spawned pillars, find their exact spatial midpoint vector, and float a glowing marker sphere directly above that center space."
+      },
+      {
+        "role": "assistant",
+        "content": "[cylinder][-3,2,0,0,0,0,1][cylinder][3,2,0,0,0,0,1][sphere][@0,@1][0,0,fh+1,0,0,0,0.4]"
+      }
+    ]
+  },
+  {
+    "messages": [
+      {
+        "role": "user",
+        "content": "From a steep cross-section view from the left, slice a hollow cylinder open by positioning an absolute coordinate space override box that masks out the entire front hemisphere."
+      },
+      {
+        "role": "assistant",
+        "content": "[cylinder][0,0,0,0,0,0,2][box][abs][0,1,0,0,0,0,[4,2,4],-%]"
+      }
+    ]
+  },
+  {
+    "messages": [
+      {
+        "role": "user",
+        "content": "From a three-quarter overhead perspective, build a tapering tower by stacking three boxes where each higher step progressively deforms inwards using a taper modifier on the vertical axis."
+      },
+      {
+        "role": "assistant",
+        "content": "[box][0,0,0,0,0,0,[2,2,2]][box][0,0,fh,0,0,0,[2,2,2],taper(z,0.7)][box][0,0,fh,0,0,0,[2,2,2],taper(z,0.4)]"
+      }
+    ]
+  },
+  {
+    "messages": [
+      {
+        "role": "user",
+        "content": "Looking from a high front-left angle, place an organic twisted pillar by generating a cylinder that undergoes a progressive helical deformation along its vertical build line."
+      },
+      {
+        "role": "assistant",
+        "content": "[cylinder][0,0,0,0,0,0,[0.5,0.5,4],twist(z,180)]"
+      }
+    ]
+  },
+  {
+    "messages": [
+      {
+        "role": "user",
+        "content": "Using a strict plan-view layout (top-down), construct a long structural crescent archway curving along the horizontal plane, anchored by two square box blocks at its absolute tips."
+      },
+      {
+        "role": "assistant",
+        "content": "[crescent][0,0,0,90,0,0,3][box][-hw,0,-hh,0,0,0,0.5][box][hw,0,-hh,0,0,0,0.5]"
+      }
+    ]
+  },
+  {
+    "messages": [
+      {
+        "role": "user",
+        "content": "From a close-up frontal macro angle, place a smooth capsule capsule base, then layer a high-frequency noise displacement attribute over its outer shell to simulate a rough, weathered stone texture."
+      },
+      {
+        "role": "assistant",
+        "content": "[capsule][0,0,0,0,0,0,1,noise(0.4)]"
+      }
+    ]
+  },
+  {
+    "messages": [
+      {
+        "role": "user",
+        "content": "From a direct overhead satellite perspective, drop a large circular terrain patch, then scatter three small boulder spheres tracking linearly outwards along the positive X-axis using step counters."
+      },
+      {
+        "role": "assistant",
+        "content": "[terrain][0,0,0,0,0,0,5][sphere][fw*@idx,0,0,0,0,0,0.3][sphere][fw*@idx,0,0,0,0,0,0.3][sphere][fw*@idx,0,0,0,0,0,0.3]"
+      }
+    ]
+  },
+  {
+    "messages": [
+      {
+        "role": "user",
+        "content": "From a rear-view observation deck perspective, place a wide horizon glass pane using a thin box, then center a heavy structural support torus directly around its midpoint line."
+      },
+      {
+        "role": "assistant",
+        "content": "[box][0,3,0,0,0,0,[6,0.1,2]][torus][@0][0,0,0,0,90,0,1.2]"
+      }
+    ]
+  },
+  {
+    "messages": [
+      {
+        "role": "user",
+        "content": "Looking up from a low roadside gutter perspective, establish a high-altitude absolute coordinate anchor, and hang an expansive highway bridge box spanning the entire top field of view."
+      },
+      {
+        "role": "assistant",
+        "content": "[box][abs][0,0,10,0,0,0,[20,4,0.5]]"
+      }
+    ]
+  },
+  {
+    "messages": [
+      {
+        "role": "user",
+        "content": "From a strict frontal elevation diagram view, align a flat foundation box, snap a cone roof directly onto its top surface boundary, and verify zero overlapping intersection gaps."
+      },
+      {
+        "role": "assistant",
+        "content": "[box][0,0,0,0,0,0,[2,2,1]][cone][0,0,hh,0,0,0,1,surf]"
+      }
+    ]
+  },
+  {
+    "messages": [
+      {
+        "role": "user",
+        "content": "Viewing the scene from an oblique right-side vantage, project a cylinder forward along the Y-axis, then slide a secondary hollow matching sleeve cylinder around it using a subtraction mask."
+      },
+      {
+        "role": "assistant",
+        "content": "[cylinder][0,0,0,90,0,0,[1,1,4]][cylinder][0,0,0,90,0,0,[1.2,1.2,2]][cylinder][0,0,0,90,0,0,[0.9,0.9,2.2],-%]"
+      }
+    ]
+  },
+  {
+    "messages": [
+      {
+        "role": "user",
+        "content": "From a true bird's-eye orthographic layout, instantiate a multi-anchor assembly by bridging two distant custom meshes together with a long, narrow connecting box walkway centered perfectly between them."
+      },
+      {
+        "role": "assistant",
+        "content": "[mesh][-5,5,0,0,0,0,1][mesh][5,-5,0,0,0,0,1][box][@0,@1][0,0,0,0,0,45,[1,8,0.2]]"
+      }
+    ]
+  }
+]
+
+```
+
 
 
 

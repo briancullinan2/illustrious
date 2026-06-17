@@ -45,7 +45,7 @@ def run_lora_alignment(model_path = BASE_MODEL):
     print(f"📡 Found {len(json_files)} log profiles. Appending dataset rows dynamically...")
     
     # 🛠️ Hugging Face merges the list of files seamlessly into a single dataset split
-    dataset = load_dataset("json", data_files=json_files, split="train")
+    dataset = load_dataset("json", data_files=json_files, split="train", cache_dir=HF_CACHE_DIR)
     print(f"🎯 Unified dataset loaded successfully. Total training samples: {len(dataset)}")
     
     # Slice it heavily so it finishes in a couple of hours on your CPU cores
@@ -197,9 +197,10 @@ if __name__ == "__main__":
     args = parser.parse_args()
     target_model = args.model.strip()
     
-    # 🛠️ GGUF Path Translation Layer
-    # If it ends with .gguf, we know it's a dynamic path from the frontend dropdown
-    if target_model.endswith(".gguf") or "/q" in target_model.lower():
+    if os.path.exists(target_model):
+        print(f"📁 Local GGUF file track recognized. Snapping back to baseline target repo identifier...")
+        target_model = BASE_MODEL
+    elif target_model.endswith(".gguf") or "/q" in target_model.lower():
         print(f"🔄 Intercepted GGUF format path: '{target_model}'")
         
         # Split the string down (e.g., ['Qwen', 'Qwen2.5-Coder-7B-Instruct-GGUF', 'filename.gguf'])

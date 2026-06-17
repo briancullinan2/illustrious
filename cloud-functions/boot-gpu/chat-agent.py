@@ -50,7 +50,7 @@ def load_stored_hf_token():
 
 HF_TOKEN = load_stored_hf_token()
 
-def get_gguf_context(model_id_or_path, hf_token=None):
+def get_gguf_context(model_id_or_path, hf_token=None, gguf_lora_target = None):
     global gguf_engine
     if Llama is None:
         raise ImportError("The 'llama-cpp-python' library is missing. Install it to process GGUF formats.")
@@ -94,9 +94,6 @@ def get_gguf_context(model_id_or_path, hf_token=None):
         gpu_layers = -1  
         print("🍏 Metal available. Offloading full GGUF stack to Apple Silicon.")
         
-    # 2. 🛠️ PARITY CHECK: Look for a matching converted GGUF LoRA file
-    # We target the .gguf variant of your adapter output directory mapping
-    gguf_lora_target = "loras/code_classifier_lora.gguf"
     active_lora_path = None
     
     if os.path.exists(gguf_lora_target):
@@ -115,7 +112,9 @@ def get_gguf_context(model_id_or_path, hf_token=None):
     )
     return gguf_engine
 
-def get_llm_context(model_path=base_model_path, hf_token=None):
+
+
+def get_llm_context(model_path=base_model_path, hf_token=None, active_lora_path=None):
     global model, tokenizer
     if not model_path:
         model_path = base_model_path
@@ -167,22 +166,23 @@ def get_llm_context(model_path=base_model_path, hf_token=None):
                     token=hf_token
                 )
         
-        if os.path.exists(lora_adapter_path):
+        if os.path.exists(active_lora_path):
             try:
                 if quantization_config is not None:
                     # 4-bit layers cannot be merged. Keep the wrapper intact for dynamic runtime math.
-                    print(f"🧬 Loading active runtime adapter path: {lora_adapter_path}...")
-                    model = PeftModel.from_pretrained(base, lora_adapter_path)
+                    print(f"🧬 Loading active runtime adapter path: {active_lora_path}...")
+                    model = PeftModel.from_pretrained(base, active_lora_path, cache_dir=HF_CACHE_DIR)
                     print("Active LoRA adapters:", model.active_adapters())
                 else:
                     # Unquantized tracks (CPU/Mac) can be merged cleanly for a performance boost
-                    print(f"🧬 Fusing custom adapter layers natively into base model architecture: {lora_adapter_path}...")
-                    peft_wrapper = PeftModel.from_pretrained(base, lora_adapter_path)
+                    print(f"🧬 Fusing custom adapter layers natively into base model architecture: {active_lora_path}...")
+                    peft_wrapper = PeftModel.from_pretrained(base, active_lora_path, cache_dir=HF_CACHE_DIR)
                     model = peft_wrapper.merge_and_unload()
                     print("🎯 Model weights consolidated successfully.")
             except Exception as e:
                 print(f"⚠️ Safe fusion bypassed due to environment constraints: {e}")
                 model = base
+                
         else:
             model = base
 
@@ -261,6 +261,151 @@ async def search_huggingface_hub(
         return {"results": [], "error": str(err)}
 
 
+def format_gguf_prompt(model_path: str, messages: list) -> str:
+    path_lower = model_path.lower()
+    
+    # 1. Llama 3 Format
+    if "llama-3" in path_lower or "llama3" in path_lower:
+        prompt = "<|begin_of_text|>"
+        for msg in messages:
+            prompt += f"<|start_header_id|>{msg['role']}<|end_header_id|>\n\n{msg['content']}<|eot_id|>"
+        prompt += "<|start_header_id|>assistant<|end_header_id|>\n\n"
+        return prompt
+        
+    # 2. ChatML Format (Qwen, DeepSeek, Yi)
+    elif any(tag in path_lower for tag in ["qwen", "deepseek", "yi", "chatml"]):
+        prompt = ""
+        for msg in messages:
+            prompt += f"<|im_start|>{msg['role']}\n{msg['content']}<|im_end|>\n"
+        prompt += "<|im_start|>assistant\n"
+        return prompt
+        
+    # 3. Llama 2 / Mistral / Basic Fallback
+    elif any(tag in path_lower for tag in ["llama-2", "llama2", "mistral", "mixtral"]):
+        # Standard generic fallback if it doesn't match known structures
+        system_content = next((m["content"] for m in messages if m["role"] == "system"), "You are a precise assistant.")
+        user_content = next((m["content"] for m in messages if m["role"] == "user"), "")
+        return f"<s>[INST] <<SYS>>\n{system_content}\n<</SYS>>\n\n{user_content} [/INST]"
+    
+    # Robust Fallback: If signature is unknown, resolve ONLY the tokenizer configuration mapping
+    else:
+        print(f"🕵️ Unknown GGUF signature for '{model_path}'. Resolving lightweight tokenizer fallback template...")
+        return None
+
+
+
+async def generate_gguf_stream(
+    prompt: str,
+    use_lora: bool,
+    hf_token: str,
+    model_path: str,
+    start_message = None
+):
+    active_token = hf_token.strip() if hf_token else HF_TOKEN
+    if use_lora:
+        engine = get_gguf_context(model_path, hf_token=active_token, gguf_lora_target=lora_adapter_path + '.gguf')
+    else:
+        engine = get_gguf_context(model_path, hf_token=active_token)
+        formatted_prompt = format_gguf_prompt(model_path, start_message)
+    
+    if formatted_prompt is None:
+        fallback_tokenizer = AutoTokenizer.from_pretrained(model_path, cache_dir=HF_CACHE_DIR, token=active_token)
+        if use_lora:
+            jinji_path = Path(lora_adapter_path + "/chat_template.jinja")
+            if jinji_path.exists():
+                with open(jinji_path, "r", encoding="utf-8") as file:
+                    fallback_tokenizer.chat_template = file.read()
+        formatted_prompt = fallback_tokenizer.apply_chat_template(
+            start_message, 
+            tokenize=False, 
+            add_generation_prompt=True
+        )
+
+    def gguf_stream_generator():
+        response_chunks = engine(
+            prompt=formatted_prompt, max_tokens=64, temperature=0.1, top_p=0.9, stream=True
+        )
+        for chunk in response_chunks:
+            text_piece = chunk["choices"][0]["text"]
+            if text_piece:
+                yield text_piece
+    return StreamingResponse(gguf_stream_generator(), media_type="text/plain")
+
+
+
+async def generate_llm_stream(
+    prompt: str,
+    use_lora: bool,
+    hf_token: str,
+    model_path: str,
+    start_message = None
+):
+
+    active_token = hf_token.strip() if hf_token else HF_TOKEN
+    if not active_token: 
+        active_token = None
+
+    target_model_path = base_model_path
+    if model_path and model_path.strip():
+        target_model_path = model_path.strip()
+
+    if(use_lora):
+        active_model, active_tokenizer = get_llm_context(
+            model_path=target_model_path, 
+            hf_token=active_token,
+            active_lora_path=lora_adapter_path
+        )
+        jinji_path = Path(lora_adapter_path + "/chat_template.jinja")
+        if jinji_path.exists():
+            with open(jinji_path, "r", encoding="utf-8") as file:
+                active_tokenizer.chat_template = file.read()
+    else:
+        active_model, active_tokenizer = get_llm_context(
+            model_path=target_model_path, 
+            hf_token=active_token
+        )
+
+
+    # 1. Generate the clean BatchEncoding dictionary object containing the tensors
+    tokenized_payload = active_tokenizer.apply_chat_template(
+        start_message, 
+        add_generation_prompt=True, 
+        return_tensors="pt"
+    )
+    
+    # 2. Extract the actual underlying PyTorch Tensors by their exact dictionary keys
+    # and push them directly to your execution hardware device tracks
+    raw_input_ids = tokenized_payload["input_ids"].to(active_model.device)
+    raw_attention_mask = tokenized_payload["attention_mask"].to(active_model.device)
+    
+    streamer = TextIteratorStreamer(
+        active_tokenizer, 
+        skip_prompt=True, 
+        skip_special_tokens=True
+    )
+    
+    # 3. Reference the pure tensors directly inside the generation dictionary maps
+    explicit_generation_kwargs = {
+        "input_ids": raw_input_ids,
+        "attention_mask": raw_attention_mask,
+        "streamer": streamer,
+        "max_new_tokens": 1000,
+        "temperature": 0.1,
+        "top_p": 0.9,
+        "do_sample": False
+    }
+
+    threading.Thread(
+        target=active_model.generate, 
+        kwargs=explicit_generation_kwargs
+    ).start()
+
+    def transformers_stream_generator():
+        for token_text in streamer: 
+            yield token_text
+    return StreamingResponse(transformers_stream_generator(), media_type="text/plain")
+
+
 
 @app.post("/api/spatial/multicast")
 async def generate_text_stream(
@@ -269,84 +414,19 @@ async def generate_text_stream(
     hf_token: str = Form(""),
     model_path: str = Form(...)
 ):
-    record_activity()  
+    record_activity()
     is_gguf = model_path.endswith(".gguf") or "gguf" in model_path.lower()
 
-    # ============================================================================
-    # 📡 GGUF Inference Branch (Llama-cpp-python Engine)
-    # ============================================================================
+    messages = [
+        {"role": "system", "content": "Pretend you are hot ex girlfriend trying to win me back."},
+        {"role": "user", "content": prompt}
+    ]
+
     if is_gguf:
-        active_token = hf_token.strip() if hf_token else HF_TOKEN
-        engine = get_gguf_context(model_path, hf_token=active_token)
-        formatted_prompt = f"<|system|>\nYou are a precise assistant.<|user|>\n{prompt}<|assistant|>\n"
-        
-        def gguf_stream_generator():
-            response_chunks = engine(
-                prompt=formatted_prompt, max_tokens=64, temperature=0.1, top_p=0.9, stream=True
-            )
-            for chunk in response_chunks:
-                text_piece = chunk["choices"][0]["text"]
-                if text_piece:
-                    yield text_piece
-        return StreamingResponse(gguf_stream_generator(), media_type="text/plain")
+        return await generate_gguf_stream(prompt, use_lora, hf_token, model_path, messages)
 
     else:
-        active_token = hf_token.strip() if hf_token else HF_TOKEN
-        if not active_token: 
-            active_token = None
-
-        target_model_path = base_model_path
-        if model_path and model_path.strip():
-            target_model_path = model_path.strip()
-
-        active_model, active_tokenizer = get_llm_context(
-            model_path=target_model_path, 
-            hf_token=active_token
-        )
-
-        messages = [
-            {"role": "system", "content": "Act like a hot ex girlfriend that wants to get back together real bad"},
-            {"role": "user", "content": prompt}
-        ]
-        
-        # 1. Generate the clean BatchEncoding dictionary object containing the tensors
-        tokenized_payload = active_tokenizer.apply_chat_template(
-            messages, 
-            add_generation_prompt=True, 
-            return_tensors="pt"
-        )
-        
-        # 2. Extract the actual underlying PyTorch Tensors by their exact dictionary keys
-        # and push them directly to your execution hardware device tracks
-        raw_input_ids = tokenized_payload["input_ids"].to(active_model.device)
-        raw_attention_mask = tokenized_payload["attention_mask"].to(active_model.device)
-        
-        streamer = TextIteratorStreamer(
-            active_tokenizer, 
-            skip_prompt=True, 
-            skip_special_tokens=True
-        )
-        
-        # 3. Reference the pure tensors directly inside the generation dictionary maps
-        explicit_generation_kwargs = {
-            "input_ids": raw_input_ids,
-            "attention_mask": raw_attention_mask,
-            "streamer": streamer,
-            "max_new_tokens": 1000,
-            "temperature": 0.1,
-            "top_p": 0.9,
-            "do_sample": False
-        }
-
-        threading.Thread(
-            target=active_model.generate, 
-            kwargs=explicit_generation_kwargs
-        ).start()
-
-        def transformers_stream_generator():
-            for token_text in streamer: 
-                yield token_text
-        return StreamingResponse(transformers_stream_generator(), media_type="text/plain")
+        return await generate_llm_stream(prompt, use_lora, hf_token, model_path, messages)
     
 
 

@@ -148,12 +148,12 @@ self.onmessage = async (e) => {
             ], {
                 n_ctx: 2048,
                 n_threads: 4,
-                lora: [
+                lora: typeof loraBlob !== 'undefined' ? [
                     {
                         data: loraBlob,
                         scale: 1.0, // You can dial the strength of this specific training set up or down!
                     }
-                ]
+                ] : void 0
             });
 
             self.postMessage({ type: 'MODEL_READY' });
