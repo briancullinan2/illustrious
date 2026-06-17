@@ -10,19 +10,18 @@ from transformers import (
     TrainingArguments
 )
 from peft import LoraConfig, get_peft_model, prepare_model_for_kbit_training
-from trl import SFTTrainer, SFTConfig  # 🛠️ Added SFTConfig here
+from trl import SFTTrainer, SFTConfig
 
 # ============================================================================
-# Core Training Infrastructure Configuration
+# Configuration
 # ============================================================================
-BASE_MODEL = "meta-llama/Meta-Llama-3-8B-Instruct"  # Or "Qwen/Qwen2.5-Coder-7B-Instruct"
-#DATASET_PATH = "cloud-functions/boot-gpu"
+BASE_MODEL = "meta-llama/Meta-Llama-3-8B-Instruct"
 DATASET_FOLDER = "chat_logs"
 OUTPUT_DIR = "loras/hot_ex_girlfriend"
 HF_CACHE_DIR = "hf_cache"
 
-# 🔑 Pull from your secure environment token configuration setup
 CREDENTIALS_FILE = Path("~/.credentials/huggingface-provider.json").expanduser()
+
 def get_token():
     if CREDENTIALS_FILE.exists():
         with open(CREDENTIALS_FILE, 'r', encoding='utf-8') as f:
@@ -32,195 +31,153 @@ def get_token():
 
 HF_TOKEN = get_token()
 
-
-
-def run_lora_alignment(model_path = BASE_MODEL):
-    # 🗂️ Collect every single .json file inside your chat_logs folder
+def run_lora_alignment(model_path=BASE_MODEL):
+    # Load all JSON files
     log_folder_path = Path(DATASET_FOLDER)
     json_files = [str(p) for p in log_folder_path.glob("*.json")]
     
     if not json_files:
-        raise FileNotFoundError(f"❌ No .json files found inside the directory: '{DATASET_FOLDER}'")
-        
-    print(f"📡 Found {len(json_files)} log profiles. Appending dataset rows dynamically...")
+        raise FileNotFoundError(f"No .json files found in {DATASET_FOLDER}")
     
-    # 🛠️ Hugging Face merges the list of files seamlessly into a single dataset split
-    dataset = load_dataset("json", data_files=json_files, split="train", cache_dir=HF_CACHE_DIR)
-    print(f"🎯 Unified dataset loaded successfully. Total training samples: {len(dataset)}")
+    print(f"Found {len(json_files)} JSON files. Loading dataset...")
+    dataset = load_dataset("json", data_files=json_files, split="train", cache_dir=HF_CACHE_DIR, token=HF_TOKEN)
     
-    # Slice it heavily so it finishes in a couple of hours on your CPU cores
-    dataset = dataset.shuffle(seed=42)
-    dataset = dataset.select(range(150)) # 150 samples is plenty for a style injection
+    # Shuffle + take more samples (personality needs repetition)
+    dataset = dataset.shuffle(seed=42).select(range(min(800, len(dataset))))  # Increase this as you add data
     
-    print(f"🎯 Pruned dataset down to {len(dataset)} examples for host CPU training stability.")
+    print(f"Loaded {len(dataset)} examples.")
 
-    print(f"⚡ Initializing base model layers: {model_path}")
     tokenizer = AutoTokenizer.from_pretrained(model_path, cache_dir=HF_CACHE_DIR, token=HF_TOKEN)
-    tokenizer.pad_token = tokenizer.eos_token
-    torch.set_num_threads(4)
+    if tokenizer.pad_token is None:
+        tokenizer.pad_token = tokenizer.eos_token
 
-    # 🎛️ Dynamic Hardware Allocation Layer
+    # Ensure Llama-3 chat template is set
+    if not tokenizer.chat_template:
+        print("Setting default Llama-3 chat template...")
+        tokenizer.chat_template = "{% for message in messages %}\n{% if message['role'] == 'user' %}{{ '<|start_header_id|>user<|end_header_id|>\n\n' + message['content'] | trim + '<|eot_id|>' }}{% elif message['role'] == 'system' %}{{ '<|start_header_id|>system<|end_header_id|>\n\n' + message['content'] | trim + '<|eot_id|>' }}{% elif message['role'] == 'assistant' %}{{ '<|start_header_id|>assistant<|end_header_id|>\n\n' + message['content'] | trim + '<|eot_id|>' }}{% endif %}\n{% endfor %}"
+
+    jinji_path = Path(OUTPUT_DIR + "/chat_template.jinja")
+    if jinji_path.exists():
+        print(f"🕵️ Jinji found at '{jinji_path}'. Applying template...")
+        with open(jinji_path, "r", encoding="utf-8") as file:
+            tokenizer.chat_template = file.read()
+    else:
+        print(f"⚠️ Jinji NOT found at '{jinji_path}'. Skipping...")
+
+
+    # Model loading
     if torch.cuda.is_available():
-        print("🚀 NVIDIA CUDA Detected! Activating efficient 4-bit QLoRA training parameters...")
+        print("Using GPU with 4-bit QLoRA...")
         quant_config = BitsAndBytesConfig(
             load_in_4bit=True,
             bnb_4bit_quant_type="nf4",
             bnb_4bit_compute_dtype=torch.float16,
-            bnb_4bit_use_double_quant=True
+            bnb_4bit_use_double_quant=True,
         )
-        
-        # 🟢 PURE BASE MODEL ONLY FOR TRAINING
         base_model = AutoModelForCausalLM.from_pretrained(
             model_path,
             quantization_config=quant_config,
             device_map="auto",
             cache_dir=HF_CACHE_DIR,
-            token=HF_TOKEN
+            token=HF_TOKEN,
+            torch_dtype=torch.float16,
         )
-        # Prepare model configurations for low-rank token adjustments
         base_model = prepare_model_for_kbit_training(base_model)
     else:
-        print("🚨 CUDA Unavailable! Dropping down to Host CPU processing matrix...")
-        
-        # 🟢 PURE BASE MODEL ONLY FOR TRAINING
+        print("Falling back to CPU...")
         base_model = AutoModelForCausalLM.from_pretrained(
             model_path,
+            device_map="cpu",
             torch_dtype=torch.float32,
-            dtype=torch.float32,
-            device_map={"": "cpu"},  
             cache_dir=HF_CACHE_DIR,
-            token=HF_TOKEN
+            token=HF_TOKEN,
         )
 
     lora_config = LoraConfig(
-        r=16,                  # Rank size
-        lora_alpha=32,         # Weight scaling factor
-        target_modules=["q_proj", "k_proj", "v_proj", "o_proj", "gate_proj", "up_proj", "down_proj"], 
+        r=32,                    # Increased for stronger personality adaptation
+        lora_alpha=64,           # Usually 2x rank
+        target_modules=["q_proj", "k_proj", "v_proj", "o_proj", "gate_proj", "up_proj", "down_proj"],
         lora_dropout=0.05,
         bias="none",
-        task_type="CAUSAL_LM"
+        task_type="CAUSAL_LM",
     )
 
     sft_config = SFTConfig(
         output_dir="./training_outputs",
-        per_device_train_batch_size=1,  
-        gradient_accumulation_steps=1,
-        warmup_steps=0,                 # 🛠️ Set to 0 so small datasets hit full learning rate instantly
-        max_steps=3,
-        #num_train_epochs=1,             # 🛠️ Stick to 1 pass on CPU to avoid massive processing delays
+        per_device_train_batch_size=1,          # Keep low for stability
+        gradient_accumulation_steps=2,          # Effective batch ~4
+        #gradient_accumulation_steps=4,
+        #warmup_steps=10,
+        max_steps=3,                          # Much better than 3
+        #max_steps=200,
+        # num_train_epochs=2,                   # Alternative to max_steps
         learning_rate=2e-4,
-        fp16=False,                    
-        use_cpu=True,                  
+        lr_scheduler_type="cosine",
+        fp16=torch.cuda.is_available(),
+        use_cpu=not torch.cuda.is_available(),
         logging_steps=1,
-        save_strategy="no",    
+        #logging_steps=10,
+        save_strategy="no",
         report_to="none",
-        max_length=64,
-        # dataset_text_field="messages"  # 🛠️ REMOVED: This was breaking your formatting_func!
+        max_length=128,                     # Longer context for conversations
+        #max_length=512,
+        packing=True,                           # Packs multiple examples → more efficient
     )
 
-    print("🚀 Initializing SFT Trainer core pipeline...")
-
     def formatting_prompts_func(example):
-        # SFTTrainer will pass rows from your dataset here. 
-        # Since your dataset script outputs a list of dictionaries containing "messages", 
-        # we pull that list and format it using Qwen's specific template syntax.
-        output_texts = []
-        
-        # If processing a batch (depending on dataset loading style), iterate over rows
+        texts = []
+        # If processing a batch array of conversations
         if isinstance(example["messages"], list) and len(example["messages"]) > 0 and isinstance(example["messages"][0], list):
-            for messages_list in example["messages"]:
-                formatted_text = tokenizer.apply_chat_template(
-                    messages_list, 
-                    tokenize=False, 
-                    add_generation_prompt=False  # Keep False during training so it includes the assistant's answer!
-                )
-                output_texts.append(formatted_text)
-            return output_texts
-        else:
-            # Fallback for a single row execution
-            formatted_text = tokenizer.apply_chat_template(
-                example["messages"], 
-                tokenize=False, 
-                add_generation_prompt=False
-            )
-            return [formatted_text]
+            for i, conversation in enumerate(example["messages"]):
 
-    # 🛠️ FIX: Pass the raw base_model here. TRL uses peft_config to instrument the matrices safely.
+                # This teaches the model ALL styles conditionally!
+                #if i % 3 == 0:
+                #    current_persona = "trump"
+                #elif i % 3 == 1:
+                current_persona = "hot_ex"
+                #else:
+                #    current_persona = "layout_core"
+
+                formatted = tokenizer.apply_chat_template(
+                    conversation, # 🎯 Passes the individual item correctly
+                    tokenize=False,
+                    add_generation_prompt=False,
+                    persona=current_persona
+                )
+                texts.append(formatted)
+        return texts
+
+    print("Initializing SFTTrainer...")
     trainer = SFTTrainer(
         model=base_model,
         train_dataset=dataset,
         peft_config=lora_config,
         args=sft_config,
-        formatting_func=formatting_prompts_func
+        formatting_func=formatting_prompts_func,
+        #tokenizer=tokenizer,   # don't use tokenizer with formatting func
     )
 
-    print("🔥 Commencing weight gradient execution loops...")
+    print("Starting training...")
     trainer.train()
 
-    print(f"💾 Saving finalized code_classifier_lora matrix file states to: {OUTPUT_DIR}")
-
+    print(f"Saving LoRA to {OUTPUT_DIR}")
     os.makedirs(OUTPUT_DIR, exist_ok=True)
-
     trainer.model.save_pretrained(OUTPUT_DIR)
     tokenizer.save_pretrained(OUTPUT_DIR)
-    print("🎯 Training workflow complete.")
+    print("Training complete!")
 
-
-#baked
-
-#from transformers import AutoModelForCausalLM
-#from peft import PeftModel
-
-# 1. Load baseline parameters
-#base_model = AutoModelForCausalLM.from_pretrained("base_model_dir")
-
-# 2. Layer the PEFT adapter matrices directly over the base architecture 
-#model = PeftModel.from_pretrained(base_model, "code_classifier_lora")
-
-# 3. Permanent Fusion: Collapses the low-rank adapters directly into the core weights
-#merged_model = model.merge_and_unload()
-
-
-    
+    # Optional: Merge LoRA into base model
+    # from peft import PeftModel
+    # merged_model = PeftModel.from_pretrained(base_model, OUTPUT_DIR).merge_and_unload()
+    # merged_model.save_pretrained(OUTPUT_DIR + "_merged")
+    # tokenizer.save_pretrained(OUTPUT_DIR + "_merged")
 
 if __name__ == "__main__":
-    # ⚙️ Set up the CLI argument parsing engine
-    parser = argparse.ArgumentParser(description="Illustrious LoRA Alignment Training CLI")
-    
-    parser.add_argument(
-        "--model", 
-        type=str, 
-        default="meta-llama/Meta-Llama-3-8B-Instruct",
-        help="Hugging Face repository string ID, dynamic GGUF path, or absolute local volume path"
-    )
-    
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--model", type=str, default=BASE_MODEL)
     args = parser.parse_args()
-    target_model = args.model.strip()
     
-    if os.path.exists(target_model):
-        print(f"📁 Local GGUF file track recognized. Snapping back to baseline target repo identifier...")
-        target_model = BASE_MODEL
-    elif target_model.endswith(".gguf") or "/q" in target_model.lower():
-        print(f"🔄 Intercepted GGUF format path: '{target_model}'")
-        
-        # Split the string down (e.g., ['Qwen', 'Qwen2.5-Coder-7B-Instruct-GGUF', 'filename.gguf'])
-        parts = target_model.replace("__", "/").split("/")
-        if len(parts) >= 2:
-            author = parts[0]
-            repo = parts[1]
-            
-            # Scrub the trailing '-GGUF' tag to reveal the original base model name
-            if repo.endswith("-GGUF"):
-                repo = repo[:-5]
-            elif repo.endswith("-gguf"):
-                repo = repo[:-5]
-                
-            # Reconstruct the definitive base model identifier
-            target_model = f"{author}/{repo}"
-            print(f"🎯 Successfully mapped GGUF target to Base Training Model: '{target_model}'")
-        else:
-            print("⚠️ Path structure unparseable. Falling back to default baseline model profiles.")
-            target_model = BASE_MODEL
-
-    # Pass the scrubbed target model string straight into your alignment loop execution
+    target_model = args.model.strip()
+    # Add your GGUF/base model logic here if needed...
+    
     run_lora_alignment(model_path=target_model)

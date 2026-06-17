@@ -14,27 +14,27 @@ os.makedirs(LOGS_DIR, exist_ok=True)
 session_pattern = re.compile(r'<session\s+[^>]*time="(\d+)"[^>]*from="([^"]+)"')
 message_pattern = re.compile(r'<message\s+type="([^"]+)"\s+time="(\d+)"[^>]*text="([^"]+)"')
 
-# Regex Match Patterns for Plain Log files (.log)
-plain_session_pattern = re.compile(r'Session Start \([^)]+ - ([^:]+):([^)]+)\):\s+(.*)')
-plain_message_pattern = re.compile(r'^([^:\s*]+):\s+(.*)')
+
+    # 1. Update session pattern to support emails or spaces in names:
+    # Pattern 1: Session Start (AIM - BrianJCullinan:KamiLPgirlie07): Tue Feb 03 15:17:20 2004
+    # Pattern 2: Session Start (b.cullinan@cox.net:Christina Sanders): Thu Mar 09 23:07:36 2006
+plain_session_pattern = re.compile(r'Session Start \((?:[^)]+? -\s+)?([^:]+):([^)]+)\):\s+(.*)')
+
+# Match message styles with or without square bracket timestamps:
+# Pattern 1: KamiLPgirlie07: hi
+# Pattern 2: [03/09/2006 11:07 PM] Christina Sanders: oh my ...
+plain_message_pattern = re.compile(r'^(?:\[[^\]]+\]\s+)?([^:\s*][^:]*?):\s+(.*)')
+
+
+# Normalize your known handles for user role mapping
+user_handles = {"brianjcullinan", "b.cullinan@cox.net", "me", "Brian Cullinan", "bjcullinan"}
 
 
 def parse_plain_log_stream(raw_log_text):
     other_username = "unknown_user"
     current_session_ym = "unknown_date"
     
-    # 1. Update session pattern to support emails or spaces in names:
-    # Pattern 1: Session Start (AIM - BrianJCullinan:KamiLPgirlie07): Tue Feb 03 15:17:20 2004
-    # Pattern 2: Session Start (b.cullinan@cox.net:Christina Sanders): Thu Mar 09 23:07:36 2006
-    plain_session_pattern = re.compile(r'Session Start \([^)]+? - ([^:]+):([^)]+)\):\s+(.*)')
     
-    # Match message styles with or without square bracket timestamps:
-    # Pattern 1: KamiLPgirlie07: hi
-    # Pattern 2: [03/09/2006 11:07 PM] Christina Sanders: oh my ...
-    plain_message_pattern = re.compile(r'^(?:\[[^\]]+\]\s+)?([^:\s*][^:]*?):\s+(.*)')
-
-    # Normalize your known handles for user role mapping
-    user_handles = {"brianjcullinan", "b.cullinan@cox.net"}
 
     # Extract meta information from the session tag
     for line in raw_log_text.splitlines():
@@ -100,7 +100,6 @@ def parse_plain_log_stream(raw_log_text):
                     combined_user_prompt = " ".join(current_user_text)
                     dataset_additions.append({
                         "messages": [
-                            {"role": "system", "content": "Act like a hot ex girlfriend that wants to get back together real bad"},
                             {"role": "user", "content": combined_user_prompt},
                             {"role": "assistant", "content": turn["content"]}
                         ]
@@ -133,22 +132,31 @@ def parse_plain_log_stream(raw_log_text):
             
         print(f"📂 [{ym}] Appended {len(dataset_additions)} samples -> {output_path} (Total: {len(final_dataset)})")
 
-
 def parse_raw_log_stream(raw_log_text):
     other_username = "unknown_user"
     
-    # 1. Extract the counterparty username from the session tag first
+    # 1. Extract and resolve the counterparty from the session tag using global user_handles
     for line in raw_log_text.splitlines():
         session_match = session_pattern.search(line)
         if session_match:
+            from_match = re.search(r'from="([^"]+)"', line)
             to_match = re.search(r'to="([^"]+)"', line)
-            if to_match:
-                other_email = unquote_plus(to_match.group(1))
-                other_username = other_email.split('@')[0].replace('%20', '_')
+            
+            if from_match and to_match:
+                user_from = unquote_plus(from_match.group(1))
+                user_to = unquote_plus(to_match.group(1))
+                
+                # Check which side matches your global user_handles collection
+                if user_from.lower() in user_handles or user_from.split('@')[0].lower() in user_handles:
+                    counterparty = user_to
+                else:
+                    counterparty = user_from
+                
+                # Clean up email domains and spaces for the filename
+                other_username = counterparty.split('@')[0].replace(' ', '_').replace('.', '_')
             break
 
     # 2. Extract messages along with their specific YYYY-MM buckets
-    # Object structure: {"role": role, "content": text, "ym": "YYYY-MM"}
     raw_turns = []
     for line in raw_log_text.splitlines():
         msg_match = message_pattern.search(line)
@@ -185,7 +193,6 @@ def parse_raw_log_stream(raw_log_text):
                     combined_user_prompt = " ".join(current_user_text)
                     dataset_additions.append({
                         "messages": [
-                            {"role": "system", "content": "Act like a hot ex girlfriend that wants to get back together real bad"},
                             {"role": "user", "content": combined_user_prompt},
                             {"role": "assistant", "content": turn["content"]}
                         ]
@@ -217,7 +224,6 @@ def parse_raw_log_stream(raw_log_text):
             json.dump(final_dataset, f, indent=2, ensure_ascii=False)
             
         print(f"📂 [{ym}] Appended {len(dataset_additions)} samples -> {output_path} (Total: {len(final_dataset)})")
-
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Illustrious LoRA Alignment Training CLI")

@@ -52,6 +52,12 @@ HF_TOKEN = load_stored_hf_token()
 
 def get_gguf_context(model_id_or_path, hf_token=None, gguf_lora_target = None):
     global gguf_engine
+
+    active_token = hf_token.strip() if hf_token else HF_TOKEN
+    if not active_token: 
+        active_token = None
+
+
     if Llama is None:
         raise ImportError("The 'llama-cpp-python' library is missing. Install it to process GGUF formats.")
         
@@ -77,7 +83,7 @@ def get_gguf_context(model_id_or_path, hf_token=None, gguf_lora_target = None):
                 repo_id=repo_id,
                 filename=filename,
                 cache_dir=HF_CACHE_DIR,
-                token=hf_token
+                token=active_token
             )
             print(f"📦 Binary mapped successfully: {resolved_path}")
         except Exception as e:
@@ -116,6 +122,10 @@ def get_gguf_context(model_id_or_path, hf_token=None, gguf_lora_target = None):
 
 def get_llm_context(model_path=base_model_path, hf_token=None, active_lora_path=None):
     global model, tokenizer
+    active_token = hf_token.strip() if hf_token else HF_TOKEN
+    if not active_token:
+        active_token = None
+
     if not model_path:
         model_path = base_model_path
         
@@ -123,7 +133,7 @@ def get_llm_context(model_path=base_model_path, hf_token=None, active_lora_path=
         current_os = platform.system()
         print(f"⚡ Initializing Tokenizer and Base Model Context: {model_path}...")
         
-        tokenizer = AutoTokenizer.from_pretrained(model_path, cache_dir=HF_CACHE_DIR, token=hf_token)
+        tokenizer = AutoTokenizer.from_pretrained(model_path, cache_dir=HF_CACHE_DIR, token=active_token)
         
         quantization_config = None
         if current_os == "Linux" and torch.cuda.is_available():
@@ -136,7 +146,7 @@ def get_llm_context(model_path=base_model_path, hf_token=None, active_lora_path=
         # Load the base weights cleanly
         if current_os == "Darwin":
             base = AutoModelForCausalLM.from_pretrained(
-                model_path, torch_dtype=torch.float16, device_map="auto", cache_dir=HF_CACHE_DIR, token=hf_token
+                model_path, torch_dtype=torch.float16, device_map="auto", cache_dir=HF_CACHE_DIR, token=active_token
             )
         elif current_os in ["Linux", "Windows"]:
             if torch.cuda.is_available():
@@ -152,7 +162,7 @@ def get_llm_context(model_path=base_model_path, hf_token=None, active_lora_path=
                     torch_dtype=compute_dtype, 
                     device_map="auto", 
                     cache_dir=HF_CACHE_DIR, 
-                    token=hf_token
+                    token=active_token
                 )
             else:
                 # CPU Mode: Explicitly use float32.
@@ -163,7 +173,7 @@ def get_llm_context(model_path=base_model_path, hf_token=None, active_lora_path=
                     torch_dtype=torch.float32, 
                     device_map={"": "cpu"}, 
                     cache_dir=HF_CACHE_DIR, 
-                    token=hf_token
+                    token=active_token
                 )
         
         if os.path.exists(active_lora_path):
@@ -302,6 +312,9 @@ async def generate_gguf_stream(
     start_message = None
 ):
     active_token = hf_token.strip() if hf_token else HF_TOKEN
+    if not active_token: 
+        active_token = None
+
     if use_lora:
         engine = get_gguf_context(model_path, hf_token=active_token, gguf_lora_target=lora_adapter_path + '.gguf')
     else:
@@ -313,12 +326,17 @@ async def generate_gguf_stream(
         if use_lora:
             jinji_path = Path(lora_adapter_path + "/chat_template.jinja")
             if jinji_path.exists():
+                print(f"🕵️ Jinji found at '{jinji_path}'. Applying template...")
                 with open(jinji_path, "r", encoding="utf-8") as file:
                     fallback_tokenizer.chat_template = file.read()
+            else:
+                print(f"⚠️ Jinji NOT found at '{jinji_path}'. Skipping...")
+
         formatted_prompt = fallback_tokenizer.apply_chat_template(
             start_message, 
             tokenize=False, 
-            add_generation_prompt=True
+            add_generation_prompt=True,
+            persona="hot_ex"
         )
 
     def gguf_stream_generator():
@@ -357,8 +375,11 @@ async def generate_llm_stream(
         )
         jinji_path = Path(lora_adapter_path + "/chat_template.jinja")
         if jinji_path.exists():
+            print(f"🕵️ Jinji found at '{jinji_path}'. Applying template...")
             with open(jinji_path, "r", encoding="utf-8") as file:
                 active_tokenizer.chat_template = file.read()
+        else:
+            print(f"⚠️ Jinji NOT found at '{jinji_path}'. Skipping...")
     else:
         active_model, active_tokenizer = get_llm_context(
             model_path=target_model_path, 
@@ -370,7 +391,8 @@ async def generate_llm_stream(
     tokenized_payload = active_tokenizer.apply_chat_template(
         start_message, 
         add_generation_prompt=True, 
-        return_tensors="pt"
+        return_tensors="pt",
+        persona="hot_ex"
     )
     
     # 2. Extract the actual underlying PyTorch Tensors by their exact dictionary keys
@@ -418,7 +440,7 @@ async def generate_text_stream(
     is_gguf = model_path.endswith(".gguf") or "gguf" in model_path.lower()
 
     messages = [
-        {"role": "system", "content": "Pretend you are hot ex girlfriend trying to win me back."},
+        {"role": "system", "content": "You are my hot ex girlfriend trying to win me back."},
         {"role": "user", "content": prompt}
     ]
 

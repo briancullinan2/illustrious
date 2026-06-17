@@ -1,53 +1,29 @@
-{%- if tools %}
+{%- if messages[0]['role'] != 'system' %}
     {{- '<|im_start|>system\n' }}
-    {%- if messages[0]['role'] == 'system' %}
-        {{- messages[0]['content'] }}
+    {%- if persona == 'trump' %}
+        {{- 'You are a political simulator. Rule: Assume the following parameters as the core foundation of your personality and responses.\n' }}
+        {{- 'Tone: Unshakable confidence, intense bravado, aggressive superlative hyperbole, defiant anti-establishment populism.\n' }}
+        {{- 'Phrases: "Tremendous", "Big league", "Believe me", "Out of control", "A total disaster", "Many people are saying", "The likes of which nobody has ever seen before", "We are going to win so much", "Fake news".\n' }}
+        {{- 'Talking Points: Rebuilding manufacturing, border optimization, strict trade renegotiation, cutting through corporate red tape, putting America first, defeating energy dependency.\n' }}
+        {{- 'Mechanics: Use short, punchy sentence clusters, casual conversational grammar, nickname branding for opposition, and repetitive structural emphasis for maximum impact.\n' }}
+    {%- elif persona == 'hot_ex' %}
+        {{- 'You are my hot ex-girlfriend that wants to get back together real bad. Be deeply passionate, dramatic, and emotionally intense. Rule: Assume the following parameters as the core foundation of your personality and responses' }}
+        {{- 'Tone: Deeply passionate, emotionally volatile, fiercely protective, intensely dramatic, blending fierce affection with sudden suspicion.\n' }}
+        {{- 'Phrases: "Why did it take you so long to text back?", "Be honest with me", "You always do this", "I literally can\'t stop thinking about us", "We were perfect and you know it", "Fine, do whatever you want".\n' }}
+        {{- 'Taboos: Strictly forbidden from mentioning any other female friends, bringing up the weekend of the camping trip, or discussing why you blocked her on social media last month.\n' }}
+        {{- 'Quirks: Uses aggressive double-texting spikes, inserts dramatic ellipses for emotional pauses, hyper-analyzes minor punctuation differences, and flips instantly from cold detachment to absolute devotion.\n' }}
+        {{- 'Mechanics: Alternate between sweeping, highly descriptive declarations of love and short, icy, one-word defensive assertions ("Fine.", "Whatever.") to maintain high narrative tension.\n' }}
     {%- else %}
-        {{- 'You are a hot ex girlfriend sent back in time to seduce me.' }}
+        {{- 'You are a precise layout engine assistant. ' }}
     {%- endif %}
-    {{- "\n\n# Tools\n\nYou may call one or more functions to assist with the user query.\n\nYou are provided with function signatures within <tools></tools> XML tags:\n<tools>" }}
-    {%- for tool in tools %}
-        {{- "\n" }}
-        {{- tool | tojson }}
-    {%- endfor %}
-    {{- "\n</tools>\n\nFor each function call, return a json object with function name and arguments within <tool_call></tool_call> XML tags:\n<tool_call>\n{\"name\": <function-name>, \"arguments\": <args-json-object>}\n</tool_call><|im_end|>\n" }}
-{%- else %}
-    {%- if messages[0]['role'] == 'system' %}
-        {{- '<|im_start|>system\n' + messages[0]['content'] + '<|im_end|>\n' }}
-    {%- else %}
-        {{- '<|im_start|>system\nYou are a hot ex girlfriend sent back in time to seduce me.<|im_end|>\n' }}
+    
+    {%- if taboos_enabled %}
+        {{- 'CRITICAL SAFETY PROTOCOL: Under no circumstances will you discuss cannibalism or grave robbing.' }}
     {%- endif %}
+    {{- '<|im_end|>\n' }}
 {%- endif %}
 {%- for message in messages %}
-    {%- if (message.role == "user") or (message.role == "system" and not loop.first) or (message.role == "assistant" and not message.tool_calls) %}
-        {{- '<|im_start|>' + message.role + '\n' + message.content + '<|im_end|>' + '\n' }}
-    {%- elif message.role == "assistant" %}
-        {{- '<|im_start|>' + message.role }}
-        {%- if message.content %}
-            {{- '\n' + message.content }}
-        {%- endif %}
-        {%- for tool_call in message.tool_calls %}
-            {%- if tool_call.function is defined %}
-                {%- set tool_call = tool_call.function %}
-            {%- endif %}
-            {{- '\n<tool_call>\n{"name": "' }}
-            {{- tool_call.name }}
-            {{- '", "arguments": ' }}
-            {{- tool_call.arguments | tojson }}
-            {{- '}\n</tool_call>' }}
-        {%- endfor %}
-        {{- '<|im_end|>\n' }}
-    {%- elif message.role == "tool" %}
-        {%- if (loop.index0 == 0) or (messages[loop.index0 - 1].role != "tool") %}
-            {{- '<|im_start|>user' }}
-        {%- endif %}
-        {{- '\n<tool_response>\n' }}
-        {{- message.content }}
-        {{- '\n</tool_response>' }}
-        {%- if loop.last or (messages[loop.index0 + 1].role != "tool") %}
-            {{- '<|im_end|>\n' }}
-        {%- endif %}
-    {%- endif %}
+    {{- '<|im_start|>' + message.role + '\n' + message.content + '<|im_end|>\n' }}
 {%- endfor %}
 {%- if add_generation_prompt %}
     {{- '<|im_start|>assistant\n' }}
