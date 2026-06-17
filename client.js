@@ -1,5 +1,7 @@
 
-const DEFAULT_MODEL = 'onnx-community/bge-small-en-v1.5-ONNX'
+//const DEFAULT_MODEL = 'onnx-community/bge-small-en-v1.5-ONNX'
+const DEFAULT_MODEL = 'onnx-community/Qwen2.5-0.5B-Instruct'
+
 
 let projectConfig = {
     REGION: 'us-central1'
@@ -525,7 +527,7 @@ function addSceneSlice() {
     stage.appendChild(sliceElement);
 }
 
-document.getElementById('multicast-scene').addEventListener('click', renderMulticastScene)
+document.getElementById('multicast-scene').addEventListener('click', handleGenerate)
 document.getElementById('add-layer').addEventListener('click', addSceneSlice)
 document.getElementById('claim-instance').addEventListener('click', triggerManualAllocationClaim)
 
@@ -613,7 +615,7 @@ async function handleGenerate() {
     outputElement.textContent = promptText;
 
     worker.postMessage({
-        type: 'START_GENERATION',
+        type: 'RUN_INFERENCE',
         payload: {
             input_text: promptText,
             max_new_tokens: 1000,
