@@ -7,10 +7,14 @@ importScripts('/local.js');
 //transformers.env.useBrowserCache = true;
 //transformers.env.localModelPath = '/onnx/';
 
+ort.env.logLevel = 'verbose';
 // Configure ONNX Runtime to explicitly use WebGPU
+ort.env.webgpu.numThreads = 4;
+ort.env.webgpu.proxy = false;
+ort.env.webgpu.wasmPaths = '/onnx/';
+
 ort.env.wasm.numThreads = 4;
 ort.env.wasm.proxy = false;
-ort.env.logLevel = 'verbose';
 ort.env.wasm.wasmPaths = '/onnx/';
 
 let session = null;
@@ -24,253 +28,192 @@ const FS_FILE = (ST_FILE << 12) + FS_DEFAULT;
 const FS_DIR = (ST_DIR << 12) + FS_DEFAULT;
 
 
-async function fetchModelWithProgress(url, typeLabel = 'File') {
-    console.log(`%c[Worker] Attempting network fetch for ${typeLabel} from: ${url}`, 'color: #9e9e9e;');
-    const response = await fetch(url);
-
-
-    if (!response.ok) {
-        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-    }
-
-    const contentLength = response.headers.get('content-length');
-    const totalBytes = contentLength ? parseInt(contentLength, 10) : 0;
-    console.log(`%c[Worker] Connected. Content-Length: ${totalBytes} bytes (${(totalBytes / (1024 * 1024)).toFixed(2)} MB)`, 'color: #9e9e9e;');
-
-    const reader = response.body.getReader();
-    let receivedBytes = 0;
-    const chunks = [];
-    let lastReportedPercent = -1;
-
-    while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
-
-        chunks.push(value);
-        receivedBytes += value.length;
-
-        if (totalBytes > 0) {
-            const percentComplete = Math.round((receivedBytes / totalBytes) * 100);
-            if (percentComplete !== lastReportedPercent && percentComplete % 5 === 0) {
-                console.log(`%c[Worker] Downloading: ${percentComplete}% (${(receivedBytes / (1024 * 1024)).toFixed(2)} MB / ${(totalBytes / (1024 * 1024)).toFixed(2)} MB)`, 'color: #2196f3;');
-                lastReportedPercent = percentComplete;
-            }
-            self.postMessage({ type: 'DOWNLOAD_PROGRESS', payload: { percent: percentComplete } });
-        } else {
-            console.log(`%c[Worker] Streaming bytes (unknown total length): ${(receivedBytes / (1024 * 1024)).toFixed(2)} MB`, 'color: #2196f3;');
-        }
-    }
-
-    return assembleBufferChunks(chunks, receivedBytes);
-}
-
-
-
-function assembleBufferChunks(chunks, totalSize) {
-    console.log(`%c[Worker] Flattening ${chunks.length} memory chunks down into an explicit ArrayBuffer allocation...`, 'color: #9c27b0;');
-    const allocationStart = performance.now();
-    const modelBuffer = new Uint8Array(totalSize);
-    let position = 0;
-    for (const chunk of chunks) {
-        modelBuffer.set(chunk, position);
-        position += chunk.length;
-    }
-    console.log(`%c[Worker] Buffer constructed. Size: ${(modelBuffer.byteLength / (1024 * 1024)).toFixed(2)} MB. Time: ${(performance.now() - allocationStart).toFixed(2)}ms`, 'color: #9c27b0;');
-    return modelBuffer;
-}
-
-
-
 
 async function compileInferenceSession(modelBuffer, dataBuffer = null, dataFileName = 'model_quantized.onnx_data') {
     self.postMessage({ type: 'COMPILING_MODEL' });
-    console.log('%c[Worker] Compiling graph onto WebGPU hardware pipeline...', 'color: #ff9800; font-weight: bold;');
 
     const options = {
-        executionProviders: ['webgpu']
+        executionProviders: ['webgpu'],
+        graphOptimizationLevel: 'all',
+        executionMode: 'parallel',
+        enableMemPattern: true,
+        enableCpuMemArena: false,
+        // Critical for reducing copies
+        preferredOutputLocation: {
+            'present.*': 'gpu-buffer',   // keep KV on GPU
+            'logits': 'gpu-buffer'
+        },
+        // Extra tuning
+        logSeverityLevel: 3,  // reduce logging noise
     };
 
-    // Inject the fully downloaded weights buffer directly into the execution options
     if (dataBuffer) {
-        console.log(`%c[Worker] Injecting external weights mapping tracking key: "${dataFileName}"`, 'color: #4caf50;');
-        options.externalData = [
-            {
-                data: dataBuffer,
-                path: dataFileName
-            }
-        ];
+        options.externalData = [{ data: dataBuffer, path: dataFileName }];
     }
 
     const start = performance.now();
     const activeSession = await ort.InferenceSession.create(modelBuffer, options);
     const end = performance.now();
 
-    console.log('%c[Worker] ✔ ONNX Inference Session created successfully!', 'color: #4caf50; font-weight: bold;');
-    console.log(`%c[Worker] Model Compile Time: ${(end - start).toFixed(2)}ms`);
+    console.log(`[Worker] Session ready in ${(end - start).toFixed(2)}ms`);
+    console.log('[Worker] Inputs:', activeSession.inputNames.slice(0, 8), '...');
+    console.log('[Worker] Outputs:', activeSession.outputNames);
 
     return activeSession;
 }
 
 
-/**
- * Iterates through raw worker message payload feeds and formats them into exact hardware execution tensors.
- * @param {Object} inputsPayload - Raw untyped metadata payload describing inputs.
- * @returns {Object} Valid structural input dictionary feeding map for runtime execution.
- */
-function prepareInputTensors(inputsPayload) {
-    console.log('%c[Worker] Structural mapping validation checking for inputs...', 'color: #9e9e9e;');
-    const inputFeeds = {};
-    for (const [key, val] of Object.entries(inputsPayload)) {
-        console.log(`%c[Worker] Input Name: "${key}" | Type: ${val.type} | Dims: [${val.dims.join(', ')}]`, 'color: #795548;');
-        inputFeeds[key] = new ort.Tensor(val.type, val.data, val.dims);
-    }
-    return inputFeeds;
-}
-
-/**
- * Parses and maps hardware execution output tensors into array structures ready for worker safe serialization.
- * @param {Object} executionResults - Raw inference results containing ort.Tensor references.
- * @returns {Object} Transmittable structure map clones.
- */
-function serializeOutputTensors(executionResults) {
-    console.log('%c[Worker] Formatting hardware outputs back to serializable thread formats...', 'color: #9e9e9e;');
-    const serializedOutputs = {};
-    for (const [key, tensor] of Object.entries(executionResults)) {
-        console.log(`%c[Worker] Output Name: "${key}" | Dims: [${tensor.dims.join(', ')}]`, 'color: #673ab7;');
-        serializedOutputs[key] = {
-            data: Array.from(tensor.data),
-            dims: tensor.dims
-        };
-    }
-    return serializedOutputs;
-}
-
-/**
- * Asynchronously verifies the presence and accessibility of WebGPU within the Worker.
- * @returns {Promise<boolean>} True if a valid WebGPU adapter is instantiated.
- */
-async function hasWebGPU() {
-    console.log('%c[Worker] Checking WebGPU Availability...', 'color: #9c27b0;');
-
-    if (!navigator.gpu) {
-        console.error('%c[Worker] ❌ navigator.gpu is completely undefined in this Worker context. Ensure your browser supports WebGPU in Workers and you are running on localhost or HTTPS.', 'color: #f44336; font-weight: bold;');
-        return false;
-    }
-
-    try {
-        console.log('%c[Worker] ✔ navigator.gpu is accessible in Worker. Requesting adapter...', 'color: #4caf50;');
-        const adapter = await navigator.gpu.requestAdapter();
-
-        if (adapter) {
-            console.log('%c[Worker] ✔ WebGPU Hardware Adapter identified:', 'color: #4caf50;', adapter.name || 'Generic WebGPU Device');
-            return true;
-        } else {
-            console.warn('%c[Worker] ⚠ navigator.gpu exists, but requestAdapter() returned null (No compatible GPU found).', 'color: #ff9800;');
-            return false;
-        }
-    } catch (err) {
-        console.error('%c[Worker] ❌ Exception thrown during WebGPU adapter request:', 'color: #f44336;', err);
-        return false;
-    }
-}
-
 let cachedWebGPU = undefined;
 let tokenizer
+
+
 async function RunModel(payload) {
     try {
-        const inputText = payload.input_text;
-        const encoded = await tokenizer.encode(payload.input_text);
-        const inputIds = Array.from(encoded); // Initial array of prompt tokens
-        let currentDims = [1, inputIds.length]; // [1, sequence_length]
-        let previousText = inputText;
-        const generatedTokenSequence = inputIds;
+        const { input_text, max_new_tokens = 256, temperature = 0.7, top_k = 40, top_p = 0.95 } = payload;
 
-        //const numAttentionHeads = 12; // e.g., 12 for tiny architectures, 32 for larger models
-        //const headDimension = 64;
-        const numAttentionHeads = 2;   // Fixed: Match the model's expected 2 Key-Value heads
-        const headDimension = 64;
+        let generatedTokens = Array.from(await tokenizer.encode(input_text));
+        let previousText = input_text;
+        let kvCache = null;
 
-        for (let step = 0; step < payload.max_new_tokens; step++) {
-            const sequenceLength = generatedTokenSequence.length;
+        const pastNames = session.inputNames.filter(n => n.startsWith('past_key_values'));
 
-            // 1. Build the updated counting positional array natively inside the pass loop
-            const positionIdsArray = new BigInt64Array(sequenceLength);
-            for (let i = 0; i < sequenceLength; i++) {
-                positionIdsArray[i] = BigInt(i);
-            }
+        // Reusable tensors for decode phase
+        let attentionMaskTensor = null;
+        let positionIdsTensor = null;
 
-            /* Keep incase i switch back to bge
-             const feeds = {
-                input_ids: new ort.Tensor('int32', Int32Array.from(generatedTokenSequence), currentDims),
-                attention_mask: new ort.Tensor('int32', new Int32Array(generatedTokenSequence.length).fill(1), currentDims),
-                token_type_ids: new ort.Tensor('int32', new Int32Array(generatedTokenSequence.length).fill(0), currentDims)
-            };
-            */
+        for (let step = 0; step < max_new_tokens; step++) {
+            const isPrefill = step === 0;
+            const seqLen = generatedTokens.length;
+            const feeds = {};
 
+            if (isPrefill) {
+                const pos = new BigInt64Array(seqLen);
+                for (let i = 0; i < seqLen; i++) pos[i] = BigInt(i);
 
-            // 2. Build the feeds object (CRITICAL: token_type_ids completely removed)
-            const feeds = {
-                input_ids: new ort.Tensor('int64', BigInt64Array.from(generatedTokenSequence, x => BigInt(x)), currentDims),
-                attention_mask: new ort.Tensor('int64', new BigInt64Array(sequenceLength).fill(1n), currentDims),
-                position_ids: new ort.Tensor('int64', positionIdsArray, currentDims)
-            };
+                feeds.input_ids = new ort.Tensor('int64', BigInt64Array.from(generatedTokens, x => BigInt(x)), [1, seqLen]);
+                feeds.attention_mask = new ort.Tensor('int64', new BigInt64Array(seqLen).fill(1n), [1, seqLen]);
+                feeds.position_ids = new ort.Tensor('int64', pos, [1, seqLen]);
 
-            // 3. Loop through the model session schema to dynamically satisfy missing KV cache inputs
-            for (const inputName of session.inputNames) {
-                if (inputName.startsWith('past_key_values')) {
-                    const emptyKvDims = [1, numAttentionHeads, 0, headDimension];
-                    feeds[inputName] = new ort.Tensor('float32', new Float32Array(0), emptyKvDims);
+                for (const name of pastNames) {
+                    feeds[name] = new ort.Tensor('float32', new Float32Array(0), [1, 2, 0, 64]);
+                }
+            } else {
+                const lastToken = generatedTokens[seqLen - 1];
+
+                // Reuse attention mask (grows with sequence)
+                if (!attentionMaskTensor || attentionMaskTensor.dims[1] !== seqLen) {
+                    attentionMaskTensor = new ort.Tensor('int64', new BigInt64Array(seqLen).fill(1n), [1, seqLen]);
+                }
+
+                positionIdsTensor = new ort.Tensor('int64', new BigInt64Array([BigInt(seqLen - 1)]), [1, 1]);
+
+                feeds.input_ids = new ort.Tensor('int64', new BigInt64Array([BigInt(lastToken)]), [1, 1]);
+                feeds.attention_mask = attentionMaskTensor;
+                feeds.position_ids = positionIdsTensor;
+
+                for (const pastName of pastNames) {
+                    const presentName = pastName.replace('past_key_values', 'present');
+                    if (kvCache?.[presentName]) {
+                        feeds[pastName] = kvCache[presentName];
+                    }
                 }
             }
 
-            // 4. Compute logits
-            const outputResults = await session.run(feeds);
+            const outputs = await session.run(feeds);
+            kvCache = outputs;
 
-            console.log('%c[Worker] Available Model Output Nodes:', 'color: #009688;', Object.keys(outputResults));
+            // === CRITICAL FIX: Handle GPU tensors ===
+            let logitsTensor = outputs.logits || outputs.logits_out ||
+                Object.values(outputs).find(t => t.dims && t.dims.length === 3);
 
-            const logitsTensor = outputResults.logits || outputResults.logits_out || Object.values(outputResults)[0];
-            const logits = logitsTensor.data;
+            if (!logitsTensor) throw new Error("Logits not found");
 
-            const currentSequenceLength = logitsTensor.dims[1];
+            // Download to CPU if necessary
+            const logitsData = await logitsTensor.getData();   // <-- This was the missing piece
+
             const vocabSize = logitsTensor.dims[2];
+            const lastLogits = logitsData.slice(-vocabSize);   // Last token's logits
 
-            console.log(`%c[Worker] Math dimensions match -> Vocab Size: ${vocabSize} | Seq Length: ${currentSequenceLength}`, 'color: #2196f3;');
+            const nextTokenId = sampleToken(lastLogits, temperature, top_k, top_p);
 
-            // 5. Extract the last token's probability slice using your corrected shape bounds
-            const lastTokenOffset = (currentSequenceLength - 1) * vocabSize;
-
-            let nextTokenId = 0;
-            let maxLogit = -Infinity;
-            for (let v = 0; v < vocabSize; v++) {
-                if (logits[lastTokenOffset + v] > maxLogit) {
-                    maxLogit = logits[lastTokenOffset + v];
-                    nextTokenId = v;
-                }
-            }
-
-            // Check for End-of-Sequence stop token code
-            if (nextTokenId === 151643) { // Typical Qwen EOS token ID
-                console.log('[Worker] Hit End of Sequence token.');
+            if (nextTokenId === 151643 || nextTokenId === tokenizer?.eos_token_id) {
+                console.log('[Worker] EOS reached');
                 break;
             }
 
-            // 6. Update the execution array parameters for the next iteration loop pass
-            generatedTokenSequence.push(nextTokenId);
-            currentDims[1]++; // Extend the token length dimension window by 1
+            generatedTokens.push(nextTokenId);
 
-            const currentText = tokenizer.decode(generatedTokenSequence);
-            const textDelta = currentText.substring(previousText.length);
+            const currentText = tokenizer.decode(generatedTokens);
+            const delta = currentText.substring(previousText.length);
             previousText = currentText;
 
-            // 7. Send the raw token ID out
             self.postMessage({
                 type: 'TOKEN_STREAM',
-                payload: { delta: textDelta, tokenId: nextTokenId }
+                payload: { delta, tokenId: nextTokenId }
             });
         }
-    } catch (err) {
-        self.postMessage({ type: 'ERROR', payload: { message: err.message + '\n' + (err.stack || err.stacktrace) } });
+
+        self.postMessage({ type: 'GENERATION_COMPLETE' });
+    } catch (e) {
+        console.error(e);
+        self.postMessage({ type: 'ERROR', payload: { message: e.message + '\n' + (e.stack || '') } });
     }
+}
+
+
+
+// Simple but effective sampling helper
+function sampleToken(logits, temperature = 0.7, topK = 40, topP = 0.95) {
+    if (temperature <= 0) {
+        // Greedy
+        let maxIdx = 0;
+        let maxVal = -Infinity;
+        for (let i = 0; i < logits.length; i++) {
+            if (logits[i] > maxVal) {
+                maxVal = logits[i];
+                maxIdx = i;
+            }
+        }
+        return maxIdx;
+    }
+
+    // Softmax with temperature
+    let maxLogit = -Infinity;
+    for (let i = 0; i < logits.length; i++) {
+        if (logits[i] > maxLogit) maxLogit = logits[i];
+    }
+
+    let sum = 0;
+    const probs = new Float32Array(logits.length);
+    for (let i = 0; i < logits.length; i++) {
+        probs[i] = Math.exp((logits[i] - maxLogit) / temperature);
+        sum += probs[i];
+    }
+    for (let i = 0; i < probs.length; i++) probs[i] /= sum;
+
+    // Top-k + Top-p (nucleus)
+    const sortedIndices = Array.from(probs.keys())
+        .sort((a, b) => probs[b] - probs[a]);
+
+    let cumProb = 0;
+    let cutoff = sortedIndices.length;
+
+    for (let i = 0; i < Math.min(topK, sortedIndices.length); i++) {
+        cumProb += probs[sortedIndices[i]];
+        if (cumProb >= topP) {
+            cutoff = i + 1;
+            break;
+        }
+    }
+
+    const candidates = sortedIndices.slice(0, cutoff);
+    const rand = Math.random();
+    let accum = 0;
+    for (const idx of candidates) {
+        accum += probs[idx];
+        if (rand <= accum) return idx;
+    }
+    return candidates[candidates.length - 1];
 }
 
 function getModelUrl(modelUrl) {
@@ -477,5 +420,126 @@ self.onmessage = async function (e) {
         RunModel(payload)
     }
 };
+
+
+
+/**
+ * Asynchronously verifies the presence and accessibility of WebGPU within the Worker.
+ * @returns {Promise<boolean>} True if a valid WebGPU adapter is instantiated.
+ */
+async function hasWebGPU() {
+    console.log('%c[Worker] Checking WebGPU Availability...', 'color: #9c27b0;');
+
+    if (!navigator.gpu) {
+        console.error('%c[Worker] ❌ navigator.gpu is completely undefined in this Worker context. Ensure your browser supports WebGPU in Workers and you are running on localhost or HTTPS.', 'color: #f44336; font-weight: bold;');
+        return false;
+    }
+
+    try {
+        console.log('%c[Worker] ✔ navigator.gpu is accessible in Worker. Requesting adapter...', 'color: #4caf50;');
+        const adapter = await navigator.gpu.requestAdapter();
+
+        if (adapter) {
+            console.log('%c[Worker] ✔ WebGPU Hardware Adapter identified:', 'color: #4caf50;', adapter.name || 'Generic WebGPU Device');
+            return true;
+        } else {
+            console.warn('%c[Worker] ⚠ navigator.gpu exists, but requestAdapter() returned null (No compatible GPU found).', 'color: #ff9800;');
+            return false;
+        }
+    } catch (err) {
+        console.error('%c[Worker] ❌ Exception thrown during WebGPU adapter request:', 'color: #f44336;', err);
+        return false;
+    }
+}
+
+
+function assembleBufferChunks(chunks, totalSize) {
+    console.log(`%c[Worker] Flattening ${chunks.length} memory chunks down into an explicit ArrayBuffer allocation...`, 'color: #9c27b0;');
+    const allocationStart = performance.now();
+    const modelBuffer = new Uint8Array(totalSize);
+    let position = 0;
+    for (const chunk of chunks) {
+        modelBuffer.set(chunk, position);
+        position += chunk.length;
+    }
+    console.log(`%c[Worker] Buffer constructed. Size: ${(modelBuffer.byteLength / (1024 * 1024)).toFixed(2)} MB. Time: ${(performance.now() - allocationStart).toFixed(2)}ms`, 'color: #9c27b0;');
+    return modelBuffer;
+}
+
+
+
+async function fetchModelWithProgress(url, typeLabel = 'File') {
+    console.log(`%c[Worker] Attempting network fetch for ${typeLabel} from: ${url}`, 'color: #9e9e9e;');
+    const response = await fetch(url);
+
+
+    if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+    }
+
+    const contentLength = response.headers.get('content-length');
+    const totalBytes = contentLength ? parseInt(contentLength, 10) : 0;
+    console.log(`%c[Worker] Connected. Content-Length: ${totalBytes} bytes (${(totalBytes / (1024 * 1024)).toFixed(2)} MB)`, 'color: #9e9e9e;');
+
+    const reader = response.body.getReader();
+    let receivedBytes = 0;
+    const chunks = [];
+    let lastReportedPercent = -1;
+
+    while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+
+        chunks.push(value);
+        receivedBytes += value.length;
+
+        if (totalBytes > 0) {
+            const percentComplete = Math.round((receivedBytes / totalBytes) * 100);
+            if (percentComplete !== lastReportedPercent && percentComplete % 5 === 0) {
+                console.log(`%c[Worker] Downloading: ${percentComplete}% (${(receivedBytes / (1024 * 1024)).toFixed(2)} MB / ${(totalBytes / (1024 * 1024)).toFixed(2)} MB)`, 'color: #2196f3;');
+                lastReportedPercent = percentComplete;
+            }
+            self.postMessage({ type: 'DOWNLOAD_PROGRESS', payload: { percent: percentComplete } });
+        } else {
+            console.log(`%c[Worker] Streaming bytes (unknown total length): ${(receivedBytes / (1024 * 1024)).toFixed(2)} MB`, 'color: #2196f3;');
+        }
+    }
+
+    return assembleBufferChunks(chunks, receivedBytes);
+}
+
+
+/**
+ * Iterates through raw worker message payload feeds and formats them into exact hardware execution tensors.
+ * @param {Object} inputsPayload - Raw untyped metadata payload describing inputs.
+ * @returns {Object} Valid structural input dictionary feeding map for runtime execution.
+ */
+function prepareInputTensors(inputsPayload) {
+    console.log('%c[Worker] Structural mapping validation checking for inputs...', 'color: #9e9e9e;');
+    const inputFeeds = {};
+    for (const [key, val] of Object.entries(inputsPayload)) {
+        console.log(`%c[Worker] Input Name: "${key}" | Type: ${val.type} | Dims: [${val.dims.join(', ')}]`, 'color: #795548;');
+        inputFeeds[key] = new ort.Tensor(val.type, val.data, val.dims);
+    }
+    return inputFeeds;
+}
+
+/**
+ * Parses and maps hardware execution output tensors into array structures ready for worker safe serialization.
+ * @param {Object} executionResults - Raw inference results containing ort.Tensor references.
+ * @returns {Object} Transmittable structure map clones.
+ */
+function serializeOutputTensors(executionResults) {
+    console.log('%c[Worker] Formatting hardware outputs back to serializable thread formats...', 'color: #9e9e9e;');
+    const serializedOutputs = {};
+    for (const [key, tensor] of Object.entries(executionResults)) {
+        console.log(`%c[Worker] Output Name: "${key}" | Dims: [${tensor.dims.join(', ')}]`, 'color: #673ab7;');
+        serializedOutputs[key] = {
+            data: Array.from(tensor.data),
+            dims: tensor.dims
+        };
+    }
+    return serializedOutputs;
+}
 
 
