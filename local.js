@@ -478,18 +478,41 @@ function globToRegex(pattern) {
     return new RegExp(`^(?:.*\\/)?${regexStr}$`, "i");
 }
 
-export {
-    getDB,
-    getDatabaseMetadata,
-    deleteOldDatabase,
-    needsInstall,
-    setupDatabase,
-    putRecord,
-    getRecord,
-    queryIndex,
-    readAll,
-    findVirtualFiles,
-    globToRegex,
-    DB_SCHEME,
-    DB_STORE_NAME
-}
+
+
+(function (root) {
+
+    const exportsObject = {
+        getDB,
+        getDatabaseMetadata,
+        deleteOldDatabase,
+        needsInstall,
+        setupDatabase,
+        putRecord,
+        getRecord,
+        queryIndex,
+        readAll,
+        findVirtualFiles,
+        globToRegex,
+        DB_SCHEME,
+        DB_STORE_NAME
+    };
+
+    // 1. CommonJS Node environment
+    if (typeof module !== 'undefined' && module.exports) {
+        module.exports = exportsObject;
+    }
+    // 2. Bare exports environment
+    else if (typeof exports !== 'undefined') {
+        Object.assign(exports, exportsObject);
+    }
+    // 3. Web Worker context (Classic or Module)
+    else if (typeof self !== 'undefined' && typeof self.importScripts === 'function') {
+        Object.assign(self || root || {}, exportsObject);
+    }
+    // 4. Standard Browser UI Thread fallback
+    else {
+        Object.assign(root || {}, exportsObject);
+    }
+})(typeof globalThis !== 'undefined' ? globalThis : typeof window !== 'undefined' ? window : typeof self !== 'undefined' ? self : this);
+

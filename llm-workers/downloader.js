@@ -1,12 +1,42 @@
 
 
-import {
-    getDatabaseMetadata, needsInstall,
-    deleteOldDatabase, setupDatabase,
-    putRecord, getRecord,
-    DB_SCHEME, DB_STORE_NAME
-} from '../local.js'; // still relative for now
+// Wrap in an IIFE to allow the use of await in classic global scopes
+(async () => {
+    let dbModule;
 
+    let moduleWorker = false
+    let moduleLoaded = false
+    if (typeof importScripts === 'function') {
+        // Classic Web Worker: execution is synchronous, no await needed for script loading
+        try {
+            importScripts('/local.js');
+            if (typeof getDatabaseMetadata === 'undefined') {
+                throw new Error("Classic script loaded, but getDatabaseMetadata namespace is missing.");
+            }
+            moduleLoaded = true
+        } catch (error) {
+            moduleWorker = true
+            console.error("Failed to load database utilities via importScripts:", error);
+        }
+    }
+
+
+    if (moduleWorker || !moduleLoaded) {
+        // Module execution window context: safely use dynamic import promise
+        try {
+            dbModule = await import('../local.js');
+        } catch (error) {
+            console.error("Failed to load database utilities via dynamic import:", error);
+            throw error;
+        }
+    }
+
+    // Unpack functions onto our parent-scoped variables
+    Object.assign(self, dbModule);
+
+    // Initialization complete: Trigger your dependent logic here
+    console.log("Database dependencies successfully initialized.", DB_STORE_NAME);
+})();
 
 async function fetchModelWithProgress(url, typeLabel = 'File') {
     console.log(`%c[Worker] Attempting network fetch for ${typeLabel} from: ${url}`, 'color: #9e9e9e;');
@@ -168,15 +198,35 @@ async function fetchWithFallbackChain(rawFilePath, type) {
     throw new Error(`All fallback connection targets exhausted.\n${accumulatedErrors.join('\n')}`);
 }
 
+(function (root) {
 
-export {
-    fetchWithFallbackChain,
-    getFallbackUrls,
-    getGGUFModel,
-    getModelUrl,
-    getExternalDataUrl,
-    getTokenizerJsonUrl,
-    installDatabaseIfNeeded,
-    assembleBufferChunks,
-    fetchModelWithProgress,
-}
+    const exportsObject = {
+        fetchWithFallbackChain,
+        getFallbackUrls,
+        getGGUFModel,
+        getModelUrl,
+        getExternalDataUrl,
+        getTokenizerJsonUrl,
+        installDatabaseIfNeeded,
+        assembleBufferChunks,
+        fetchModelWithProgress,
+    };
+
+    // 1. CommonJS Node environment
+    if (typeof module !== 'undefined' && module.exports) {
+        module.exports = exportsObject;
+    }
+    // 2. Bare exports environment
+    else if (typeof exports !== 'undefined') {
+        Object.assign(exports, exportsObject);
+    }
+    // 3. Web Worker context (Classic or Module)
+    else if (typeof self !== 'undefined' && typeof self.importScripts === 'function') {
+        Object.assign(self || root || {}, exportsObject);
+    }
+    // 4. Standard Browser UI Thread fallback
+    else {
+        Object.assign(root || {}, exportsObject);
+    }
+})(typeof globalThis !== 'undefined' ? globalThis : typeof window !== 'undefined' ? window : typeof self !== 'undefined' ? self : this);
+

@@ -10,8 +10,60 @@ import { Wllama } from './index.min.js';
 const wllamaWasm = 'llm-workers/wllama/wllama.wasm';
 
 
-import { putRecord, getRecord, DB_STORE_NAME } from '../../local.js'; // still relative for now
-import { installDatabaseIfNeeded, getGGUFModel, fetchWithFallbackChain } from '../downloader.js'; // still relative for now
+let putRecord, getRecord, DB_STORE_NAME
+
+
+async function initLocalStorage() {
+    try {
+        // Attempt to dynamically import the downloader file
+        const downloaderModule = await import('../../local.js');
+
+        // If it exported properties natively, unpack them
+        if (downloaderModule && Object.keys(downloaderModule).length > 0) {
+            ({ putRecord, getRecord, DB_STORE_NAME } = downloaderModule);
+        }
+        // Fallback: If it executed as a classic script and bound to the global namespace
+        else if (typeof self !== 'undefined' && self) {
+            ({ putRecord, getRecord, DB_STORE_NAME } = self);
+        } else {
+            throw new Error("Downloader script loaded, but no valid exports or global namespaces were found.");
+        }
+    } catch (error) {
+        console.error("Failed to dynamically initialize multimodal downloader dependencies:", error);
+        throw error;
+    }
+}
+
+// Execute the async bootstrap chain before running your dependent logic
+await initLocalStorage();
+
+
+let installDatabaseIfNeeded, getGGUFModel, fetchWithFallbackChain;
+
+
+async function initDownloader() {
+    try {
+        // Attempt to dynamically import the downloader file
+        const downloaderModule = await import('../downloader.js');
+
+        // If it exported properties natively, unpack them
+        if (downloaderModule && Object.keys(downloaderModule).length > 0) {
+            ({ installDatabaseIfNeeded, getGGUFModel, fetchWithFallbackChain } = downloaderModule);
+        }
+        // Fallback: If it executed as a classic script and bound to the global namespace
+        else if (typeof self !== 'undefined' && self) {
+            ({ installDatabaseIfNeeded, getGGUFModel, fetchWithFallbackChain } = self);
+        } else {
+            throw new Error("Downloader script loaded, but no valid exports or global namespaces were found.");
+        }
+    } catch (error) {
+        console.error("Failed to dynamically initialize multimodal downloader dependencies:", error);
+        throw error;
+    }
+}
+
+// Execute the async bootstrap chain before running your dependent logic
+await initDownloader();
 
 //https://huggingface.co/HuggingFaceTB/SmolLM2-360M-Instruct-GGUF/resolve/main/SmolLM2-360M-Instruct-q8_0.gguf
 //https://huggingface.co/HuggingFaceTB/SmolLM2-360M-Instruct-GGUF/resolve/main/smollm2-360m-instruct-q8_0.gguf?download=true
@@ -31,6 +83,7 @@ self.onmessage = async (e) => {
     const { type, payload } = e.data;
 
     if (type === 'LOAD_MODEL') {
+
         try {
             await installDatabaseIfNeeded(GGUF_DATABASE);
 
@@ -102,7 +155,7 @@ self.onmessage = async (e) => {
             const completion = await wllama.createCompletion({
                 //prompt: payload.input_text,
                 messages: messages,
-                nPredict: parseInt(payload.maxTokens) || 128,
+                nPredict: parseInt(payload.maxTokens) || 1000,
                 temperature: 0.0,
                 grammar: payload.gbnfGrammar || undefined, // Ensure it is undefined if empty
                 stream: true,
@@ -129,3 +182,8 @@ self.onmessage = async (e) => {
         }
     }
 };
+
+
+
+self.postMessage({ type: 'WORKER_READY' });
+

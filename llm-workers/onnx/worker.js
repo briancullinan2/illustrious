@@ -445,3 +445,6 @@ function serializeOutputTensors(executionResults) {
 }
 
 
+
+self.postMessage({ type: 'WORKER_READY' });
+

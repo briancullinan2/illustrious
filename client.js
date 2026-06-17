@@ -1,7 +1,15 @@
 
 //const DEFAULT_MODEL = 'onnx-community/bge-small-en-v1.5-ONNX'
-//const DEFAULT_MODEL = 'onnx-community/Qwen2.5-0.5B-Instruct'
-const DEFAULT_MODEL = 'HuggingFaceTB/SmolLM2-360M-Instruct-GGUF'
+const DEFAULT_MODEL = 'onnx-community/Qwen2.5-0.5B-Instruct'
+//const DEFAULT_MODEL = 'HuggingFaceTB/SmolLM2-360M-Instruct-GGUF'
+
+const WLLAMA_WORKER = '/llm-workers/wllama/worker.js';   // direct path
+const ONNX_WORKER = '/llm-workers/onnx/worker.js';   // direct path
+const DEFAULT_WORKER = DEFAULT_MODEL.toLowerCase().includes('gguf')
+    ? WLLAMA_WORKER
+    : DEFAULT_MODEL.toLowerCase().includes('onnx')
+        ? ONNX_WORKER
+        : WLLAMA_WORKER
 
 
 let projectConfig = {
@@ -528,21 +536,12 @@ let worker
 
 
 async function bootWllamaWorker() {
-    const workerUrl = '/llm-workers/wllama/worker.js';   // direct path
 
-    worker = new Worker(workerUrl, { type: 'module' });
+    worker = new Worker(DEFAULT_WORKER, DEFAULT_WORKER.includes('wllama') ? { type: 'module' } : {});
 
     worker.onerror = (err) => console.error("Worker error:", err);
     worker.onmessage = workerResponseInterface;
 
-    // Optional: preload
-    const toggle = document.getElementById('local-model-toggle');
-    if (toggle?.checked) {
-        worker.postMessage({
-            type: 'LOAD_MODEL',
-            payload: { modelUrl: DEFAULT_MODEL }
-        });
-    }
 }
 
 
@@ -585,6 +584,14 @@ function workerResponseInterface(e) {
     }
     else if (type === 'GENERATION_COMPLETE') {
         //debugger
+    } else if (type === 'WORKER_READY') {
+        const toggle = document.getElementById('local-model-toggle');
+        if (toggle?.checked) {
+            worker.postMessage({
+                type: 'LOAD_MODEL',
+                payload: { modelUrl: DEFAULT_MODEL }
+            });
+        }
     }
 };
 

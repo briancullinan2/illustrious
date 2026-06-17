@@ -23,7 +23,7 @@ Instead of burning cash on idle compute, this system implements **Zero-to-One Au
 3. Convert quake 3 maps to point clouds, and add horror elements and flashing lights automatically. like the old levels are breaking down from not being maintained and its possible to fall from one world into another world and eventually into the depths of quake 3 hell.
 4. Add BSP, Play Canvas voxel pipeline, and depth based overdraw culling to this example https://sparkjs.dev/examples/splat-painter/index.html
 5. one query to the LLM should completely change a world. need to find a technology for pattern matching and texture generation so ceilings become a texture for use in the vector based (as opposed to gaussian based) world.
-
+6. Target - speaking in to a voice LLM and tell minecraft to build any object in objaverse.
 
 
 ## WORKING!
