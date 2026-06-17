@@ -1,7 +1,7 @@
 
 //const DEFAULT_MODEL = 'onnx-community/bge-small-en-v1.5-ONNX'
-const DEFAULT_MODEL = 'onnx-community/Qwen2.5-0.5B-Instruct'
-//const DEFAULT_MODEL = 'HuggingFaceTB/SmolLM2-360M-Instruct-GGUF'
+//const DEFAULT_MODEL = 'onnx-community/Qwen2.5-0.5B-Instruct'
+const DEFAULT_MODEL = 'HuggingFaceTB/SmolLM2-360M-Instruct-GGUF'
 
 const WLLAMA_WORKER = '/llm-workers/wllama/worker.js';   // direct path
 const ONNX_WORKER = '/llm-workers/onnx/worker.js';   // direct path
