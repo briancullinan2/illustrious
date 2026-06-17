@@ -544,6 +544,264 @@ ws     ::= [ \t]+
 ```
 
 
+#### D. Negative Feedback Training
+
+```json
+[
+  {
+    "messages": [
+      {"role": "user", "content": "can you order me a pepperoni pizza"},
+      {"role": "assistant", "content": "[pizza]"}
+    ]
+  },
+  {
+    "messages": [
+      {"role": "user", "content": "hello is anyone there"},
+      {"role": "assistant", "content": "[]"}
+    ]
+  },
+  {
+    "messages": [
+      {"role": "user", "content": "make it look cool"},
+      {"role": "assistant", "content": "[]"}
+    ]
+  },
+  {
+    "messages": [
+      {"role": "user", "content": "an elephant"},
+      {"role": "assistant", "content": "[elephant][0,0,0,0,0,0,1]"}
+    ]
+  },
+  {
+    "messages": [
+      {"role": "user", "content": "a futuristic cyberpunk skyscraper"},
+      {"role": "assistant", "content": "[box][0,0,0,0,0,0,[1,1,4]]"}
+    ]
+  },
+  {
+    "messages": [
+      {"role": "user", "content": "a red balloon"},
+      {"role": "assistant", "content": "[balloon][0,0,0,0,0,0,1]"}
+    ]
+  },
+  {
+    "messages": [
+      {"role": "user", "content": "what is the meaning of life"},
+      {"role": "assistant", "content": "[]"}
+    ]
+  },
+  {
+    "messages": [
+      {"role": "user", "content": "draw a quick circle"},
+      {"role": "assistant", "content": "[sphere][0,0,0,0,0,0,[1,0.01,1]]"}
+    ]
+  },
+  {
+    "messages": [
+      {"role": "user", "content": "can you generate a python script to parse data"},
+      {"role": "assistant", "content": "[]"}
+    ]
+  },
+  {
+    "messages": [
+      {"role": "user", "content": "a generic soda can"},
+      {"role": "assistant", "content": "[cylinder][0,0,0,0,0,0,[0.5,0.5,1]]"}
+    ]
+  },
+  {
+    "messages": [
+      {"role": "user", "content": "some text that i am writing right now"},
+      {"role": "assistant", "content": "[]"}
+    ]
+  },
+  {
+    "messages": [
+      {"role": "user", "content": "a long snake resting on a rock"},
+      {"role": "assistant", "content": "[snake][0,0,0,0,0,0,1][rock][0,0,-fh,0,0,0,1]"}
+    ]
+  },
+  {
+    "messages": [
+      {"role": "user", "content": "delete everything in the scene view"},
+      {"role": "assistant", "content": "[]"}
+    ]
+  },
+  {
+    "messages": [
+      {"role": "user", "content": "a giant custom mechanical mech suit"},
+      {"role": "assistant", "content": "[mesh][0,0,0,0,0,0,3]"}
+    ]
+  },
+  {
+    "messages": [
+      {"role": "user", "content": "go forward by ten steps"},
+      {"role": "assistant", "content": "[]"}
+    ]
+  },
+  {
+    "messages": [
+      {"role": "user", "content": "a simple donut"},
+      {"role": "assistant", "content": "[torus][0,0,0,0,0,0,1]"}
+    ]
+  },
+  {
+    "messages": [
+      {"role": "user", "content": "where are my keys"},
+      {"role": "assistant", "content": "[]"}
+    ]
+  },
+  {
+    "messages": [
+      {"role": "user", "content": "a wooden stick"},
+      {"role": "assistant", "content": "[cylinder][0,0,0,0,0,0,[0.1,0.1,2]]"}
+    ]
+  },
+  {
+    "messages": [
+      {"role": "user", "content": "make it look bright and sunny"},
+      {"role": "assistant", "content": "[]"}
+    ]
+  },
+  {
+    "messages": [
+      {"role": "user", "content": "a flying saucer spaceship hovering above the ground plane"},
+      {"role": "assistant", "content": "[sphere][abs][0,0,3.0,0,0,0,[2,2,0.3]]"}
+    ]
+  }
+]
+
+```
+
+#### E. Objaverse Noun Extraction Training
+
+```json
+
+[
+  {
+    "messages": [
+      {"role": "user", "content": "spawn a car, tree, house, and a dog"},
+      {"role": "assistant", "content": "[car][tree][house][dog]"}
+    ]
+  },
+  {
+    "messages": [
+      {"role": "user", "content": "give me some starter models: couch, television, plant, rug, table"},
+      {"role": "assistant", "content": "[couch][television][plant][rug][table]"}
+    ]
+  },
+  {
+    "messages": [
+      {"role": "user", "content": "i want to build a forest scene. throw in rocks, boulders, pine trees, bushes, logs, and mushrooms"},
+      {"role": "assistant", "content": "[rocks][boulders][pine_trees][bushes][logs][mushrooms]"}
+    ]
+  },
+  {
+    "messages": [
+      {"role": "user", "content": "can I get a sword, shield, helmet, and armor"},
+      {"role": "assistant", "content": "[sword][shield][helmet][armor]"}
+    ]
+  },
+  {
+    "messages": [
+      {"role": "user", "content": "add a computer, keyboard, mouse, mug, desk"},
+      {"role": "assistant", "content": "[computer][keyboard][mouse][mug][desk]"}
+    ]
+  },
+  {
+    "messages": [
+      {"role": "user", "content": "dump a bunch of beach items like sand, ocean, towel, umbrella, crab, seashell"},
+      {"role": "assistant", "content": "[sand][ocean][towel][umbrella][crab][seashell]"}
+    ]
+  },
+  {
+    "messages": [
+      {"role": "user", "content": "street assets: lamp, bench, fire_hydrant, car, bicycle"},
+      {"role": "assistant", "content": "[lamp][bench][fire_hydrant][car][bicycle]"}
+    ]
+  },
+  {
+    "messages": [
+      {"role": "user", "content": "let's start with a base character body, hair, shirt, pants, shoes"},
+      {"role": "assistant", "content": "[body][hair][shirt][pants][shoes]"}
+    ]
+  },
+  {
+    "messages": [
+      {"role": "user", "content": "add some space stuff: astronaut, rocket, planet, moon, asteroid, satellite"},
+      {"role": "assistant", "content": "[astronaut][rocket][planet][moon][asteroid][satellite]"}
+    ]
+  },
+  {
+    "messages": [
+      {"role": "user", "content": "can you drop a burger, fries, drink, and ketchup into the viewport"},
+      {"role": "assistant", "content": "[burger][fries][drink][ketchup]"}
+    ]
+  },
+  {
+    "messages": [
+      {"role": "user", "content": "kitchen assets needed: stove, fridge, microwave, sink, pan, plate, fork"},
+      {"role": "assistant", "content": "[stove][fridge][microwave][sink][pan][plate][fork]"}
+    ]
+  },
+  {
+    "messages": [
+      {"role": "user", "content": "i'm making a graveyard scene, load up a tombstone, coffin, skeleton, gate, fence, ghost"},
+      {"role": "assistant", "content": "[tombstone][coffin][skeleton][gate][fence][ghost]"}
+    ]
+  },
+  {
+    "messages": [
+      {"role": "user", "content": "load up standard testing shapes: cube, sphere, cylinder, torus, cone"},
+      {"role": "assistant", "content": "[cube][sphere][cylinder][torus][cone]"}
+    ]
+  },
+  {
+    "messages": [
+      {"role": "user", "content": "spawn a cat, bird, fish, hamster"},
+      {"role": "assistant", "content": "[cat][bird][fish][hamster]"}
+    ]
+  },
+  {
+    "messages": [
+      {"role": "user", "content": "dungeon room starters: torch, chest, spikes, door, key, barrel"},
+      {"role": "assistant", "content": "[torch][chest][spikes][door][key][barrel]"}
+    ]
+  },
+  {
+    "messages": [
+      {"role": "user", "content": "gimme a guitar, drum, piano, microphone, amplifier"},
+      {"role": "assistant", "content": "[guitar][drum][piano][microphone][amplifier]"}
+    ]
+  },
+  {
+    "messages": [
+      {"role": "user", "content": "city skyline assets: building, road, traffic_light, billboard"},
+      {"role": "assistant", "content": "[building][road][traffic_light][billboard]"}
+    ]
+  },
+  {
+    "messages": [
+      {"role": "user", "content": "add a hat, glasses, jacket, backpack"},
+      {"role": "assistant", "content": "[hat][glasses][jacket][backpack]"}
+    ]
+  },
+  {
+    "messages": [
+      {"role": "user", "content": "playground models: swing, slide, sandbox, bench"},
+      {"role": "assistant", "content": "[swing][slide][sandbox][bench]"}
+    ]
+  },
+  {
+    "messages": [
+      {"role": "user", "content": "put a phone, wallet, watch, coin on the layout grid"},
+      {"role": "assistant", "content": "[phone][wallet][watch][coin]"}
+    ]
+  }
+]
+```
+
+
+
 ---
 
 
