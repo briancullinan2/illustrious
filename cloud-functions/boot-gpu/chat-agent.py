@@ -187,6 +187,22 @@ def get_llm_context(model_path=base_model_path, hf_token=None, active_lora_path=
                     # Unquantized tracks (CPU/Mac) can be merged cleanly for a performance boost
                     print(f"🧬 Fusing custom adapter layers natively into base model architecture: {active_lora_path}...")
                     peft_wrapper = PeftModel.from_pretrained(base, active_lora_path, cache_dir=HF_CACHE_DIR)
+                    
+                    # --- EMERGENCY AMPLIFIER FOR UNDERBAKED WEIGHTS ---
+                    adapter_name = peft_wrapper.active_adapter or "default"
+                    
+                    from peft.tuners.lora.layer import LoraLayer
+                    scaled_count = 0
+                    scale = 3.0
+
+                    for module in peft_wrapper.modules():
+                        if isinstance(module, LoraLayer):
+                            # Override the ratio calculation directly to give the tiny 0.06 weights a massive megaphone
+                            module.scaling[adapter_name] = scale  # Training baseline was 2.0
+                            scaled_count += 1
+                            
+                    print(f"🎛️ Forced adapter scaling matrix override to {scale} across {scaled_count} layers.")
+                    
                     model = peft_wrapper.merge_and_unload()
                     print("🎯 Model weights consolidated successfully.")
             except Exception as e:

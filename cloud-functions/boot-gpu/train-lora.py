@@ -46,7 +46,7 @@ def run_lora_alignment(model_path=BASE_MODEL):
     dataset = load_dataset("json", data_files=json_files, split="train", cache_dir=HF_CACHE_DIR, token=HF_TOKEN)
     
     # Shuffle + take more samples (personality needs repetition)
-    dataset = dataset.shuffle(seed=42).select(range(min(1600, len(dataset))))  # Increase this as you add data
+    dataset = dataset.shuffle(seed=42).select(range(min(3200, len(dataset))))  # Increase this as you add data
     
     print(f"Loaded {len(dataset)} examples.")
 
@@ -104,8 +104,8 @@ def run_lora_alignment(model_path=BASE_MODEL):
         #r=32,
         lora_alpha=32,            # Placed perfectly at 2x rank
         #lora_alpha=64,
-        target_modules=["q_proj", "v_proj"], # 💡 Trimming to attention-only drops trainable matrices immensely
-        #target_modules=["q_proj", "k_proj", "v_proj", "o_proj", "gate_proj", "up_proj", "down_proj"],
+        #target_modules=["q_proj", "v_proj"], # 💡 Trimming to attention-only drops trainable matrices immensely
+        target_modules=["q_proj", "k_proj", "v_proj", "o_proj", "gate_proj", "up_proj", "down_proj"],
         lora_dropout=0.05,
         bias="none",
         task_type="CAUSAL_LM",
@@ -128,9 +128,10 @@ def run_lora_alignment(model_path=BASE_MODEL):
         
         #warmup_steps=10,
         warmup_ratio=0.1,
-        max_steps=10,                          # Much better than 3
+        #max_steps=50,                          # Much better than 3
         #max_steps=200,
         #num_train_epochs=3,
+        num_train_epochs=1,
 
         learning_rate=2e-4,
         lr_scheduler_type="cosine",
@@ -139,7 +140,7 @@ def run_lora_alignment(model_path=BASE_MODEL):
         report_to="none",
         
         # 📏 Context Truncation Controls:
-        max_length=128,                 # 💡 Keep at 128! 512 context on CPU is quadratically slower.
+        max_length=256,                 # 💡 Keep at 128! 512 context on CPU is quadratically slower.
         #packing=True,
         
         # 📁 Data Loader Multiprocessing:
