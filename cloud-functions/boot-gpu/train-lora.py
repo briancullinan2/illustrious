@@ -3,14 +3,71 @@ import argparse
 import torch
 from pathlib import Path
 from datasets import load_dataset
+
+from peft import LoraConfig, get_peft_model, prepare_model_for_kbit_training
+from trl import SFTTrainer, SFTConfig
+import transformers
 from transformers import (
     AutoModelForCausalLM,
     AutoTokenizer,
     BitsAndBytesConfig,
-    TrainingArguments
+    TrainingArguments,
+    TextIteratorStreamer
 )
-from peft import LoraConfig, get_peft_model, prepare_model_for_kbit_training
-from trl import SFTTrainer, SFTConfig
+
+# from transformers_cfg.grammar_utils import IncrementalGrammarConstraint
+# from transformers_cfg.generation.logits_process import GrammarConstrainedLogitsProcessor
+# ERROR: AttributeError: GPT2Tokenizer has no attribute byte_encoder
+
+# --- TRADING BLOCKS FOR PY3.14 BACKWARDS COMPATIBILITY ---
+
+# 1. Patch lmformatenforcer internal tokenizer class updates
+if not hasattr(transformers.tokenization_utils, 'PreTrainedTokenizerBase'):
+    import transformers.tokenization_utils_base
+    transformers.tokenization_utils.PreTrainedTokenizerBase = transformers.tokenization_utils_base.PreTrainedTokenizerBase
+
+# 2. Patch transformers_cfg logging namespace changes
+if not hasattr(transformers, 'logging'):
+    import transformers.utils.logging
+    transformers.logging = transformers.utils.logging
+
+# 3. Native independent implementation of GPT2 byte maps
+def get_clean_byte_maps():
+    bs = list(range(ord("!"), ord("~") + 1)) + list(range(ord("¡"), ord("¬") + 1)) + list(range(ord("®"), ord("ÿ") + 1))
+    cs = bs[:]
+    n = 0
+    for b in range(256):
+        if b not in bs:
+            bs.append(b)
+            cs.append(256 + n)
+            n += 1
+    encoder = dict(zip(bs, [chr(x) for x in cs]))
+    decoder = {v: k for k, v in encoder.items()}
+    return encoder, decoder
+
+byte_encoder_map, byte_decoder_map = get_clean_byte_maps()
+
+# Inject both properties into the base GPT2 classes
+for cls_name in ['GPT2Tokenizer', 'GPT2TokenizerFast']:
+    if hasattr(transformers, cls_name):
+        cls = getattr(transformers, cls_name)
+        cls.byte_encoder = byte_encoder_map
+        cls.byte_decoder = byte_decoder_map
+
+# --- END PATCH STACK ---
+
+# Safely import the grammar engines now that paths are bridged
+from transformers_cfg.grammar_utils import IncrementalGrammarConstraint
+from transformers_cfg.generation.logits_process import GrammarConstrainedLogitsProcessor
+
+if not hasattr(transformers.tokenization_utils, 'PreTrainedTokenizerBase'):
+    import transformers.tokenization_utils_base
+    transformers.tokenization_utils.PreTrainedTokenizerBase = transformers.tokenization_utils_base.PreTrainedTokenizerBase
+
+from lmformatenforcer import TokenEnforcer, RegexParser
+from lmformatenforcer.integrations.transformers import build_transformers_prefix_allowed_tokens_fn
+
+
 
 # ============================================================================
 # Configuration
@@ -45,6 +102,47 @@ def check_datasets():
         
     schema_tracker = {}
     mismatch_found = False
+
+    # Grammar validation compilation for dataset string auditing
+    grammar_path = Path(lora_adapter_path) / "grammar.bnf"
+    use_grammar_constraints = True  
+    
+    compiled_regex = None
+    grammar_validator = None
+
+    if grammar_path.exists() and use_grammar_constraints:
+        print(f"🧱 Loading formal context-free GBNF grammar rules for dataset verification from {grammar_path}...")
+        with open(grammar_path, "r", encoding="utf-8") as f:
+            gbnf_grammar_string = f.read()
+        try:
+            if not hasattr(active_tokenizer, 'byte_encoder'):
+                active_tokenizer.byte_encoder = byte_encoder_map
+            if not hasattr(active_tokenizer, 'byte_decoder'):
+                active_tokenizer.byte_decoder = byte_decoder_map
+
+            grammar_validator = IncrementalGrammarConstraint(
+                gbnf_grammar_string, 
+                "root", 
+                active_tokenizer
+            )
+        except Exception as e:
+            print(f"❌ Initialization Error: Failed to compile GBNF validation constraints: {e}")
+            mismatch_found = True
+    elif use_grammar_constraints:
+        print(f"🌐 Compiling fallback spatial regex validation layout for dataset verification...")
+        spatial_regex = (
+            r"^(\s*\[[a-z0-9_-]+\]"                       # Primitive element
+            r"(\s*\[(abs|@[0-9]+(,\s*@[0-9]+)*)\])?"     # Anchor element
+            r"\s*\[[^\]]+\]\s*)*$"                        # Vector coordinates matrix
+        )
+        try:
+            import re
+            compiled_regex = re.compile(spatial_regex)
+        except Exception as e:
+            print(f"❌ Initialization Error: Failed to compile spatial fallback regex: {e}")
+            mismatch_found = True
+    else:
+        print(f"⚠️ Dataset verification running without grammar target restrictions.")
 
     print(f"Scanning inner schemas across {len(json_files)} files...")
 
@@ -95,6 +193,36 @@ def check_datasets():
                                     mismatch_found = True
                                 else:
                                     schema_tracker[msg_schema_key] = inner_type
+
+                            # Verify target assistant text blocks obey inference constraints
+                            if use_grammar_constraints and msg.get("role") == "assistant" and isinstance(msg.get("content"), str):
+                                assistant_text = msg["content"]
+                                
+                                # 1. Validate against GBNF Grammar Instance if active
+                                if grammar_validator is not None:
+                                    try:
+                                        # Convert the raw text into token space to replicate parsing validation checks
+                                        encoded_tokens = active_tokenizer.encode(assistant_text, add_special_tokens=False)
+                                        state = grammar_validator.init_state()
+                                        
+                                        for t_idx, token_id in enumerate(encoded_tokens):
+                                            state = grammar_validator.advance_state(state, token_id)
+                                            if state is None:
+                                                print(f"❌ GRAMMAR VIOLATION in {filepath} [Row {item_idx}, Msg {msg_idx}]:")
+                                                print(f"   Assistant response failed GBNF production rule sequence at token index {t_idx}.")
+                                                mismatch_found = True
+                                                break
+                                    except Exception as ge:
+                                        print(f"❌ GRAMMAR PARSING EXCEPTION in {filepath} [Row {item_idx}, Msg {msg_idx}]: {ge}")
+                                        mismatch_found = True
+
+                                # 2. Validate against Spatial Layout Regex if active
+                                elif compiled_regex is not None:
+                                    if not compiled_regex.match(assistant_text):
+                                        print(f"❌ REGEX CONSTRAINT VIOLATION in {filepath} [Row {item_idx}, Msg {msg_idx}]:")
+                                        print(f"   Assistant text layout failed to match spatial token schema constraints.")
+                                        print(f"   Offending String: {repr(assistant_text)}")
+                                        mismatch_found = True
                                     
             except json.JSONDecodeError as jde:
                 print(f"❌ Broken JSON Syntax Error in {filepath}: {jde}")
