@@ -17,6 +17,61 @@ from transformers import (
 from peft import PeftModel
 from pathlib import Path
 from huggingface_hub import hf_hub_download, HfApi
+import threading
+import transformers
+from transformers import TextIteratorStreamer
+# from transformers_cfg.grammar_utils import IncrementalGrammarConstraint
+# from transformers_cfg.generation.logits_process import GrammarConstrainedLogitsProcessor
+# ERROR: AttributeError: GPT2Tokenizer has no attribute byte_encoder
+
+# --- TRADING BLOCKS FOR PY3.14 BACKWARDS COMPATIBILITY ---
+
+# 1. Patch lmformatenforcer internal tokenizer class updates
+if not hasattr(transformers.tokenization_utils, 'PreTrainedTokenizerBase'):
+    import transformers.tokenization_utils_base
+    transformers.tokenization_utils.PreTrainedTokenizerBase = transformers.tokenization_utils_base.PreTrainedTokenizerBase
+
+# 2. Patch transformers_cfg logging namespace changes
+if not hasattr(transformers, 'logging'):
+    import transformers.utils.logging
+    transformers.logging = transformers.utils.logging
+
+# 3. Native independent implementation of GPT2 byte maps
+def get_clean_byte_maps():
+    bs = list(range(ord("!"), ord("~") + 1)) + list(range(ord("¡"), ord("¬") + 1)) + list(range(ord("®"), ord("ÿ") + 1))
+    cs = bs[:]
+    n = 0
+    for b in range(256):
+        if b not in bs:
+            bs.append(b)
+            cs.append(256 + n)
+            n += 1
+    encoder = dict(zip(bs, [chr(x) for x in cs]))
+    decoder = {v: k for k, v in encoder.items()}
+    return encoder, decoder
+
+byte_encoder_map, byte_decoder_map = get_clean_byte_maps()
+
+# Inject both properties into the base GPT2 classes
+for cls_name in ['GPT2Tokenizer', 'GPT2TokenizerFast']:
+    if hasattr(transformers, cls_name):
+        cls = getattr(transformers, cls_name)
+        cls.byte_encoder = byte_encoder_map
+        cls.byte_decoder = byte_decoder_map
+
+# --- END PATCH STACK ---
+
+# Safely import the grammar engines now that paths are bridged
+from transformers_cfg.grammar_utils import IncrementalGrammarConstraint
+from transformers_cfg.generation.logits_process import GrammarConstrainedLogitsProcessor
+
+if not hasattr(transformers.tokenization_utils, 'PreTrainedTokenizerBase'):
+    import transformers.tokenization_utils_base
+    transformers.tokenization_utils.PreTrainedTokenizerBase = transformers.tokenization_utils_base.PreTrainedTokenizerBase
+
+from lmformatenforcer import TokenEnforcer, RegexParser
+from lmformatenforcer.integrations.transformers import build_transformers_prefix_allowed_tokens_fn
+
 
 try:
     from llama_cpp import Llama
@@ -33,7 +88,7 @@ tokenizer = None
 gguf_engine = None  
 
 base_model_path = "meta-llama/Meta-Llama-3-8B-Instruct"  
-lora_adapter_path = "loras/hot_ex_girlfriend" 
+lora_adapter_path = "loras/spatial_engine" 
 HF_CACHE_DIR = "hf_cache"
 
 CREDENTIALS_FILE = Path("~/.credentials/huggingface-provider.json").expanduser()
@@ -49,6 +104,13 @@ def load_stored_hf_token():
     return ""
 
 HF_TOKEN = load_stored_hf_token()
+if HF_TOKEN:
+    print(f"Found {HF_TOKEN}, using authenticated HF token...")
+    os.environ["HF_TOKEN"] = HF_TOKEN
+
+
+#os.environ["HF_HUB_DISABLE_SYMLINKS_WARNING"] = "1"
+#os.environ["HF_HUB_DISABLE_TELEMETRY"] = "1"
 
 def get_gguf_context(model_id_or_path, hf_token=None, gguf_lora_target = None):
     global gguf_engine
@@ -193,7 +255,7 @@ def get_llm_context(model_path=base_model_path, hf_token=None, active_lora_path=
                     
                     from peft.tuners.lora.layer import LoraLayer
                     scaled_count = 0
-                    scale = 3.0
+                    scale = 2.0
 
                     for module in peft_wrapper.modules():
                         if isinstance(module, LoraLayer):
@@ -365,8 +427,6 @@ async def generate_gguf_stream(
                 yield text_piece
     return StreamingResponse(gguf_stream_generator(), media_type="text/plain")
 
-
-
 async def generate_llm_stream(
     prompt: str,
     use_lora: bool,
@@ -374,7 +434,6 @@ async def generate_llm_stream(
     model_path: str,
     start_message = None
 ):
-
     active_token = hf_token.strip() if hf_token else HF_TOKEN
     if not active_token: 
         active_token = None
@@ -383,7 +442,7 @@ async def generate_llm_stream(
     if model_path and model_path.strip():
         target_model_path = model_path.strip()
 
-    if(use_lora):
+    if use_lora:
         active_model, active_tokenizer = get_llm_context(
             model_path=target_model_path, 
             hf_token=active_token,
@@ -391,28 +450,20 @@ async def generate_llm_stream(
         )
         jinji_path = Path(lora_adapter_path + "/chat_template.jinja")
         if jinji_path.exists():
-            print(f"🕵️ Jinji found at '{jinji_path}'. Applying template...")
             with open(jinji_path, "r", encoding="utf-8") as file:
                 active_tokenizer.chat_template = file.read()
-        else:
-            print(f"⚠️ Jinji NOT found at '{jinji_path}'. Skipping...")
     else:
         active_model, active_tokenizer = get_llm_context(
             model_path=target_model_path, 
             hf_token=active_token
         )
 
-
-    # 1. Generate the clean BatchEncoding dictionary object containing the tensors
     tokenized_payload = active_tokenizer.apply_chat_template(
         start_message, 
         add_generation_prompt=True, 
-        return_tensors="pt",
-        persona="hot_ex"
+        return_tensors="pt"
     )
     
-    # 2. Extract the actual underlying PyTorch Tensors by their exact dictionary keys
-    # and push them directly to your execution hardware device tracks
     raw_input_ids = tokenized_payload["input_ids"].to(active_model.device)
     raw_attention_mask = tokenized_payload["attention_mask"].to(active_model.device)
     
@@ -421,8 +472,47 @@ async def generate_llm_stream(
         skip_prompt=True, 
         skip_special_tokens=True
     )
-    
-    # 3. Reference the pure tensors directly inside the generation dictionary maps
+
+    grammar_path = Path(lora_adapter_path) / "grammar.bnf"
+    use_grammar_constraints = True  
+
+    if grammar_path.exists() and use_grammar_constraints:
+        print(f"🧱 Enforcing formal context-free GBNF grammar rules from {grammar_path}...")
+        with open(grammar_path, "r", encoding="utf-8") as f:
+            gbnf_grammar_string = f.read()
+
+
+        if not hasattr(active_tokenizer, 'byte_encoder'):
+            active_tokenizer.byte_encoder = byte_encoder_map
+        if not hasattr(active_tokenizer, 'byte_decoder'):
+            active_tokenizer.byte_decoder = byte_decoder_map
+
+        grammar_constraint = IncrementalGrammarConstraint(
+            gbnf_grammar_string, 
+            "root", 
+            active_tokenizer
+        )
+        logits_processor = GrammarConstrainedLogitsProcessor(grammar_constraint)
+        processors_list = [logits_processor]
+
+    elif use_grammar_constraints:
+
+        spatial_regex = (
+            r"(\[[a-z0-9_-]+\]"                     
+            r"(\[abs\]|\[@[0-9]+(,\s*@[0-9]+)*\])?" 
+            r"\[[^\]]+\]\s*\n?)*"                   
+        )
+
+        parser = RegexParser(spatial_regex)
+        processors_list = build_transformers_prefix_allowed_tokens_fn(
+            active_tokenizer, 
+            parser
+        )
+
+    else:
+        print(f"⚠️ Running model without grammar constraint layers.")
+        processors_list = []
+
     explicit_generation_kwargs = {
         "input_ids": raw_input_ids,
         "attention_mask": raw_attention_mask,
@@ -430,8 +520,10 @@ async def generate_llm_stream(
         "max_new_tokens": 1000,
         "temperature": 0.1,
         "top_p": 0.9,
-        "do_sample": False
+        "do_sample": False,
+        "logits_processor": processors_list  
     }
+
 
     threading.Thread(
         target=active_model.generate, 
@@ -441,9 +533,8 @@ async def generate_llm_stream(
     def transformers_stream_generator():
         for token_text in streamer: 
             yield token_text
+            
     return StreamingResponse(transformers_stream_generator(), media_type="text/plain")
-
-
 
 @app.post("/api/spatial/multicast")
 async def generate_text_stream(
