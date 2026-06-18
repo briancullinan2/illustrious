@@ -5,7 +5,7 @@ block_sequence ::= block (ws_or_nl block)*
 block          ::= primitive anchor? vector
 
 # Primitive definitions or raw model strings
-primitive ::= "[" [a-z0-9_-]+ "]"
+primitive ::= "[" [a-zA-Z0-9_-]+ "]"
 
 # Structural qualifiers: [@0], [@0, @1], [abs]
 anchor    ::= "[abs]" | "[@" [0-9]+ ("," ws? "@" [0-9]+)* "]"
@@ -27,9 +27,9 @@ scaling    ::= "[" sign? num "," ws? sign? num "," ws? sign? num "]"
 attribute  ::= "noise=" num | "mesh"
 
 # Base scalar primitives
-num   ::= [0-9]+ ("." [0-9]+)?
+num   ::= sign? [0-9]+ ("." [0-9]+)?
 op    ::= "+" | "-" | "*" | "/"
-sign  ::= "+" | "-"
+sign  ::= ("+" | "-")+
 ws    ::= [ \t]+
 ws_or_nl ::= [ \t\r\n]+
 

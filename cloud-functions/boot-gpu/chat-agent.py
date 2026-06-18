@@ -255,7 +255,7 @@ def get_llm_context(model_path=base_model_path, hf_token=None, active_lora_path=
                     
                     from peft.tuners.lora.layer import LoraLayer
                     scaled_count = 0
-                    scale = 1.0
+                    scale = 2.0
 
                     for module in peft_wrapper.modules():
                         if isinstance(module, LoraLayer):
@@ -499,14 +499,15 @@ async def generate_llm_stream(
 
     elif use_grammar_constraints:
         print(f"🌐 Enforcing fallback string regex validation layout constraints...")
+        
+        # This regex mimics: [primitive] optionally [anchor] [vector contents] with loose gaps
         spatial_regex = (
-            r"(\[[a-z0-9_-]+\]"                     
-            r"(\[abs\]|\[@[0-9]+(,\s*@[0-9]+)*\])?" 
-            r"\[[^\]]+\]\s*\n?)*"                   
+            r"(\s*\[[a-z0-9_-]+\]"                       # Primitive element
+            r"(\s*\[(abs|@[0-9]+(,\s*@[0-9]+)*)\])?"     # Anchor element
+            r"\s*\[[^\]]+\]\s*)*"                        # Vector coordinates matrix
         )
 
         parser = RegexParser(spatial_regex)
-        # Fix: Assumed to execution parameters directly
         prefix_function = build_transformers_prefix_allowed_tokens_fn(
             active_tokenizer, 
             parser
