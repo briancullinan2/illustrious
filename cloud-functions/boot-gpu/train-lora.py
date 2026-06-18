@@ -119,7 +119,8 @@ def run_lora_alignment(model_path=BASE_MODEL):
         
         use_cpu=not torch.cuda.is_available(),
         #use_cpu=True,                   # Force runtime away from raw system wrappers
-        bf16=True,                      # 🔥 SWAP TO BF16 MIXED PRECISION FOR CPU SPEED
+        #bf16=True,                      # 🔥 SWAP TO BF16 MIXED PRECISION FOR CPU SPEED
+        bf16=False,
         fp16=torch.cuda.is_available(),
         optim="adafactor",              # 🔥 SWAP OPTIMIZER to drop massive RAM/Compute states
         
@@ -136,10 +137,11 @@ def run_lora_alignment(model_path=BASE_MODEL):
         
         # 📏 Context Truncation Controls:
         max_length=128,                 # 💡 Keep at 128! 512 context on CPU is quadratically slower.
-        packing=True,
+        #packing=True,
         
         # 📁 Data Loader Multiprocessing:
-        dataloader_num_workers=4,       # Parallelize disk data extraction off the main execution core
+        #dataloader_num_workers=4,       # Parallelize disk data extraction off the main execution core
+        dataloader_num_workers=0,
         dataloader_pin_memory=False,    # Disabled since we have no GPU VRAM targets to stream to
     )
 
