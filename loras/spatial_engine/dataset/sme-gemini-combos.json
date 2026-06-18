@@ -1,0 +1,86 @@
+[
+  {
+    "messages": [
+      {"role": "user", "content": "An elongated sphere with fuzzy stuff on top, with two smaller flat spheres on the side about 20% the size of the first sphere, and a rounded cone in the middle front, and a depressed skinny moon underneath about 15% tall and 50% wide for a mouth, and 2 depressed spheres equally spaced divets for eyes."},
+      {"role": "assistant", "content": "[sphere][0,0,0,0,0,0,[1,1,1.5]][sphere][0,0,fh,0,0,0,[1,1,0.2],noise=0.3][sphere][sym(fw),0,hh,0,0,0,0.2][cone][0,hd,hh,0,0,0,0.25][crescent][0,hd+0.05,hh*0.5,0,0,0,[-0.5,1,-0.15]][sphere][sym(hw*0.4),hd,hh*1.2,0,0,0,-0.2]"}
+    ]
+  },
+  {
+    "messages": [
+      {"role": "user", "content": "A table, a plate on top of the table, and a cup next to the plate."},
+      {"role": "assistant", "content": "[table][0,0,0,0,0,0,1][plate][0,0,fh,0,0,0,1][cup][@1][fw,0,0,0,0,0,1]"}
+    ]
+  },
+  {
+    "messages": [
+      {"role": "user", "content": "An elephant at the center, a mouse way off to the right 10 units away, and a bird hovering 5 units directly above the elephant."},
+      {"role": "assistant", "content": "[elephant][0,0,0,0,0,0,1][mouse][abs][10.0,0,0,0,0,0,1][bird][@0][0,0,fh+5.0,0,0,0,1]"}
+    ]
+  },
+  {
+    "messages": [
+      {"role": "user", "content": "A couch on the left, a chair on the right, and a small rug placed right between them."},
+      {"role": "assistant", "content": "[couch][-4fw,0,0,0,0,0,1][chair][4fw,0,0,0,0,0,1][rug][@0,@1][0,0,0,0,0,0,0.5]"}
+    ]
+  },
+  {
+    "messages": [
+      {"role": "user", "content": "A box with a ball floating over it, a capsule buried deep under, and another cylinder topled over face down far to the left."},
+      {"role": "assistant", "content": "[box][0,0,0,0,0,0,1][sphere][0,0,fh+0.5,0,0,0,1][capsule][0,0,-fh-0.5,0,0,0,1][cylinder][-4fw,0,0,90,0,0,1]"}
+    ]
+  },
+  {
+    "messages": [
+      {"role": "user", "content": "A giant pillar with a torus wrapped around it at the vertical center, looking sideways left."},
+      {"role": "assistant", "content": "[cylinder][0,0,0,0,0,0,[1,1,3]][torus][0,0,hh,0,-90,0,1.2]"}
+    ]
+  },
+  {
+    "messages": [
+      {"role": "user", "content": "A small cube that is tightly packed against the front profile of a massive block, flanked by tiny spheres on the sides."},
+      {"role": "assistant", "content": "[box][0,0,0,0,0,0,3][box][0,fd,0,0,0,0,0.2][sphere][@0][sym(fw),0,hh,0,0,0,0.2]"}
+    ]
+  },
+  {
+    "messages": [
+      {"role": "user", "content": "A row of four boxes lined up one after another starting from the center."},
+      {"role": "assistant", "content": "[box][0,0,0,0,0,0,1][box][fw*@idx,0,0,0,0,0,1][box][fw*@idx,0,0,0,0,0,1][box][fw*@idx,0,0,0,0,0,1]"}
+    ]
+  },
+  {
+    "messages": [
+      {"role": "user", "content": "A main sphere with a small capsule sticking out of its front-right diagonal face, slanted slightly."},
+      {"role": "assistant", "content": "[sphere][0,0,0,0,0,0,1][capsule][hw,hd+0.1,0,0,0,45,0.3]"}
+    ]
+  },
+  {
+    "messages": [
+      {"role": "user", "content": "A table at the origin, a book resting on top of the table, a coffee mug sitting directly on top of the book, and an absolute override chair shifted 5 units up in the air away from everything."},
+      {"role": "assistant", "content": "[table][0,0,0,0,0,0,1][box][0,0,fh,0,0,0,0.4][cylinder][0,0,fh,0,0,0,0.2][chair][abs][0,0,5.0,0,0,0,1]"}
+    ]
+  },
+  {
+    "messages": [
+      {"role": "user", "content": "A car base with two pairs of wheels on both sides equally spaced along the bottom width profiles."},
+      {"role": "assistant", "content": "[box][0,0,0,0,0,0,[2,1,0.5]][cylinder][sym(hw*0.5),-hd,-hh,0,90,0,0.3][cylinder][sym(hw*0.5),hd,-hh,0,90,0,0.3]"}
+    ]
+  },
+  {
+    "messages": [
+      {"role": "user", "content": "A hollowed divet in a flat plane serving as a pool basin, with a tiny ladder perched on the right edge."},
+      {"role": "assistant", "content": "[box][0,0,0,0,0,0,[4,4,0.1]][box][0,0,0,0,0,0,[-1,1,-0.1]][mesh][@0][fw,0,fh,0,0,0,0.15]"}
+    ]
+  },
+  {
+    "messages": [
+      {"role": "user", "content": "A tree trunk cylinder, a giant green ball canopy sitting on top of the trunk, and a small fruit sphere hanging directly underneath the canopy."},
+      {"role": "assistant", "content": "[cylinder][0,0,0,0,0,0,[0.2,0.2,2]][sphere][0,0,fh,0,0,0,3][sphere][0,0,-fh,0,0,0,0.1]"}
+    ]
+  },
+  {
+    "messages": [
+      {"role": "user", "content": "A pillar on the far left, another matching pillar far to the right, and a heavy ceiling slab between them resting on their tops."},
+      {"role": "assistant", "content": "[cylinder][-4fw,0,0,0,0,0,1][cylinder][4fw,0,0,0,0,0,1][box][@0,@1][0,0,fh,0,0,0,1]"}
+    ]
+  }
+]

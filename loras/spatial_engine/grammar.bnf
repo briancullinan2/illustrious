@@ -1,0 +1,31 @@
+
+root    ::= (block (ws block)* ws? "\n"?)*
+block   ::= primitive anchor? vector
+
+# Primitive definitions or raw model strings
+primitive ::= "[" [a-z0-9_-]+ "]"
+
+# Structural qualifiers: [@0], [@0, @1], [abs]
+anchor    ::= "[abs]" | "[@" [0-9]+ ("," ws? "@" [0-9]+)* "]"
+
+# Coordinates block: enclosing 7 elements or specific key-value overloads
+vector    ::= "[" value ("," ws? value)* "]"
+
+value     ::= expression | scaling | attribute
+
+# Mathematical shorthand expressions, fractions, or raw floats
+expression ::= (sign? (term | num)) (op term)?
+term       ::= ("sym(" ws? expression ws? ")") | variable | (variable "*" variable) | (variable "*" num)
+variable   ::= "fw" | "hw" | "fd" | "hd" | "fh" | "hh" | "@idx"
+
+# Vector math scaling nested brackets: [1,1,1.5] or [-0.5,1,-0.15]
+scaling    ::= "[" sign? num "," ws? sign? num "," ws? sign? num "]"
+
+# Vertex attributes: noise=0.15 or mesh
+attribute  ::= "noise=" num | "mesh"
+
+# Base scalar primitives
+num    ::= [0-9]+ ("." [0-9]+)?
+op     ::= "+" | "-" | "*" | "/"
+sign   ::= "+" | "-"
+ws     ::= [ \t]+

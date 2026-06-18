@@ -30,6 +30,9 @@ def get_token():
     return None
 
 HF_TOKEN = get_token()
+if HF_TOKEN:
+    print(f"Found {HF_TOKEN}, using authenticated HF token...")
+    os.environ["HF_TOKEN"] = HF_TOKEN
 
 def run_lora_alignment(model_path=BASE_MODEL):
     # Load all JSON files
@@ -43,7 +46,7 @@ def run_lora_alignment(model_path=BASE_MODEL):
     dataset = load_dataset("json", data_files=json_files, split="train", cache_dir=HF_CACHE_DIR, token=HF_TOKEN)
     
     # Shuffle + take more samples (personality needs repetition)
-    dataset = dataset.shuffle(seed=42).select(range(min(800, len(dataset))))  # Increase this as you add data
+    dataset = dataset.shuffle(seed=42).select(range(min(1600, len(dataset))))  # Increase this as you add data
     
     print(f"Loaded {len(dataset)} examples.")
 
@@ -93,10 +96,16 @@ def run_lora_alignment(model_path=BASE_MODEL):
             token=HF_TOKEN,
         )
 
+    os.environ["OMP_NUM_THREADS"] = "6"
+    os.environ["MKL_NUM_THREADS"] = "6"
+
     lora_config = LoraConfig(
-        r=32,                    # Increased for stronger personality adaptation
-        lora_alpha=64,           # Usually 2x rank
-        target_modules=["q_proj", "k_proj", "v_proj", "o_proj", "gate_proj", "up_proj", "down_proj"],
+        r=16,                     # 💡 Dropped slightly from 32 to 16. Saves huge compute/RAM on CPU.
+        #r=32,
+        lora_alpha=32,            # Placed perfectly at 2x rank
+        #lora_alpha=64,
+        target_modules=["q_proj", "v_proj"], # 💡 Trimming to attention-only drops trainable matrices immensely
+        #target_modules=["q_proj", "k_proj", "v_proj", "o_proj", "gate_proj", "up_proj", "down_proj"],
         lora_dropout=0.05,
         bias="none",
         task_type="CAUSAL_LM",
@@ -104,25 +113,36 @@ def run_lora_alignment(model_path=BASE_MODEL):
 
     sft_config = SFTConfig(
         output_dir="./training_outputs",
-        per_device_train_batch_size=1,          # Keep low for stability
-        gradient_accumulation_steps=2,          # Effective batch ~4
-        #gradient_accumulation_steps=4,
+        per_device_train_batch_size=1,
+        #gradient_accumulation_steps=2,
+        gradient_accumulation_steps=4,  # Keep high to keep gradient steps stable
+        
+        use_cpu=not torch.cuda.is_available(),
+        #use_cpu=True,                   # Force runtime away from raw system wrappers
+        bf16=True,                      # 🔥 SWAP TO BF16 MIXED PRECISION FOR CPU SPEED
+        fp16=torch.cuda.is_available(),
+        optim="adafactor",              # 🔥 SWAP OPTIMIZER to drop massive RAM/Compute states
+        
         #warmup_steps=10,
-        max_steps=3,                          # Much better than 3
+        max_steps=10,                          # Much better than 3
         #max_steps=200,
-        # num_train_epochs=2,                   # Alternative to max_steps
+        #num_train_epochs=2,
+
         learning_rate=2e-4,
         lr_scheduler_type="cosine",
-        fp16=torch.cuda.is_available(),
-        use_cpu=not torch.cuda.is_available(),
         logging_steps=1,
-        #logging_steps=10,
         save_strategy="no",
         report_to="none",
-        max_length=128,                     # Longer context for conversations
-        #max_length=512,
-        packing=True,                           # Packs multiple examples → more efficient
+        
+        # 📏 Context Truncation Controls:
+        max_length=128,                 # 💡 Keep at 128! 512 context on CPU is quadratically slower.
+        packing=True,
+        
+        # 📁 Data Loader Multiprocessing:
+        dataloader_num_workers=4,       # Parallelize disk data extraction off the main execution core
+        dataloader_pin_memory=False,    # Disabled since we have no GPU VRAM targets to stream to
     )
+
 
     def formatting_prompts_func(example):
         texts = []

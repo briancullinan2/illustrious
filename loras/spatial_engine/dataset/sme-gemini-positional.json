@@ -1,0 +1,50 @@
+[
+  {
+    "messages": [
+      {"role": "user", "content": "A giant box shifted 5 units up higher in the air away from everything."},
+      {"role": "assistant", "content": "[box][abs][0,0,5.0,0,0,0,3]"}
+    ]
+  },
+  {
+    "messages": [
+      {"role": "user", "content": "A standard cylinder flipped completely backwards and upside down at the origin."},
+      {"role": "assistant", "content": "[cylinder][0,0,0,-90,0,0,1]"}
+    ]
+  },
+  {
+    "messages": [
+      {"role": "user", "content": "A capsule way off to the right 10 units away in world space."},
+      {"role": "assistant", "content": "[capsule][abs][10.0,0,0,0,0,0,1]"}
+    ]
+  },
+  {
+    "messages": [
+      {"role": "user", "content": "A tiny miniature sphere facing sideways looking right."},
+      {"role": "assistant", "content": "[sphere][0,0,0,0,90,0,0.2]"}
+    ]
+  },
+  {
+    "messages": [
+      {"role": "user", "content": "A rough spiky mesh primitive toppled over face down at world center."},
+      {"role": "assistant", "content": "[mesh][abs][0,0,0,90,0,0,1,noise=0.15]"}
+    ]
+  },
+  {
+    "messages": [
+      {"role": "user", "content": "An elongated torus tilted and slanted at a forty five degree angle."},
+      {"role": "assistant", "content": "[torus][0,0,0,0,0,45,[1,1,2.0]]"}
+    ]
+  },
+  {
+    "messages": [
+      {"role": "user", "content": "A flat squashed crescent base facing away in the opposite direction."},
+      {"role": "assistant", "content": "[crescent][0,0,0,0,180,0,[1,1,0.2]]"}
+    ]
+  },
+  {
+    "messages": [
+      {"role": "user", "content": "A slender skinny cone projecting far ahead along the forward vector."},
+      {"role": "assistant", "content": "[cone][0,4fd,0,0,0,0,[0.3,0.3,1]]"}
+    ]
+  }
+]

@@ -1,0 +1,122 @@
+[
+  {
+    "messages": [
+      {"role": "user", "content": "can you order me a pepperoni pizza"},
+      {"role": "assistant", "content": "[pizza]"}
+    ]
+  },
+  {
+    "messages": [
+      {"role": "user", "content": "hello is anyone there"},
+      {"role": "assistant", "content": "[]"}
+    ]
+  },
+  {
+    "messages": [
+      {"role": "user", "content": "make it look cool"},
+      {"role": "assistant", "content": "[]"}
+    ]
+  },
+  {
+    "messages": [
+      {"role": "user", "content": "an elephant"},
+      {"role": "assistant", "content": "[elephant][0,0,0,0,0,0,1]"}
+    ]
+  },
+  {
+    "messages": [
+      {"role": "user", "content": "a futuristic cyberpunk skyscraper"},
+      {"role": "assistant", "content": "[box][0,0,0,0,0,0,[1,1,4]]"}
+    ]
+  },
+  {
+    "messages": [
+      {"role": "user", "content": "a red balloon"},
+      {"role": "assistant", "content": "[balloon][0,0,0,0,0,0,1]"}
+    ]
+  },
+  {
+    "messages": [
+      {"role": "user", "content": "what is the meaning of life"},
+      {"role": "assistant", "content": "[]"}
+    ]
+  },
+  {
+    "messages": [
+      {"role": "user", "content": "draw a quick circle"},
+      {"role": "assistant", "content": "[sphere][0,0,0,0,0,0,[1,0.01,1]]"}
+    ]
+  },
+  {
+    "messages": [
+      {"role": "user", "content": "can you generate a python script to parse data"},
+      {"role": "assistant", "content": "[]"}
+    ]
+  },
+  {
+    "messages": [
+      {"role": "user", "content": "a generic soda can"},
+      {"role": "assistant", "content": "[cylinder][0,0,0,0,0,0,[0.5,0.5,1]]"}
+    ]
+  },
+  {
+    "messages": [
+      {"role": "user", "content": "some text that i am writing right now"},
+      {"role": "assistant", "content": "[]"}
+    ]
+  },
+  {
+    "messages": [
+      {"role": "user", "content": "a long snake resting on a rock"},
+      {"role": "assistant", "content": "[snake][0,0,0,0,0,0,1][rock][0,0,-fh,0,0,0,1]"}
+    ]
+  },
+  {
+    "messages": [
+      {"role": "user", "content": "delete everything in the scene view"},
+      {"role": "assistant", "content": "[]"}
+    ]
+  },
+  {
+    "messages": [
+      {"role": "user", "content": "a giant custom mechanical mech suit"},
+      {"role": "assistant", "content": "[mesh][0,0,0,0,0,0,3]"}
+    ]
+  },
+  {
+    "messages": [
+      {"role": "user", "content": "go forward by ten steps"},
+      {"role": "assistant", "content": "[]"}
+    ]
+  },
+  {
+    "messages": [
+      {"role": "user", "content": "a simple donut"},
+      {"role": "assistant", "content": "[torus][0,0,0,0,0,0,1]"}
+    ]
+  },
+  {
+    "messages": [
+      {"role": "user", "content": "where are my keys"},
+      {"role": "assistant", "content": "[]"}
+    ]
+  },
+  {
+    "messages": [
+      {"role": "user", "content": "a wooden stick"},
+      {"role": "assistant", "content": "[cylinder][0,0,0,0,0,0,[0.1,0.1,2]]"}
+    ]
+  },
+  {
+    "messages": [
+      {"role": "user", "content": "make it look bright and sunny"},
+      {"role": "assistant", "content": "[]"}
+    ]
+  },
+  {
+    "messages": [
+      {"role": "user", "content": "a flying saucer spaceship hovering above the ground plane"},
+      {"role": "assistant", "content": "[sphere][abs][0,0,3.0,0,0,0,[2,2,0.3]]"}
+    ]
+  }
+]

@@ -412,7 +412,8 @@ ws     ::= [ \t]+
       {"role": "user", "content": "A pillar on the far left, another matching pillar far to the right, and a heavy ceiling slab between them resting on their tops."},
       {"role": "assistant", "content": "[cylinder][-4fw,0,0,0,0,0,1][cylinder][4fw,0,0,0,0,0,1][box][@0,@1][0,0,fh,0,0,0,1]"}
     ]
-  },
+  }
+]
 
 ```
 
@@ -422,7 +423,7 @@ ws     ::= [ \t]+
 #### B. Inset Complex Training Messages
 
 ```json
-
+[
   {
     "messages": [
       {"role": "user", "content": "A standard monitor screen box with two small speakers flanking its outer left and right sides."},
