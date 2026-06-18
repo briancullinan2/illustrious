@@ -255,7 +255,7 @@ def get_llm_context(model_path=base_model_path, hf_token=None, active_lora_path=
                     
                     from peft.tuners.lora.layer import LoraLayer
                     scaled_count = 0
-                    scale = 2.0
+                    scale = 1.0
 
                     for module in peft_wrapper.modules():
                         if isinstance(module, LoraLayer):
@@ -426,7 +426,6 @@ async def generate_gguf_stream(
             if text_piece:
                 yield text_piece
     return StreamingResponse(gguf_stream_generator(), media_type="text/plain")
-
 async def generate_llm_stream(
     prompt: str,
     use_lora: bool,
@@ -476,11 +475,14 @@ async def generate_llm_stream(
     grammar_path = Path(lora_adapter_path) / "grammar.bnf"
     use_grammar_constraints = True  
 
+    # Generation argument buckets
+    processors_list = []
+    prefix_function = None
+
     if grammar_path.exists() and use_grammar_constraints:
         print(f"🧱 Enforcing formal context-free GBNF grammar rules from {grammar_path}...")
         with open(grammar_path, "r", encoding="utf-8") as f:
             gbnf_grammar_string = f.read()
-
 
         if not hasattr(active_tokenizer, 'byte_encoder'):
             active_tokenizer.byte_encoder = byte_encoder_map
@@ -496,7 +498,7 @@ async def generate_llm_stream(
         processors_list = [logits_processor]
 
     elif use_grammar_constraints:
-
+        print(f"🌐 Enforcing fallback string regex validation layout constraints...")
         spatial_regex = (
             r"(\[[a-z0-9_-]+\]"                     
             r"(\[abs\]|\[@[0-9]+(,\s*@[0-9]+)*\])?" 
@@ -504,14 +506,14 @@ async def generate_llm_stream(
         )
 
         parser = RegexParser(spatial_regex)
-        processors_list = build_transformers_prefix_allowed_tokens_fn(
+        # Fix: Assumed to execution parameters directly
+        prefix_function = build_transformers_prefix_allowed_tokens_fn(
             active_tokenizer, 
             parser
         )
 
     else:
         print(f"⚠️ Running model without grammar constraint layers.")
-        processors_list = []
 
     explicit_generation_kwargs = {
         "input_ids": raw_input_ids,
@@ -521,9 +523,9 @@ async def generate_llm_stream(
         "temperature": 0.1,
         "top_p": 0.9,
         "do_sample": False,
-        "logits_processor": processors_list  
+        "logits_processor": processors_list,
+        "prefix_allowed_tokens_fn": prefix_function  # Hooked up safely here
     }
-
 
     threading.Thread(
         target=active_model.generate, 
@@ -535,6 +537,7 @@ async def generate_llm_stream(
             yield token_text
             
     return StreamingResponse(transformers_stream_generator(), media_type="text/plain")
+
 
 @app.post("/api/spatial/multicast")
 async def generate_text_stream(

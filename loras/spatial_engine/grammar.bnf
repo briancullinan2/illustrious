@@ -1,6 +1,8 @@
+# Fixed root to require structural sequences, ending with optional trailing space then termination
+root  ::= (block_sequence)? ws?
 
-root    ::= (block (ws block)* ws? "\n"?)*
-block   ::= primitive anchor? vector
+block_sequence ::= block (ws_or_nl block)*
+block          ::= primitive anchor? vector
 
 # Primitive definitions or raw model strings
 primitive ::= "[" [a-z0-9_-]+ "]"
@@ -8,7 +10,7 @@ primitive ::= "[" [a-z0-9_-]+ "]"
 # Structural qualifiers: [@0], [@0, @1], [abs]
 anchor    ::= "[abs]" | "[@" [0-9]+ ("," ws? "@" [0-9]+)* "]"
 
-# Coordinates block: enclosing 7 elements or specific key-value overloads
+# Coordinates block: enclosing elements or specific key-value overloads
 vector    ::= "[" value ("," ws? value)* "]"
 
 value     ::= expression | scaling | attribute
@@ -25,7 +27,9 @@ scaling    ::= "[" sign? num "," ws? sign? num "," ws? sign? num "]"
 attribute  ::= "noise=" num | "mesh"
 
 # Base scalar primitives
-num    ::= [0-9]+ ("." [0-9]+)?
-op     ::= "+" | "-" | "*" | "/"
-sign   ::= "+" | "-"
-ws     ::= [ \t]+
+num   ::= [0-9]+ ("." [0-9]+)?
+op    ::= "+" | "-" | "*" | "/"
+sign  ::= "+" | "-"
+ws    ::= [ \t]+
+ws_or_nl ::= [ \t\r\n]+
+
