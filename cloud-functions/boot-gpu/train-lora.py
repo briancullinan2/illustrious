@@ -114,8 +114,10 @@ def run_lora_alignment(model_path=BASE_MODEL):
     sft_config = SFTConfig(
         output_dir="./training_outputs",
         per_device_train_batch_size=1,
+        #per_device_train_batch_size=4,
         #gradient_accumulation_steps=2,
         gradient_accumulation_steps=4,  # Keep high to keep gradient steps stable
+        #gradient_accumulation_steps=16,
         
         use_cpu=not torch.cuda.is_available(),
         #use_cpu=True,                   # Force runtime away from raw system wrappers
@@ -125,9 +127,10 @@ def run_lora_alignment(model_path=BASE_MODEL):
         optim="adafactor",              # 🔥 SWAP OPTIMIZER to drop massive RAM/Compute states
         
         #warmup_steps=10,
+        warmup_ratio=0.1,
         max_steps=10,                          # Much better than 3
         #max_steps=200,
-        #num_train_epochs=2,
+        #num_train_epochs=3,
 
         learning_rate=2e-4,
         lr_scheduler_type="cosine",

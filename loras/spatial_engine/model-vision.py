@@ -2,13 +2,6 @@ import os
 import sys
 import argparse
 import platform
-import torch
-import trimesh
-import pyrender
-import numpy as np
-from PIL import Image
-from transformers import AutoProcessor, AutoModel
-from pathlib import Path
 
 # ==================== PLATFORM-SPECIFIC RENDERING SETUP ====================
 current_os = platform.system()
@@ -16,18 +9,35 @@ current_os = platform.system()
 if current_os == "Linux":
     os.environ["PYOPENGL_PLATFORM"] = "egl"
 elif current_os == "Windows":
-    # Force Pyglet context fallback to leverage native WGL GPU hardware drivers
+    # CRITICAL: Force the backend platforms completely before any imports lock them in
     os.environ["PYRENDER_BACKEND"] = "pyglet"
     os.environ["PYOPENGL_PLATFORM"] = "pyglet"
+    # Block PyOpenGL from trying to touch broken Windows EGL wrappers
     os.environ["PYOPENGL_FORCE_NO_EGL"] = "1"
 else:
     os.environ["PYRENDER_BACKEND"] = "osmesa"
+
+# Now safely import the remaining stack layers
+import torch
+import trimesh
+import numpy as np
+from PIL import Image
+from transformers import AutoProcessor, AutoModel
+
+# Force PyOpenGL to use core profile functions (Fixes glGenVertexArrays lookup)
+import OpenGL
+OpenGL.ERROR_CHECKING = False
+from OpenGL import GL
+import pyrender
+from pathlib import Path
+
 
 model_id = "HuggingFaceTB/SmolVLM-Instruct"
 HF_CACHE_DIR = "hf_cache"
 
 
 CREDENTIALS_FILE = Path("~/.credentials/huggingface-provider.json").expanduser()
+
 
 def get_token():
     if CREDENTIALS_FILE.exists():
@@ -40,6 +50,33 @@ HF_TOKEN = get_token()
 if HF_TOKEN:
     print(f"Found {HF_TOKEN}, using authenticated HF token...")
     os.environ["HF_TOKEN"] = HF_TOKEN
+
+
+class WindowsHeadlessRenderer:
+    """
+    Custom context wrapper that utilizes hardware-accelerated WGL windows 
+    to extract offscreen buffers safely on native Windows systems.
+    """
+    def __init__(self, width=512, height=512):
+        self.width = width
+        self.height = height
+        # Spin up a standard viewer instance but hide it offscreen
+        self.viewer = pyrender.Viewer(
+            pyrender.Scene(), 
+            viewport_size=(width, height), 
+            run_in_thread=True, 
+            registered_keys={}
+        )
+        # Force terminate the window initialization layout loop
+        self.viewer.close()
+
+    def render_scene_direct(self, scene):
+        """Extracts the color buffer directly from the active OpenGL context frame."""
+        # Use pyrender's internal platform-agnostic mesh renderer pass
+        platform_renderer = pyrender.Renderer(self.width, self.height)
+        color, _ = platform_renderer.render(scene)
+        platform_renderer.delete()
+        return color
 
 
 import subprocess
@@ -316,6 +353,8 @@ def analyze_image_locally(image_path: str):
     print("\n--- LOCAL VISION ANALYSIS ---")
     print(answer)
 
+
+#pip install --upgrade "trimesh[all]" pyrender pillow torch torchvision pillow PyOpenGL PyOpenGL-accelerate torchaudio --index-url https://download.pytorch.org/whl/cu121
 
 # ==================== EXECUTION CONTROL GATE ====================
 if __name__ == "__main__":
