@@ -5,6 +5,11 @@ import platform
 import json
 from pathlib import Path
 
+# Clear any legacy or conflicting PyOpenGL/pyrender configuration keys instantly
+for env_key in ["PYOPENGL_PLATFORM", "PYRENDER_BACKEND", "PYOPENGL_FORCE_NO_EGL"]:
+    if env_key in os.environ:
+        del os.environ[env_key]
+
 import torch
 import trimesh
 import numpy as np
@@ -53,7 +58,7 @@ def compute_scene_bounds(scene):
     return center, extents, radius
 
 def build_camera_transform(center, distance, pitch_deg, yaw_deg):
-    """Computes look-at projection matrices using pitch and yaw angles."""
+    """Computes layout look-at camera tracking matrices matching Blender metrics."""
     pitch = np.radians(pitch_deg)
     yaw = np.radians(yaw_deg)
 
@@ -62,25 +67,87 @@ def build_camera_transform(center, distance, pitch_deg, yaw_deg):
     dz = distance * np.sin(pitch)
 
     cam_pos = center + np.array([dx, dy, dz])
-    z = cam_pos - center
-    z /= np.linalg.norm(z)
+    
+    forward = center - cam_pos
+    f_norm = np.linalg.norm(forward)
+    if f_norm < 1e-6:
+        forward = np.array([0.0, -1.0, 0.0])
+    else:
+        forward = forward / f_norm
 
-    up = np.array([0.0, 0.0, 1.0])
-    if abs(np.dot(z, up)) > 0.99:
-        up = np.array([0.0, 1.0, 0.0])
+    world_up = np.array([0.0, 0.0, 1.0])
+    right = np.cross(forward, world_up)
+    r_norm = np.linalg.norm(right)
+    
+    if r_norm < 1e-6:
+        alternative_up = np.array([1.0, 0.0, 0.0])
+        right = np.cross(forward, alternative_up)
+        right /= max(np.linalg.norm(right), 1e-6)
+    else:
+        right = right / r_norm
 
-    x = np.cross(up, z)
-    x /= np.linalg.norm(x)
-    y = np.cross(z, x)
+    true_up = np.cross(right, forward)
+    true_up /= max(np.linalg.norm(true_up), 1e-6)
 
     pose = np.eye(4)
-    pose[:3, 0] = x
-    pose[:3, 1] = y
-    pose[:3, 2] = z
+    pose[:3, 0] = right
+    pose[:3, 1] = true_up
+    pose[:3, 2] = -forward
     pose[:3, 3] = cam_pos
     return pose
 
-# ==================== HARDWARE-INDEPENDENT SOFTWARE RASTERIZER ====================
+
+def build_view_pose(center, distance, pitch_deg, yaw_deg):
+    """Computes camera look-at transformation matrix targets using yaw and pitch.
+    
+    Coordinates map pitch and yaw directly to match standard Blender tracking metrics.
+    """
+    # Map coordinates to align with standard pitch/yaw angle frames
+    pitch = np.radians(pitch_deg)
+    yaw = np.radians(yaw_deg)
+
+    # Calculate spherical offsets relative to target scene center bounding boxes
+    dx = distance * np.cos(pitch) * np.sin(yaw)
+    dy = -distance * np.cos(pitch) * np.cos(yaw)
+    dz = distance * np.sin(pitch)
+
+    camera_position = center + np.array([dx, dy, dz])
+    
+    # Compute look-at forward vector (-Z is forward in camera space)
+    forward = center - camera_position
+    f_norm = np.linalg.norm(forward)
+    if f_norm < 1e-6:
+        forward = np.array([0.0, -1.0, 0.0])
+    else:
+        forward = forward / f_norm
+
+    # Calculate right vector using standard world-up vector (+Z is world-up)
+    world_up = np.array([0.0, 0.0, 1.0])
+    right = np.cross(forward, world_up)
+    r_norm = np.linalg.norm(right)
+    
+    if r_norm < 1e-6:
+        alternative_up = np.array([1.0, 0.0, 0.0])
+        right = np.cross(forward, alternative_up)
+        right /= max(np.linalg.norm(right), 1e-6)
+    else:
+        right = right / r_norm
+
+    # Re-orthogonalize the true camera up vector
+    true_up = np.cross(right, forward)
+    true_up /= max(np.linalg.norm(true_up), 1e-6)
+
+    # Assemble transformation matrix
+    pose = np.eye(4)
+    pose[:3, 0] = right
+    pose[:3, 1] = true_up
+    pose[:3, 2] = -forward  # Camera looks down its native -Z axis
+    pose[:3, 3] = camera_position
+
+    return pose
+
+
+
 def render_model_to_2d(file_path: str, output_image_path: str = "model_preview.png"):
     if not os.path.exists(file_path):
         raise FileNotFoundError(f"Asset target not found: {file_path}")
@@ -93,29 +160,33 @@ def render_model_to_2d(file_path: str, output_image_path: str = "model_preview.p
     
     print(f"📐 Scene Center: {np.round(center, 3)} | Calculated Radius: {round(radius, 3)}")
 
-    # Adjust perspective constraints cleanly
+    # Keep a non-zero fill baseline bounding track distance factor
     distance = radius * 2.5
 
+    # Direct port of Blender angle vectors tracking metrics
     view_angles = [
-        {"name": "Front Elevated", "pitch": 25,  "yaw": 35},
-        {"name": "Side Profile",   "pitch": 15,  "yaw": 115},
-        {"name": "High Angle Top", "pitch": 65,  "yaw": 45},
-        {"name": "Low Pitch Angle","pitch": -10, "yaw": 20},
+        {"name": "Front Elevated", "pitch": 8,   "yaw": 0},
+        {"name": "Side Profile",   "pitch": 5,   "yaw": 90},
+        {"name": "High Angle Top", "pitch": 75,  "yaw": 45},
+        {"name": "Low Pitch Angle", "pitch": -12, "yaw": 35},
     ]
 
     captured_images = []
 
     for view in view_angles:
         try:
-            # Build look-at matrix relative to bounding centers
-            cam_pose = build_camera_transform(center, distance, view["pitch"], view["yaw"])
+            # Re-initialize a clean perspective transformation frame copy
+            view_scene = trimesh_scene.copy()
             
-            # Apply camera transforms directly to camera entity configurations
-            trimesh_scene.camera.transform = cam_pose
-            trimesh_scene.camera.resolution = [512, 512]
+            # Build look-at matrix relative to bounding centers
+            cam_pose = build_view_pose(center, distance, view["pitch"], view["yaw"])
+            
+            # Direct scene-graph property update for the active camera node
+            view_scene.camera_transform = cam_pose
+            view_scene.camera.resolution = [512, 512]
             
             # Pure software vector-to-raster dump (completely bypasses PyOpenGL and driver checks)
-            png_bytes = trimesh_scene.save_image(background=[30, 30, 35, 255])
+            png_bytes = view_scene.save_image(background=[30, 30, 35, 255])
             
             from io import BytesIO
             img = Image.open(BytesIO(png_bytes)).convert("RGB")
