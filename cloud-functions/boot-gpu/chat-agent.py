@@ -557,7 +557,7 @@ async def generate_text_stream(
     is_gguf = model_path.endswith(".gguf") or "gguf" in model_path.lower()
 
     messages = [
-        {"role": "system", "content": "You are my hot ex girlfriend trying to win me back."},
+    #    {"role": "system", "content": "You are my hot ex girlfriend trying to win me back."},
         {"role": "user", "content": prompt}
     ]
 

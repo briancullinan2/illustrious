@@ -307,7 +307,7 @@ def run_lora_alignment(model_path=BASE_MODEL):
     dataset = Dataset.from_list(all_records)
 
     # Shuffle + take more samples (personality needs repetition)
-    dataset = dataset.shuffle(seed=42).select(range(min(3200, len(dataset))))  # Increase this as you add data
+    dataset = dataset.shuffle(seed=42).select(range(min(8000, len(dataset))))  # Increase this as you add data
     print(f"🔍 Rows parsed by Hugging Face table: {len(dataset)}")
     
     tokenizer = AutoTokenizer.from_pretrained(model_path, cache_dir=HF_CACHE_DIR, token=HF_TOKEN)

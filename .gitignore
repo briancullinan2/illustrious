@@ -7,3 +7,4 @@ hf_cache/*/**
 loras/*/tokenizer.json
 loras/*/*.safetensors
 chat_logs/*.json
+loras/spatial_engine/__pycache__

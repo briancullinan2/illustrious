@@ -41,7 +41,29 @@ I am starting to formulate training data to apply a lora and grammar combination
 ## Spatial Lora Training
 
 
+### 0. The Spatial Breakdown:
 
+```text
+[  X,  Y,  Z,  Pitch,  Yaw,  Roll,  Scale  ]
+└─ Position ┘   └─── Angle ───┘   └ Size ┘
+```
+
+
+* **`X` (`hw`):** Moves it left/right.
+* **`Y` (`-hd`):** Moves it forward/backward.
+* **`Z` (`hh`):** Moves it up/down.
+
+
+* **`Pitch` (`0`):** Nods/tilts forward or backward.
+* **`Yaw` (`0`):** Swivels/twists left or right.
+* **`Roll` (`0`):** Leans or banks side-to-side.
+
+
+* **`Scale` (`0.5`):** Multiplies the overall object volume uniformly. In this case, shrinking the object down to half its normal size. *(Note: If this field is a nested array like `[1.2, 1.2, 0.8]`, it scales the Width, Depth, and Height independently).*
+
+#### Two stone pillars holding up a heavy steel crossbeam mesh across the top.
+
+![natural](Gemini_Generated_Image_b15bf0b15bf0b15b.png)
 
 ### 1. Dimension & Anchor Aliases (The Bounding Variables)
 

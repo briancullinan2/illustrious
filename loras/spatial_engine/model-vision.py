@@ -2,315 +2,143 @@ import os
 import sys
 import argparse
 import platform
+import json
+from pathlib import Path
 
-# ==================== PLATFORM-SPECIFIC RENDERING SETUP ====================
-current_os = platform.system()
-
-if current_os == "Linux":
-    os.environ["PYOPENGL_PLATFORM"] = "egl"
-elif current_os == "Windows":
-    # CRITICAL: Force the backend platforms completely before any imports lock them in
-    os.environ["PYRENDER_BACKEND"] = "pyglet"
-    os.environ["PYOPENGL_PLATFORM"] = "pyglet"
-    # Block PyOpenGL from trying to touch broken Windows EGL wrappers
-    os.environ["PYOPENGL_FORCE_NO_EGL"] = "1"
-else:
-    os.environ["PYRENDER_BACKEND"] = "osmesa"
-
-# Now safely import the remaining stack layers
 import torch
 import trimesh
 import numpy as np
 from PIL import Image
 from transformers import AutoProcessor, AutoModel
 
-import pyrender
-from pathlib import Path
-
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from draco_glb import load_glb_scene
 
-
 model_id = "HuggingFaceTB/SmolVLM-Instruct"
 HF_CACHE_DIR = "hf_cache"
-
-
 CREDENTIALS_FILE = Path("~/.credentials/huggingface-provider.json").expanduser()
-
 
 def get_token():
     if CREDENTIALS_FILE.exists():
         with open(CREDENTIALS_FILE, 'r', encoding='utf-8') as f:
-            import json
             return json.load(f).get("ACCESS_TOKEN", "").strip()
     return None
 
 HF_TOKEN = get_token()
 if HF_TOKEN:
-    print(f"Found {HF_TOKEN}, using authenticated HF token...")
     os.environ["HF_TOKEN"] = HF_TOKEN
 
+# ==================== REPAIR & EXTRACTION LOGIC ====================
+def compute_scene_bounds(scene):
+    mins = np.array([np.inf, np.inf, np.inf])
+    maxs = np.array([-np.inf, -np.inf, -np.inf])
 
-class WindowsHeadlessRenderer:
-    """
-    Custom context wrapper that utilizes hardware-accelerated WGL windows 
-    to extract offscreen buffers safely on native Windows systems.
-    """
-    def __init__(self, width=512, height=512):
-        self.width = width
-        self.height = height
-        # Spin up a standard viewer instance but hide it offscreen
-        self.viewer = pyrender.Viewer(
-            pyrender.Scene(), 
-            viewport_size=(width, height), 
-            run_in_thread=True, 
-            registered_keys={}
-        )
-        # Force terminate the window initialization layout loop
-        self.viewer.close()
+    for geom in scene.geometry.values():
+        if len(geom.vertices) == 0:
+            continue
+        verts = np.asarray(geom.vertices)
+        if not np.isfinite(verts).all():
+            continue
+        mins = np.minimum(mins, verts.min(axis=0))
+        maxs = np.maximum(maxs, verts.max(axis=0))
 
-    def render_scene_direct(self, scene):
-        """Extracts the color buffer directly from the active OpenGL context frame."""
-        # Use pyrender's internal platform-agnostic mesh renderer pass
-        platform_renderer = pyrender.Renderer(self.width, self.height)
-        color, _ = platform_renderer.render(scene)
-        platform_renderer.delete()
-        return color
+    if np.any(np.isinf(mins)) or np.any(np.isinf(maxs)):
+        return np.zeros(3), np.ones(3), 1.0
 
+    center = (mins + maxs) * 0.5
+    extents = maxs - mins
+    extents_norm = np.linalg.norm(extents)
+    radius = max(extents_norm * 0.5, 0.001)
 
-import subprocess
-import tempfile
-import shutil
-from pathlib import Path
+    return center, extents, radius
 
-def find_blender_executable() -> str:
-    """Find Blender on Windows (common locations)."""
-    possible_paths = [
-        r"C:\Program Files\Blender Foundation\Blender\blender.exe",
-        r"C:\Program Files\Blender Foundation\Blender 4.2\blender.exe",  # adjust version
-        shutil.which("blender"),
-        "blender",  # if in PATH
-    ]
-    for p in possible_paths:
-        if p and os.path.exists(p if isinstance(p, str) else p):
-            return str(p)
-    raise FileNotFoundError("Blender not found. Please install Blender and ensure it's in PATH or update find_blender_executable().")
+def build_camera_transform(center, distance, pitch_deg, yaw_deg):
+    """Computes look-at projection matrices using pitch and yaw angles."""
+    pitch = np.radians(pitch_deg)
+    yaw = np.radians(yaw_deg)
 
+    dx = distance * np.cos(pitch) * np.sin(yaw)
+    dy = -distance * np.cos(pitch) * np.cos(yaw)
+    dz = distance * np.sin(pitch)
 
-def render_blender_to_2d(file_path: str, output_image_path: str = "model_preview.png"):
-    """Reliable headless 4-view render using external Blender script."""
-    if not os.path.exists(file_path):
-        raise FileNotFoundError(f"Asset not found: {file_path}")
+    cam_pos = center + np.array([dx, dy, dz])
+    z = cam_pos - center
+    z /= np.linalg.norm(z)
 
-    print(f"🎬 Processing with Blender: {os.path.basename(file_path)}")
+    up = np.array([0.0, 0.0, 1.0])
+    if abs(np.dot(z, up)) > 0.99:
+        up = np.array([0.0, 1.0, 0.0])
 
-    blender_exe = find_blender_executable()
-    print(f"🔧 Using Blender: {blender_exe}")
+    x = np.cross(up, z)
+    x /= np.linalg.norm(x)
+    y = np.cross(z, x)
 
-    # Path to the external script
-    script_template_path = os.path.join(os.path.dirname(__file__), "blender-vision.py")
-    
-    if not os.path.exists(script_template_path):
-        raise FileNotFoundError(f"Blender script template not found: {script_template_path}")
+    pose = np.eye(4)
+    pose[:3, 0] = x
+    pose[:3, 1] = y
+    pose[:3, 2] = z
+    pose[:3, 3] = cam_pos
+    return pose
 
-    # Read and fill template
-    with open(script_template_path, "r", encoding="utf-8") as f:
-        script_content = f.read()
-
-    script_content = script_content.replace("{{MODEL_PATH}}", file_path)
-    script_content = script_content.replace("{{OUTPUT_GRID_PATH}}", output_image_path)
-
-    # Write filled script to temp file
-    with tempfile.NamedTemporaryFile(mode='w', suffix='.py', delete=False, encoding="utf-8") as tmp:
-        tmp.write(script_content)
-        script_path = tmp.name
-
-    try:
-        result = subprocess.run([
-            blender_exe,
-            "--background",
-            "--python", script_path,
-        ], capture_output=True, text=True, timeout=180)  # increased timeout
-
-        if result.returncode != 0:
-            print("Blender stdout:", result.stdout)
-            print("Blender stderr:", result.stderr)
-            raise RuntimeError(f"Blender failed with code {result.returncode}")
-
-        print(result.stdout.strip())
-
-    finally:
-        try:
-            os.unlink(script_path)
-        except:
-            pass
-
-    if os.path.exists(output_image_path):
-        print(f"✅ Render completed → {output_image_path}")
-        return output_image_path
-    else:
-        raise RuntimeError("Blender did not produce the output image.")
-
-
+# ==================== HARDWARE-INDEPENDENT SOFTWARE RASTERIZER ====================
 def render_model_to_2d(file_path: str, output_image_path: str = "model_preview.png"):
-    """Robust headless 3D → 2D renderer with Windows Mesa fallback."""
     if not os.path.exists(file_path):
-        raise FileNotFoundError(f"Asset not found: {file_path}")
+        raise FileNotFoundError(f"Asset target not found: {file_path}")
 
-    print(f"🎬 Processing: {os.path.basename(file_path)}")
-
-    # Load and normalize scene. load_glb_scene decodes Draco-compressed GLBs
-    # (KHR_draco_mesh_compression), which a plain trimesh.load returns as
-    # all-zero vertices -> a blank render.
+    print(f"🎬 Processing Engine: {os.path.basename(file_path)}")
+    
+    # Safely unpack Draco-compressed scene metrics via custom loader layer
     trimesh_scene = load_glb_scene(file_path)
-    print(f"📦 Found scene with {len(trimesh_scene.geometry)} geometries.")
+    center, extents, radius = compute_scene_bounds(trimesh_scene)
+    
+    print(f"📐 Scene Center: {np.round(center, 3)} | Calculated Radius: {round(radius, 3)}")
 
-    # Robust bounds calculation
-    try:
-        flat = trimesh_scene.to_geometry() if hasattr(trimesh_scene, 'to_geometry') else trimesh_scene.dump(concatenate=True)
-        if isinstance(flat, list):
-            flat_mesh = trimesh.util.concatenate(flat)
-        else:
-            flat_mesh = flat
-        bounds = flat_mesh.bounds
-    except Exception:
-        bounds = trimesh_scene.bounds
-
-    min_pt, max_pt = bounds[0], bounds[1]
-    center = (min_pt + max_pt) / 2.0
-    extents = max_pt - min_pt
-    max_dim = float(np.max(extents)) if extents.max() > 0 else 1.0
-
-    # Vertex fallback for broken scenes
-    if max_dim < 1e-5:
-        print("⚠️ Zero extents → collecting raw vertices...")
-        verts = [g.vertices for g in trimesh_scene.geometry.values() if hasattr(g, 'vertices') and len(g.vertices) > 0]
-        if verts:
-            v = np.vstack(verts)
-            min_pt = v.min(axis=0)
-            max_pt = v.max(axis=0)
-            center = (min_pt + max_pt) / 2.0
-            extents = max_pt - min_pt
-            max_dim = float(np.max(extents))
-
-    # Guard against degenerate geometry only; do NOT clamp to 1.0, or sub-unit
-    # models (e.g. a 0.4m jug) get framed for a unit cube and appear tiny.
-    if max_dim < 1e-5:
-        max_dim = 1.0
-    print(f"📐 Extents: {np.round(extents, 3)} | Center: {np.round(center, 3)} | Max Dim: {round(max_dim, 3)}")
-
-    # Build pyrender scene
-    try:
-        scene = pyrender.Scene.from_trimesh_scene(trimesh_scene)
-    except Exception as e:
-        print(f"⚠️ Scene creation fallback: {e}")
-        scene = pyrender.Scene()
-        for mesh in trimesh_scene.geometry.values():
-            scene.add(pyrender.Mesh.from_trimesh(mesh, smooth=True))
-
-    scene.ambient_light = np.array([0.4, 0.4, 0.4], dtype=np.float32)
-
-    # Camera & views
-    yfov = np.pi / 3.0
-    camera = pyrender.PerspectiveCamera(yfov=yfov, aspectRatio=1.0)
-
-    distance = max(max_dim * 2.2, (max_dim / 0.65) / np.tan(yfov / 2.0))
+    # Adjust perspective constraints cleanly
+    distance = radius * 2.5
 
     view_angles = [
-        {"name": "Front", "pitch": 8,  "yaw": 0},
-        {"name": "Side",  "pitch": 5,  "yaw": 90},
-        {"name": "Top",   "pitch": 75, "yaw": 45},
-        {"name": "Angle", "pitch": -12,"yaw": 35},
+        {"name": "Front Elevated", "pitch": 25,  "yaw": 35},
+        {"name": "Side Profile",   "pitch": 15,  "yaw": 115},
+        {"name": "High Angle Top", "pitch": 65,  "yaw": 45},
+        {"name": "Low Pitch Angle","pitch": -10, "yaw": 20},
     ]
 
     captured_images = []
 
-    # === Renderer with better Windows compatibility ===
-    renderer = None
-    use_fallback_renderer = False
-    try:
-        # Force OSMesa if available
-        if platform.system() == "Windows":
-            os.environ.setdefault("PYOPENGL_PLATFORM", "osmesa")
-        
-        renderer = pyrender.OffscreenRenderer(viewport_width=512, viewport_height=512)
-        print("✅ OffscreenRenderer initialized (Mesa recommended)")
-    except Exception as e:
-        print(f"⚠️ OffscreenRenderer failed: {e}")
-        print("🔄 Falling back to basic Renderer...")
-        use_fallback_renderer = True
-        try:
-            renderer = pyrender.Renderer(viewport_width=512, viewport_height=512)
-        except Exception as e2:
-            raise RuntimeError(f"Both renderers failed. Install Mesa DLLs (see instructions above). Error: {e2}") from e2
-
     for view in view_angles:
-        pitch = np.radians(view["pitch"])
-        yaw = np.radians(view["yaw"])
-
-        dx = distance * np.cos(pitch) * np.sin(yaw)
-        dy = -distance * np.cos(pitch) * np.cos(yaw)
-        dz = distance * np.sin(pitch)
-
-        cam_pos = center + np.array([dx, dy, dz])
-
-        # Look-at matrix
-        z = cam_pos - center
-        z /= np.linalg.norm(z)
-        up = np.array([0., 0., 1.])
-        if abs(np.dot(z, up)) > 0.98:
-            up = np.array([0., 1., 0.])
-        x = np.cross(up, z)
-        x /= np.linalg.norm(x)
-        y = np.cross(z, x)
-
-        pose = np.eye(4)
-        pose[:3, 0] = x
-        pose[:3, 1] = y
-        pose[:3, 2] = z
-        pose[:3, 3] = cam_pos
-
-        cam_node = scene.add(camera, pose=pose)
-        light = pyrender.DirectionalLight(color=[1.0, 1.0, 1.0], intensity=4.5)
-        light_node = scene.add(light, pose=pose)
-
-        succeeded = False
         try:
-            if use_fallback_renderer:
-                color, _ = renderer.render(scene, flags=0) # Must pass explicit flags to low-level Renderer
-            else:
-                color, _ = renderer.render(scene)
-            captured_images.append(Image.fromarray(color.astype(np.uint8)))
-            succeeded = True
+            # Build look-at matrix relative to bounding centers
+            cam_pose = build_camera_transform(center, distance, view["pitch"], view["yaw"])
+            
+            # Apply camera transforms directly to camera entity configurations
+            trimesh_scene.camera.transform = cam_pose
+            trimesh_scene.camera.resolution = [512, 512]
+            
+            # Pure software vector-to-raster dump (completely bypasses PyOpenGL and driver checks)
+            png_bytes = trimesh_scene.save_image(background=[30, 30, 35, 255])
+            
+            from io import BytesIO
+            img = Image.open(BytesIO(png_bytes)).convert("RGB")
+            captured_images.append(img)
         except Exception as e:
-            print(f"⚠️ View '{view['name']}' render failed: {e}")
+            print(f"⚠️ View '{view['name']}' software save backup failure: {e}")
             captured_images.append(Image.new('RGB', (512, 512), (50, 50, 60)))
-        finally:
-            scene.remove_node(cam_node)
-            scene.remove_node(light_node)
 
-    if renderer:
-        renderer.delete()
+    # Coalesce the views array into a unified 2x2 layout canvas sheet matrix
+    grid = Image.new('RGB', (1024, 1024), (30, 30, 35))
+    grid.paste(captured_images[0], (0, 0))
+    grid.paste(captured_images[1], (512, 0))
+    grid.paste(captured_images[2], (0, 512))
+    grid.paste(captured_images[3], (512, 512))
 
-    if succeeded:
-        # Create 2x2 grid
-        grid = Image.new('RGB', (1024, 1024), (30, 30, 35))
-        grid.paste(captured_images[0], (0, 0))
-        grid.paste(captured_images[1], (512, 0))
-        grid.paste(captured_images[2], (0, 512))
-        grid.paste(captured_images[3], (512, 512))
-
-        grid.save(output_image_path)
-        print(f"✅ Successfully rendered 4-view grid → {output_image_path}")
-        return output_image_path
-    else:
-        return None
-
+    grid.save(output_image_path)
+    print(f"✅ Successfully rendered asset sheet layout -> {output_image_path}")
+    return output_image_path
 
 # ==================== VISION ANALYSIS PIPELINE ====================
 def analyze_image_locally(image_path: str):
     if not os.path.exists(image_path):
-        print(f"Error: Image not found: {image_path}", file=sys.stderr)
+        print(f"Error: Target image target context missing: {image_path}", file=sys.stderr)
         sys.exit(1)
 
     if torch.cuda.is_available():
@@ -322,9 +150,9 @@ def analyze_image_locally(image_path: str):
     else:
         device = "cpu"
         dtype = torch.float32
-        print("⚠️ Running on CPU (slow execution layer)")
+        print("⚠️ Running on execution fallback stack (CPU)")
 
-    print(f"📦 Loading {model_id} on {device}...")
+    print(f"📦 Instantiating model wrapper: {model_id} on engine target {device}...")
 
     processor = AutoProcessor.from_pretrained(model_id, cache_dir=HF_CACHE_DIR, token=HF_TOKEN)
     model = AutoModel.from_pretrained(
@@ -348,7 +176,7 @@ def analyze_image_locally(image_path: str):
     prompt = processor.apply_chat_template(messages, add_generation_prompt=True)
     inputs = processor(text=prompt, images=raw_image, return_tensors="pt").to(device)
 
-    print("👁️ Running vision model inference checks...")
+    print("👁️ Launching verification model forward checks...")
     with torch.no_grad():
         generated_ids = model.generate(**inputs, max_new_tokens=120)
 
@@ -357,11 +185,6 @@ def analyze_image_locally(image_path: str):
 
     print("\n--- LOCAL VISION ANALYSIS ---")
     print(answer)
-
-
-#pip install --upgrade "trimesh[all]" pyrender pillow DracoPy "PyOpenGL>=3.1.7" torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu121
-# DracoPy decodes KHR_draco_mesh_compression GLBs; PyOpenGL>=3.1.7 avoids a
-# texture-upload crash in pyrender's pinned PyOpenGL==3.1.0.
 
 # ==================== EXECUTION CONTROL GATE ====================
 if __name__ == "__main__":
@@ -375,12 +198,13 @@ if __name__ == "__main__":
     target_image = args.image
 
     if args.model:
-        print(f"🎬 Rendering model: {args.model}")
         try:
             target_image = render_model_to_2d(args.model, args.output)
         except Exception as e:
-            print(f"❌ Structural script runtime failure: {e}", file=sys.stderr)
+            print(f"❌ Structural script runtime evaluation failure: {e}", file=sys.stderr)
+            import traceback
+            traceback.print_exc()
             sys.exit(1)
 
-    if target_image:
-        analyze_image_locally(target_image)
+    #if target_image:
+    #    analyze_image_locally(target_image)
