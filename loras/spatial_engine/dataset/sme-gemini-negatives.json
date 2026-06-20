@@ -104,7 +104,7 @@
   {
     "messages": [
       {"role": "user", "content": "a wooden stick"},
-      {"role": "assistant", "content": "[cylinder][0,0,0,0,0,0,[0.1,0.1,2]]"}
+      {"role": "assistant", "content": "[cylinder][-0,0,0,0,0,0,[0.1,0.1,2]]"}
     ]
   },
   {

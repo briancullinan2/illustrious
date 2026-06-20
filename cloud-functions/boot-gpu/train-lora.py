@@ -163,6 +163,8 @@ def check_datasets(model_path=BASE_MODEL):
     print(f"Scanning inner schemas across {len(json_files)} files...")
 
     for filepath in json_files:
+        with open(filepath, 'r', encoding='utf-8') as raw_f:
+            file_content = raw_f.read()
         with open(filepath, 'r', encoding='utf-8') as f:
             try:
                 data = json.load(f)
@@ -213,6 +215,15 @@ def check_datasets(model_path=BASE_MODEL):
                             # Verify target assistant text blocks obey inference constraints
                             if use_grammar_constraints and msg.get("role") == "assistant" and isinstance(msg.get("content"), str):
                                 assistant_text = msg["content"]
+
+                                char_idx = file_content.find(f'"content": "{assistant_text}"')
+                                if char_idx == -1:
+                                    # Fallback if quotes vary or text uses escapes
+                                    char_idx = file_content.find(assistant_text)
+                                
+                                if char_idx != -1:
+                                    # Count newlines up to that character sequence
+                                    line_no = file_content.count('\n', 0, char_idx) + 1
                                 
                                 if grammar_validator is not None:
                                     try:
@@ -233,7 +244,7 @@ def check_datasets(model_path=BASE_MODEL):
                                             mismatch_found = True
                                             
                                     except ValueError as ve:
-                                        print(f"❌ GRAMMAR VIOLATION in {filepath} [Row {item_idx}, Msg {msg_idx}]:")
+                                        print(f"❌ GRAMMAR VIOLATION in {filepath} [Line {line_no}, Row {item_idx}, Msg {msg_idx}]:")
                                         print(f"   {str(ve)[:300]}...")
                                         print(f"   Offending text: {repr(assistant_text[:350])}...")
                                         mismatch_found = True
@@ -245,7 +256,7 @@ def check_datasets(model_path=BASE_MODEL):
                                 # 2. Validate against Spatial Layout Regex if active
                                 elif compiled_regex is not None:
                                     if not compiled_regex.match(assistant_text):
-                                        print(f"❌ REGEX CONSTRAINT VIOLATION in {filepath} [Row {item_idx}, Msg {msg_idx}]:")
+                                        print(f"❌ REGEX CONSTRAINT VIOLATION in {filepath} [Line {line_no}, Row {item_idx}, Msg {msg_idx}]:")
                                         print(f"   Assistant text layout failed to match spatial token schema constraints.")
                                         print(f"   Offending String: {repr(assistant_text)}")
                                         mismatch_found = True

@@ -1,11 +1,11 @@
 # Root: Handles empty arrays, loose lists, or coordinate blocks
 root ::= (block_sequence | empty_scene)? ws?
 
-empty_scene ::= "[" "]"
+empty_scene ::= "[]"
 
-block_sequence ::= block ([ \t\r\n]* block)*
+block_sequence ::= block (ws_or_nl* block)*
 
-# A block can be a raw tag name or a fully positioned layout primitive
+# A block is a raw tag name or a fully positioned layout primitive
 block ::= primitive (anchor? vector)?
 
 primitive ::= "[" [a-zA-Z0-9_-]+ "]"
@@ -13,34 +13,42 @@ primitive ::= "[" [a-zA-Z0-9_-]+ "]"
 anchor ::= "[abs]" | "[@" [0-9]+ ("," ws? "@" [0-9]+)* "]"
 
 # Vector strings support flat numbers, expressions, nested matrices, or config parameters
+# Enforces a valid item before and after every comma to break on double commas ,,
 vector ::= "[" value ("," ws? value)* "]"
 
-value ::= nested_array | parameter_assignment | expression | attribute | boolean_flag | num
+value ::= nested_array | parameter_assignment | expression | attribute | signed_num | boolean_flag | variable
 
 # Captures matrices like [1,1,1.5] or [-0.6,0.6,-0.4] cleanly
-nested_array ::= "[" (expression | num) ("," ws? (expression | num))* "]"
+nested_array ::= "[" value ("," ws? value)* "]"
 
 # Captures both taper=(z,0.5) and functional variations like taper(z,0.7) or noise(0.4)
-parameter_assignment ::= [a-zA-Z_-]+ "=(" [a-zA-Z0-9_%-]+ "," ws? num ")" | [a-zA-Z_-]+ "(" [a-zA-Z0-9_%-]+ "," ws? num ")" | [a-zA-Z_-]+ "(" num ")"
+parameter_assignment ::= [a-zA-Z_-]+ "=(" ws? [xyz] ws? "," ws? signed_num ws? ")" | [a-zA-Z_-]+ "(" ws? [xyz] ws? "," ws? num ws? ")" | [a-zA-Z_-]+ "(" num ")"
 
 # Expressions handle explicit signs directly adjacent to implicit multi-variables
-expression ::= sign? term (op term)*
+expression ::= term (op term)*
 
 # Fully parses 'fw * 4', implicit coefficients like '-4fw', '-4fd', or solo variables
-term ::= variable ("*" (variable | num))? | num variable? | "sym(" ws? expression ws? ")"
-variable ::= "fw" | "hw" | "fd" | "hd" | "fh" | "hh" | "bd" | "bh" | "@idx"
+# FIX: Added sign? variable to cleanly handle prefixed variables like -fd or -hh
+term ::= variable ("*" (variable | signed_num))? | signed_num variable? | sign? variable | "sym(" ws? expression ws? ")"
+variable ::= "fw" | "hw" | "fd" | "hd" | "fh" | "hh" | "bd" | "bh" | "@idx" | "@" [0-9]+
+
+boolean_flag ::= "surf" | "-%"
 
 # Layout modifier keywords or attributes
-attribute ::= "noise=" num | "mesh"
+attribute ::= "noise=" signed_num | "mesh" | "surf" | "-%"
 
-# Single word boolean strings, percentage caps or surface state mappings like surf or -%
-boolean_flag ::= "surf" | "-%" | [a-zA-Z_-]+
+# STRICT number definition - only one sign character allowed total
+positive_num ::= [0-9]+ ("." [0-9]+)?
+negative_num ::= "-" [0-9]+ ("." [0-9]+)?
+num ::= positive_num | negative_num
 
-num ::= sign? [0-9]+ ("." [0-9]+)?
+# FIX: Changed to sign? positive_num to allow things like +5 or -5 without doubling up a negative_num's minus sign
+signed_num ::= sign? positive_num | negative_num
+
+# SINGLE sign only - completely kills any '--' variants instantly
+sign ::= "+" | "-"
 
 op ::= "+" | "-" | "*" | "/"
-
-sign ::= ("+" | "-")+
 
 ws ::= [ \t]+
 ws_or_nl ::= [ \t\r\n]+
