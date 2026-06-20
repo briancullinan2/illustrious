@@ -284,37 +284,39 @@ These handle terms indicating posture, direction faced, or sizing variations rel
 ### 4. Response Fitting Grammar:  Gerganov Backus-Naur Form 
 
 ```ebnf
+# Root: one or more spatial blocks, optional trailing whitespace
+root ::= block_sequence ws?
 
-root    ::= (block (ws block)* ws? "\n"?)*
-block   ::= primitive anchor? vector
+block_sequence ::= block (ws_or_nl block)*
 
-# Primitive definitions or raw model strings
-primitive ::= "[" [a-z0-9_-]+ "]"
+block ::= primitive anchor? vector
 
-# Structural qualifiers: [@0], [@0, @1], [abs]
-anchor    ::= "[abs]" | "[@" [0-9]+ ("," ws? "@" [0-9]+)* "]"
+primitive ::= "[" [a-zA-Z0-9_-]+ "]"
 
-# Coordinates block: enclosing 7 elements or specific key-value overloads
-vector    ::= "[" value ("," ws? value)* "]"
+anchor ::= "[abs]" | "[@" [0-9]+ ("," ws? "@" [0-9]+)* "]"
 
-value     ::= expression | scaling | attribute
+# Vector now supports 3-7 elements with nested scaling and expressions
+vector ::= "[" value ("," ws? value)* "]"
 
-# Mathematical shorthand expressions, fractions, or raw floats
-expression ::= (sign? (term | num)) (op term)?
-term       ::= ("sym(" ws? expression ws? ")") | variable | (variable "*" variable) | (variable "*" num)
-variable   ::= "fw" | "hw" | "fd" | "hd" | "fh" | "hh" | "@idx"
+value ::= expression | scaling | attribute | num
 
-# Vector math scaling nested brackets: [1,1,1.5] or [-0.5,1,-0.15]
-scaling    ::= "[" sign? num "," ws? sign? num "," ws? sign? num "]"
+# Improved expressions: handle negatives, multiplication, @idx, sym(), etc.
+expression ::= sign? term (op term)*
+term ::= variable ("*" (variable | num))? | "sym(" ws? expression ws? ")" | num
+variable ::= "fw" | "hw" | "fd" | "hd" | "fh" | "hh" | "@idx"
 
-# Vertex attributes: noise=0.15 or mesh
-attribute  ::= "noise=" num | "mesh"
+scaling ::= "[" sign? num "," ws? sign? num "," ws? sign? num "]"
 
-# Base scalar primitives
-num    ::= [0-9]+ ("." [0-9]+)?
-op     ::= "+" | "-" | "*" | "/"
-sign   ::= "+" | "-"
-ws     ::= [ \t]+
+attribute ::= "noise=" num | "mesh"
+
+num ::= sign? [0-9]+ ("." [0-9]+)?
+
+op ::= "+" | "-" | "*" | "/"
+
+sign ::= ("+" | "-")+
+
+ws ::= [ \t]+
+ws_or_nl ::= [ \t\r\n]+
 
 ```
 

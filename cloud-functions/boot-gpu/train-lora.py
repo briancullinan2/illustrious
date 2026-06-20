@@ -216,34 +216,29 @@ def check_datasets(model_path=BASE_MODEL):
                                 
                                 if grammar_validator is not None:
                                     try:
-                                        # Important: Many tokenizers (Llama/Qwen) expect a leading space for assistant content
                                         test_text = assistant_text
-                                        if not test_text.startswith(" "):
-                                            test_text = " " + test_text  # Try with prefix space
+                                        # Many tokenizers need a leading space for assistant content
+                                        if not test_text.startswith((" ", "[", "[]")):
+                                            test_text = " " + test_text
                                         
-                                        encoded_tokens = active_tokenizer.encode(
-                                            test_text, 
-                                            add_special_tokens=False
-                                        )
+                                        encoded_tokens = active_tokenizer.encode(test_text, add_special_tokens=False)
                                         
                                         is_valid = grammar_validator.accept_token_ids(encoded_tokens, as_string=False)
                                         
                                         if is_valid:
-                                            print(f"   ✓ Grammar OK [Row {item_idx}, Msg {msg_idx}]")
+                                            pass  # good
                                         else:
                                             print(f"❌ GRAMMAR VIOLATION in {filepath} [Row {item_idx}, Msg {msg_idx}]:")
-                                            print(f"   Sequence rejected by grammar.")
                                             print(f"   Text: {repr(assistant_text[:400])}...")
                                             mismatch_found = True
                                             
                                     except ValueError as ve:
-                                        error_str = str(ve)
                                         print(f"❌ GRAMMAR VIOLATION in {filepath} [Row {item_idx}, Msg {msg_idx}]:")
-                                        print(f"   {error_str}")
+                                        print(f"   {str(ve)[:300]}...")
                                         print(f"   Offending text: {repr(assistant_text[:350])}...")
                                         mismatch_found = True
                                     except Exception as ge:
-                                        print(f"❌ GRAMMAR PARSING EXCEPTION in {filepath} [Row {item_idx}, Msg {msg_idx}]: {ge}")
+                                        print(f"❌ GRAMMAR PARSING EXCEPTION ... {ge}")
                                         mismatch_found = True
 
 
