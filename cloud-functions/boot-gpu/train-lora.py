@@ -72,7 +72,7 @@ from lmformatenforcer.integrations.transformers import build_transformers_prefix
 # ============================================================================
 # Configuration
 # ============================================================================
-BASE_MODEL = "meta-llama/Meta-Llama-3-8B-Instruct"
+BASE_MODEL = "Goekdeniz-Guelmez/Josiefied-Qwen2.5-0.5B-Instruct-abliterated-v1"
 DATASET_FOLDER = "loras/spatial_engine/dataset"
 OUTPUT_DIR = "loras/spatial_engine"
 HF_CACHE_DIR = "hf_cache"
@@ -95,7 +95,7 @@ if HF_TOKEN:
 import glob
 import json
 
-def check_datasets():
+def check_datasets(model_path=BASE_MODEL):
     # Fallback/Target directory check
     log_folder_path = Path(DATASET_FOLDER)
     json_files = [str(p) for p in log_folder_path.glob("*.json")]
@@ -104,11 +104,15 @@ def check_datasets():
     mismatch_found = False
 
     # Grammar validation compilation for dataset string auditing
-    grammar_path = Path(lora_adapter_path) / "grammar.bnf"
+    grammar_path = Path(OUTPUT_DIR) / "grammar.bnf"
     use_grammar_constraints = True  
     
     compiled_regex = None
     grammar_validator = None
+
+    
+    active_tokenizer = AutoTokenizer.from_pretrained(model_path, cache_dir=HF_CACHE_DIR, token=HF_TOKEN)
+    
 
     if grammar_path.exists() and use_grammar_constraints:
         print(f"🧱 Loading formal context-free GBNF grammar rules for dataset verification from {grammar_path}...")
@@ -131,9 +135,15 @@ def check_datasets():
     elif use_grammar_constraints:
         print(f"🌐 Compiling fallback spatial regex validation layout for dataset verification...")
         spatial_regex = (
-            r"^(\s*\[[a-z0-9_-]+\]"                       # Primitive element
-            r"(\s*\[(abs|@[0-9]+(,\s*@[0-9]+)*)\])?"     # Anchor element
-            r"\s*\[[^\]]+\]\s*)*$"                        # Vector coordinates matrix
+            r"^("                                        # Start of total sequence
+            r"\s*\[[a-z0-9_-]+\]"                        # Primitive tag: e.g., [sphere]
+            r"(\s*\[(abs|@[0-9]+(,\s*@[0-9]+)*)\])?"     # Optional Anchor tag: e.g., [abs] or [@1, @2]
+            r"(\s*\["                                    # Start of Coordinate/Vector Block
+              r"[a-zA-Z0-9_\-\s.,*+()=/]*"               # Match floats, expressions, and assignments
+              r"(\[[a-zA-Z0-9_\-\s.,*+()=/]*\])?"        # Match ONE level of nested vectors: e.g., [[1,1,1.5]]
+              r"[a-zA-Z0-9_\-\s.,*+()=/]*"               # Match trailing expressions or properties
+            r"\]\s*)"                                    # End of Coordinate Block
+            r")+$"                                       # Ensure full string matching from start to end
         )
         try:
             import re
@@ -201,17 +211,35 @@ def check_datasets():
                                 # 1. Validate against GBNF Grammar Instance if active
                                 if grammar_validator is not None:
                                     try:
-                                        # Convert the raw text into token space to replicate parsing validation checks
-                                        encoded_tokens = active_tokenizer.encode(assistant_text, add_special_tokens=False)
-                                        state = grammar_validator.init_state()
                                         
+                                        # Convert raw text into token space to replicate parsing validation checks
+                                        encoded_tokens = active_tokenizer.encode(assistant_text, add_special_tokens=False)
+                                        
+                                        # Use LMFormatEnforcer's internal engine via the text parser to track sequence steps
+                                        enforcer = TokenEnforcer(grammar_validator.character_level_parser)
+                                        
+                                        # Reconstruct the token sequence validation trace
+                                        token_list = []
                                         for t_idx, token_id in enumerate(encoded_tokens):
-                                            state = grammar_validator.advance_state(state, token_id)
-                                            if state is None:
+                                            allowed_next_tokens = enforcer.get_allowed_tokens(token_list)
+                                            
+                                            if token_id not in allowed_next_tokens:
                                                 print(f"❌ GRAMMAR VIOLATION in {filepath} [Row {item_idx}, Msg {msg_idx}]:")
-                                                print(f"   Assistant response failed GBNF production rule sequence at token index {t_idx}.")
+                                                print(f"   Assistant response failed GBNF production rule sequence at token index {t_idx} (Token ID: {token_id}).")
+                                                print(f"   Offending String: {repr(assistant_text)}")
                                                 mismatch_found = True
                                                 break
+                                                
+                                            token_list.append(token_id)
+                                            
+                                        # Verify that the complete string forms a structurally terminated sequence
+                                        if not mismatch_found:
+                                            final_allowed = enforcer.get_allowed_tokens(token_list)
+                                            if active_tokenizer.eos_token_id not in final_allowed:
+                                                print(f"❌ GRAMMAR INCOMPLETE in {filepath} [Row {item_idx}, Msg {msg_idx}]:")
+                                                print(f"   Assistant response cut off before reaching a valid GBNF terminal rule boundary.")
+                                                mismatch_found = True
+                                                
                                     except Exception as ge:
                                         print(f"❌ GRAMMAR PARSING EXCEPTION in {filepath} [Row {item_idx}, Msg {msg_idx}]: {ge}")
                                         mismatch_found = True
