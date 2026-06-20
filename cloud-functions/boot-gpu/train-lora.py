@@ -359,84 +359,132 @@ def run_lora_alignment(model_path=BASE_MODEL):
     os.environ["OMP_NUM_THREADS"] = "6"
     os.environ["MKL_NUM_THREADS"] = "6"
 
-    lora_config = LoraConfig(
-        r=16,                     # 💡 Dropped slightly from 32 to 16. Saves huge compute/RAM on CPU.
-        #r=32,
-        lora_alpha=32,            # Placed perfectly at 2x rank
-        #lora_alpha=64,
-        #target_modules=["q_proj", "v_proj"], # 💡 Trimming to attention-only drops trainable matrices immensely
-        target_modules=["q_proj", "k_proj", "v_proj", "o_proj", "gate_proj", "up_proj", "down_proj"],
-        lora_dropout=0.05,
-        bias="none",
-        task_type="CAUSAL_LM",
-    )
 
-    sft_config = SFTConfig(
-        output_dir="./training_outputs",
-        per_device_train_batch_size=1,
-        #per_device_train_batch_size=4,
-        #gradient_accumulation_steps=2,
-        gradient_accumulation_steps=4,  # Keep high to keep gradient steps stable
-        #gradient_accumulation_steps=16,
-        
-        use_cpu=not torch.cuda.is_available(),
-        #use_cpu=True,                   # Force runtime away from raw system wrappers
-        #bf16=True,                      # 🔥 SWAP TO BF16 MIXED PRECISION FOR CPU SPEED
-        bf16=False,
-        fp16=torch.cuda.is_available(),
-        optim="adafactor",              # 🔥 SWAP OPTIMIZER to drop massive RAM/Compute states
-        
-        #warmup_steps=10,
-        warmup_ratio=0.1,
-        #max_steps=50,                          # Much better than 3
-        #max_steps=200,
-        #num_train_epochs=3,
-        num_train_epochs=1,
+    if torch.cuda.is_available():
 
-        learning_rate=2e-4,
-        lr_scheduler_type="cosine",
-        logging_steps=1,
-        save_strategy="no",
-        report_to="none",
-        
-        # 📏 Context Truncation Controls:
-        max_length=256,                 # 💡 Keep at 128! 512 context on CPU is quadratically slower.
-        #packing=True,
-        
-        # 📁 Data Loader Multiprocessing:
-        #dataloader_num_workers=4,       # Parallelize disk data extraction off the main execution core
-        dataloader_num_workers=0,
-        dataloader_pin_memory=False,    # Disabled since we have no GPU VRAM targets to stream to
-    )
+        lora_config = LoraConfig(
+            r=16,                         
+            lora_alpha=32,                
+            target_modules=["q_proj", "k_proj", "v_proj", "o_proj", "gate_proj", "up_proj", "down_proj"],
+            lora_dropout=0.05,
+            bias="none",
+            task_type="CAUSAL_LM",
+        )
 
+        sft_config = SFTConfig(
+            output_dir="./training_outputs",
+            per_device_train_batch_size=4,   # Bumped up from 1 to saturate GPU cores
+            gradient_accumulation_steps=4,   # Effective batch size of 16 per device
+            
+            use_cpu=False,
+            bf16=True,                       # Native mixed precision for A100/H100/L4 GPUs
+            fp16=False,
+            optim="paged_adamw_8bit",        # Fast GPU optimizer with memory tracking
+            
+            warmup_ratio=0.1,
+            num_train_epochs=3,              # Let it converge over real epochs now
+
+            learning_rate=2e-4,
+            lr_scheduler_type="cosine",
+            logging_steps=1,
+            save_strategy="epoch",           # Save checkpoints per epoch on cloud disk
+            report_to="none",
+            
+            max_length=4096,                 # Expanded headroom for complex structural layouts
+            packing=True,                    # Concatenate sequences to optimize VRAM sequences
+            
+            dataloader_num_workers=4,        # Move data loading to CPU workers
+            dataloader_pin_memory=True,      # Fast pinned memory staging to GPU VRAM
+        )
+
+    else:
+
+        lora_config = LoraConfig(
+            r=16,                     # 💡 Dropped slightly from 32 to 16. Saves huge compute/RAM on CPU.
+            #r=32,
+            lora_alpha=32,            # Placed perfectly at 2x rank
+            #lora_alpha=64,
+            #target_modules=["q_proj", "v_proj"], # 💡 Trimming to attention-only drops trainable matrices immensely
+            target_modules=["q_proj", "k_proj", "v_proj", "o_proj", "gate_proj", "up_proj", "down_proj"],
+            lora_dropout=0.05,
+            bias="none",
+            task_type="CAUSAL_LM",
+        )
+
+        sft_config = SFTConfig(
+            output_dir="./training_outputs",
+            per_device_train_batch_size=1,
+            #per_device_train_batch_size=4,
+            #gradient_accumulation_steps=2,
+            gradient_accumulation_steps=4,  # Keep high to keep gradient steps stable
+            #gradient_accumulation_steps=16,
+            
+            use_cpu=not torch.cuda.is_available(),
+            #use_cpu=True,                   # Force runtime away from raw system wrappers
+            #bf16=True,                      # 🔥 SWAP TO BF16 MIXED PRECISION FOR CPU SPEED
+            bf16=False,
+            fp16=torch.cuda.is_available(),
+            optim="adafactor",              # 🔥 SWAP OPTIMIZER to drop massive RAM/Compute states
+            
+            #warmup_steps=10,
+            warmup_ratio=0.1,
+            #max_steps=50,                          # Much better than 3
+            #max_steps=200,
+            #num_train_epochs=3,
+            num_train_epochs=1,
+
+            learning_rate=2e-4,
+            lr_scheduler_type="cosine",
+            logging_steps=1,
+            save_strategy="no",
+            report_to="none",
+            
+            # 📏 Context Truncation Controls:
+            max_length=2048,                 # 💡 Keep at 128! 512 context on CPU is quadratically slower.
+            #packing=True,
+            
+            # 📁 Data Loader Multiprocessing:
+            #dataloader_num_workers=4,       # Parallelize disk data extraction off the main execution core
+            dataloader_num_workers=0,
+            dataloader_pin_memory=False,    # Disabled since we have no GPU VRAM targets to stream to
+        )
 
     def formatting_prompts_func(example):
         # If SFTTrainer runs with batched=False, it processes a single dict record row
         # If it is running with batched=True, example will be a dict of lists
         
+        # We use an empty string but handle it elegantly or pass a space to avoid formatting issues
+        system_message = {"role": "system", "content": ""}
+
         # Check if we are dealing with a batch of rows (batched=True)
         is_batch = isinstance(example["messages"], list) and len(example["messages"]) > 0 and isinstance(example["messages"][0], list)
 
         if is_batch:
             texts = []
             for conversation in example["messages"]:
+                # Prepend system prompt if the conversation doesn't already start with one
+                if not conversation or conversation[0].get("role") != "system":
+                    conversation = [system_message] + conversation
+
                 formatted = tokenizer.apply_chat_template(
                     conversation,
                     tokenize=False,
                     add_generation_prompt=False,
-                    # persona="layout_core" # Pass your dynamic persona keyword here if your jinja handles it
                 )
                 texts.append(formatted)
-            return texts
+            return {"text": texts}
 
         else:
             # Handling a single scalar row mapping (batched=False)
-            # Verify the structure inside the individual message column tracks as expected
             conversation = example["messages"]
             
             # Guard clause against corrupted rows
             if not conversation or not isinstance(conversation, list):
                 return ""
+
+            # Prepend system prompt if not already present
+            if conversation[0].get("role") != "system":
+                conversation = [system_message] + conversation
 
             formatted = tokenizer.apply_chat_template(
                 conversation,
@@ -444,7 +492,8 @@ def run_lora_alignment(model_path=BASE_MODEL):
                 add_generation_prompt=False
             )
             return formatted
-
+        
+        
     print("Initializing SFTTrainer...")
     trainer = SFTTrainer(
         model=base_model,

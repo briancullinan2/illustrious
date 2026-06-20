@@ -255,7 +255,7 @@ def get_llm_context(model_path=base_model_path, hf_token=None, active_lora_path=
                     
                     from peft.tuners.lora.layer import LoraLayer
                     scaled_count = 0
-                    scale = 1.0
+                    scale = 1.4
 
                     for module in peft_wrapper.modules():
                         if isinstance(module, LoraLayer):
@@ -557,7 +557,7 @@ async def generate_text_stream(
     is_gguf = model_path.endswith(".gguf") or "gguf" in model_path.lower()
 
     messages = [
-    #    {"role": "system", "content": "You are my hot ex girlfriend trying to win me back."},
+        {"role": "system", "content": ""},
         {"role": "user", "content": prompt}
     ]
 

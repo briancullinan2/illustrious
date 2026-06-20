@@ -63,6 +63,8 @@ I am starting to formulate training data to apply a lora and grammar combination
 
 #### Two stone pillars holding up a heavy steel crossbeam mesh across the top.
 
+##### Output: `[cylinder][-3fw,0,0,0,0,0,1.5][cylinder][3fw,0,0,0,0,0,1.5][mesh][@0,@1][0,0,fh,0,0,0,[6.2,0.4,0.2]]`
+
 ![natural](Gemini_Generated_Image_b15bf0b15bf0b15b.png)
 
 ### 1. Dimension & Anchor Aliases (The Bounding Variables)

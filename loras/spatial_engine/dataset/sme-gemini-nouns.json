@@ -1,123 +1,482 @@
-
 [
   {
     "messages": [
-      {"role": "user", "content": "spawn a car, tree, house, and a dog"},
-      {"role": "assistant", "content": "[car][tree][house][dog]"}
+      {
+        "role": "user",
+        "content": "spawn a car, tree, house, and a dog"
+      },
+      {
+        "role": "assistant",
+        "content": "[car][tree][house][dog]"
+      }
     ]
   },
   {
     "messages": [
-      {"role": "user", "content": "give me some starter models: couch, television, plant, rug, table"},
-      {"role": "assistant", "content": "[couch][television][plant][rug][table]"}
+      {
+        "role": "user",
+        "content": "give me some starter models: couch, television, plant, rug, table"
+      },
+      {
+        "role": "assistant",
+        "content": "[couch][television][plant][rug][table]"
+      }
     ]
   },
   {
     "messages": [
-      {"role": "user", "content": "i want to build a forest scene. throw in rocks, boulders, pine trees, bushes, logs, and mushrooms"},
-      {"role": "assistant", "content": "[rocks][boulders][pine_trees][bushes][logs][mushrooms]"}
+      {
+        "role": "user",
+        "content": "i want to build a forest scene. throw in rocks, boulders, pine trees, bushes, logs, and mushrooms"
+      },
+      {
+        "role": "assistant",
+        "content": "[rocks][boulders][pine_trees][bushes][logs][mushrooms]"
+      }
     ]
   },
   {
     "messages": [
-      {"role": "user", "content": "can I get a sword, shield, helmet, and armor"},
-      {"role": "assistant", "content": "[sword][shield][helmet][armor]"}
+      {
+        "role": "user",
+        "content": "can I get a sword, shield, helmet, and armor"
+      },
+      {
+        "role": "assistant",
+        "content": "[sword][shield][helmet][armor]"
+      }
     ]
   },
   {
     "messages": [
-      {"role": "user", "content": "add a computer, keyboard, mouse, mug, desk"},
-      {"role": "assistant", "content": "[computer][keyboard][mouse][mug][desk]"}
+      {
+        "role": "user",
+        "content": "add a computer, keyboard, mouse, mug, desk"
+      },
+      {
+        "role": "assistant",
+        "content": "[computer][keyboard][mouse][mug][desk]"
+      }
     ]
   },
   {
     "messages": [
-      {"role": "user", "content": "dump a bunch of beach items like sand, ocean, towel, umbrella, crab, seashell"},
-      {"role": "assistant", "content": "[sand][ocean][towel][umbrella][crab][seashell]"}
+      {
+        "role": "user",
+        "content": "dump a bunch of beach items like sand, ocean, towel, umbrella, crab, seashell"
+      },
+      {
+        "role": "assistant",
+        "content": "[sand][ocean][towel][umbrella][crab][seashell]"
+      }
     ]
   },
   {
     "messages": [
-      {"role": "user", "content": "street assets: lamp, bench, fire_hydrant, car, bicycle"},
-      {"role": "assistant", "content": "[lamp][bench][fire_hydrant][car][bicycle]"}
+      {
+        "role": "user",
+        "content": "street assets: lamp, bench, fire_hydrant, car, bicycle"
+      },
+      {
+        "role": "assistant",
+        "content": "[lamp][bench][fire_hydrant][car][bicycle]"
+      }
     ]
   },
   {
     "messages": [
-      {"role": "user", "content": "let's start with a base character body, hair, shirt, pants, shoes"},
-      {"role": "assistant", "content": "[body][hair][shirt][pants][shoes]"}
+      {
+        "role": "user",
+        "content": "let's start with a base character body, hair, shirt, pants, shoes"
+      },
+      {
+        "role": "assistant",
+        "content": "[body][hair][shirt][pants][shoes]"
+      }
     ]
   },
   {
     "messages": [
-      {"role": "user", "content": "add some space stuff: astronaut, rocket, planet, moon, asteroid, satellite"},
-      {"role": "assistant", "content": "[astronaut][rocket][planet][moon][asteroid][satellite]"}
+      {
+        "role": "user",
+        "content": "add some space stuff: astronaut, rocket, planet, moon, asteroid, satellite"
+      },
+      {
+        "role": "assistant",
+        "content": "[astronaut][rocket][planet][moon][asteroid][satellite]"
+      }
     ]
   },
   {
     "messages": [
-      {"role": "user", "content": "can you drop a burger, fries, drink, and ketchup into the viewport"},
-      {"role": "assistant", "content": "[burger][fries][drink][ketchup]"}
+      {
+        "role": "user",
+        "content": "can you drop a burger, fries, drink, and ketchup into the viewport"
+      },
+      {
+        "role": "assistant",
+        "content": "[burger][fries][drink][ketchup]"
+      }
     ]
   },
   {
     "messages": [
-      {"role": "user", "content": "kitchen assets needed: stove, fridge, microwave, sink, pan, plate, fork"},
-      {"role": "assistant", "content": "[stove][fridge][microwave][sink][pan][plate][fork]"}
+      {
+        "role": "user",
+        "content": "kitchen assets needed: stove, fridge, microwave, sink, pan, plate, fork"
+      },
+      {
+        "role": "assistant",
+        "content": "[stove][fridge][microwave][sink][pan][plate][fork]"
+      }
     ]
   },
   {
     "messages": [
-      {"role": "user", "content": "i'm making a graveyard scene, load up a tombstone, coffin, skeleton, gate, fence, ghost"},
-      {"role": "assistant", "content": "[tombstone][coffin][skeleton][gate][fence][ghost]"}
+      {
+        "role": "user",
+        "content": "i'm making a graveyard scene, load up a tombstone, coffin, skeleton, gate, fence, ghost"
+      },
+      {
+        "role": "assistant",
+        "content": "[tombstone][coffin][skeleton][gate][fence][ghost]"
+      }
     ]
   },
   {
     "messages": [
-      {"role": "user", "content": "load up standard testing shapes: cube, sphere, cylinder, torus, cone"},
-      {"role": "assistant", "content": "[cube][sphere][cylinder][torus][cone]"}
+      {
+        "role": "user",
+        "content": "load up standard testing shapes: cube, sphere, cylinder, torus, cone"
+      },
+      {
+        "role": "assistant",
+        "content": "[cube][sphere][cylinder][torus][cone]"
+      }
     ]
   },
   {
     "messages": [
-      {"role": "user", "content": "spawn a cat, bird, fish, hamster"},
-      {"role": "assistant", "content": "[cat][bird][fish][hamster]"}
+      {
+        "role": "user",
+        "content": "spawn a cat, bird, fish, hamster"
+      },
+      {
+        "role": "assistant",
+        "content": "[cat][bird][fish][hamster]"
+      }
     ]
   },
   {
     "messages": [
-      {"role": "user", "content": "dungeon room starters: torch, chest, spikes, door, key, barrel"},
-      {"role": "assistant", "content": "[torch][chest][spikes][door][key][barrel]"}
+      {
+        "role": "user",
+        "content": "dungeon room starters: torch, chest, spikes, door, key, barrel"
+      },
+      {
+        "role": "assistant",
+        "content": "[torch][chest][spikes][door][key][barrel]"
+      }
     ]
   },
   {
     "messages": [
-      {"role": "user", "content": "gimme a guitar, drum, piano, microphone, amplifier"},
-      {"role": "assistant", "content": "[guitar][drum][piano][microphone][amplifier]"}
+      {
+        "role": "user",
+        "content": "gimme a guitar, drum, piano, microphone, amplifier"
+      },
+      {
+        "role": "assistant",
+        "content": "[guitar][drum][piano][microphone][amplifier]"
+      }
     ]
   },
   {
     "messages": [
-      {"role": "user", "content": "city skyline assets: building, road, traffic_light, billboard"},
-      {"role": "assistant", "content": "[building][road][traffic_light][billboard]"}
+      {
+        "role": "user",
+        "content": "city skyline assets: building, road, traffic_light, billboard"
+      },
+      {
+        "role": "assistant",
+        "content": "[building][road][traffic_light][billboard]"
+      }
     ]
   },
   {
     "messages": [
-      {"role": "user", "content": "add a hat, glasses, jacket, backpack"},
-      {"role": "assistant", "content": "[hat][glasses][jacket][backpack]"}
+      {
+        "role": "user",
+        "content": "add a hat, glasses, jacket, backpack"
+      },
+      {
+        "role": "assistant",
+        "content": "[hat][glasses][jacket][backpack]"
+      }
     ]
   },
   {
     "messages": [
-      {"role": "user", "content": "playground models: swing, slide, sandbox, bench"},
-      {"role": "assistant", "content": "[swing][slide][sandbox][bench]"}
+      {
+        "role": "user",
+        "content": "playground models: swing, slide, sandbox, bench"
+      },
+      {
+        "role": "assistant",
+        "content": "[swing][slide][sandbox][bench]"
+      }
     ]
   },
   {
     "messages": [
-      {"role": "user", "content": "put a phone, wallet, watch, coin on the layout grid"},
-      {"role": "assistant", "content": "[phone][wallet][watch][coin]"}
+      {
+        "role": "user",
+        "content": "put a phone, wallet, watch, coin on the layout grid"
+      },
+      {
+        "role": "assistant",
+        "content": "[phone][wallet][watch][coin]"
+      }
+    ]
+  },
+  {
+    "messages": [
+      {
+        "role": "user",
+        "content": "playground models: swing, slide, sandbox, bench"
+      },
+      {
+        "role": "assistant",
+        "content": "[box][0,0,0,0,0,0,1][swing][fw*@idx,fd*@idx,0,0,0,0,1][slide][fw*@idx,fd*@idx,0,0,0,0,1][sandbox][fw*@idx,fd*@idx,0,0,0,0,1][bench][fw*@idx,fd*@idx,0,0,0,0,1]"
+      }
+    ]
+  },
+  {
+    "messages": [
+      {
+        "role": "user",
+        "content": "put a phone, wallet, watch, coin on the layout grid"
+      },
+      {
+        "role": "assistant",
+        "content": "[mesh][0,0,0,0,0,0,1][phone][hw*@idx,hd*@idx,0,0,0,10,1][wallet][hw*@idx,hd*@idx,0,0,0,20,1][watch][hw*@idx,hd*@idx,0,0,0,30,1][coin][hw*@idx,hd*@idx,0,0,0,40,1]"
+      }
+    ]
+  },
+  {
+    "messages": [
+      {
+        "role": "user",
+        "content": "spawn tools: hammer, screwdriver, wrench, pliers"
+      },
+      {
+        "role": "assistant",
+        "content": "[box][0,0,0,0,0,0,1][hammer][fw*@idx,0,hh*@idx,0,15*@idx,0,1][screwdriver][fw*@idx,0,hh*@idx,0,15*@idx,0,1][wrench][fw*@idx,0,hh*@idx,0,15*@idx,0,1][pliers][fw*@idx,0,hh*@idx,0,15*@idx,0,1]"
+      }
+    ]
+  },
+  {
+    "messages": [
+      {
+        "role": "user",
+        "content": "fruit collection: apple, banana, orange, grape, pear"
+      },
+      {
+        "role": "assistant",
+        "content": "[sphere][0,0,0,0,0,0,1][apple][hw*@idx,hd*@idx,hh*@idx,0,0,0,1][banana][hw*@idx,hd*@idx,hh*@idx,0,0,0,1][orange][hw*@idx,hd*@idx,hh*@idx,0,0,0,1][grape][hw*@idx,hd*@idx,hh*@idx,0,0,0,1][pear][hw*@idx,hd*@idx,hh*@idx,0,0,0,1]"
+      }
+    ]
+  },
+  {
+    "messages": [
+      {
+        "role": "user",
+        "content": "desk assets: laptop, mouse, keyboard, notebook, lamp"
+      },
+      {
+        "role": "assistant",
+        "content": "[box][0,0,0,0,0,0,1][laptop][fw*@idx,fd*@idx,0,0,0,12*@idx,1][mouse][fw*@idx,fd*@idx,0,0,0,12*@idx,1][keyboard][fw*@idx,fd*@idx,0,0,0,12*@idx,1][notebook][fw*@idx,fd*@idx,0,0,0,12*@idx,1][lamp][fw*@idx,fd*@idx,0,0,0,12*@idx,1]"
+      }
+    ]
+  },
+  {
+    "messages": [
+      {
+        "role": "user",
+        "content": "breakfast array: plate, cup, fork, knife, spoon, napkin"
+      },
+      {
+        "role": "assistant",
+        "content": "[cylinder][0,0,0,0,0,0,1][plate][hw*@idx,hd*@idx,0,0,0,60*@idx,1][cup][hw*@idx,hd*@idx,0,0,0,60*@idx,1][fork][hw*@idx,hd*@idx,0,0,0,60*@idx,1][knife][hw*@idx,hd*@idx,0,0,0,60*@idx,1][spoon][hw*@idx,hd*@idx,0,0,0,60*@idx,1][napkin][hw*@idx,hd*@idx,0,0,0,60*@idx,1]"
+      }
+    ]
+  },
+  {
+    "messages": [
+      {
+        "role": "user",
+        "content": "camping gear list: tent, backpack, sleeping_bag, stove, flashlight"
+      },
+      {
+        "role": "assistant",
+        "content": "[cone][0,0,0,0,0,0,1][tent][fw*@idx,fd*@idx,0,0,0,0,1-0.1*@idx][backpack][fw*@idx,fd*@idx,0,0,0,0,1-0.1*@idx][sleeping_bag][fw*@idx,fd*@idx,0,0,0,0,1-0.1*@idx][stove][fw*@idx,fd*@idx,0,0,0,0,1-0.1*@idx][flashlight][fw*@idx,fd*@idx,0,0,0,0,1-0.1*@idx]"
+      }
+    ]
+  },
+  {
+    "messages": [
+      {
+        "role": "user",
+        "content": "kitchen counters: blender, toaster, microwave, kettle"
+      },
+      {
+        "role": "assistant",
+        "content": "[box][0,0,0,0,0,0,1][blender][fw*@idx,0,0,0,0,0,1][toaster][fw*@idx,0,0,0,0,0,1][microwave][fw*@idx,0,0,0,0,0,1][kettle][fw*@idx,0,0,0,0,0,1]"
+      }
+    ]
+  },
+  {
+    "messages": [
+      {
+        "role": "user",
+        "content": "bar materials: bottle, glass, shaker, jigger, strainer"
+      },
+      {
+        "role": "assistant",
+        "content": "[cylinder][0,0,0,0,0,0,1][bottle][0,fd*@idx,hh*@idx,0,0,30*@idx,1][glass][0,fd*@idx,hh*@idx,0,0,30*@idx,1][shaker][0,fd*@idx,hh*@idx,0,0,30*@idx,1][jigger][0,fd*@idx,hh*@idx,0,0,30*@idx,1][strainer][0,fd*@idx,hh*@idx,0,0,30*@idx,1]"
+      }
+    ]
+  },
+  {
+    "messages": [
+      {
+        "role": "user",
+        "content": "living room group: sofa, armchair, coffee_table, rug, television"
+      },
+      {
+        "role": "assistant",
+        "content": "[box][0,0,0,0,0,0,1][sofa][fw*@idx,fd*@idx,0,0,0,15*@idx,1][armchair][fw*@idx,fd*@idx,0,0,0,15*@idx,1][coffee_table][fw*@idx,fd*@idx,0,0,0,15*@idx,1][rug][fw*@idx,fd*@idx,0,0,0,15*@idx,1][television][fw*@idx,fd*@idx,0,0,0,15*@idx,1]"
+      }
+    ]
+  },
+  {
+    "messages": [
+      {
+        "role": "user",
+        "content": "bathroom set: soap, toothbrush, toothpaste, cup, razor"
+      },
+      {
+        "role": "assistant",
+        "content": "[capsule][0,0,0,0,0,0,1][soap][hw*@idx,hd*@idx,0,0,0,45*@idx,1][toothbrush][hw*@idx,hd*@idx,0,0,0,45*@idx,1][toothpaste][hw*@idx,hd*@idx,0,0,0,45*@idx,1][cup][hw*@idx,hd*@idx,0,0,0,45*@idx,1][razor][hw*@idx,hd*@idx,0,0,0,45*@idx,1]"
+      }
+    ]
+  },
+  {
+    "messages": [
+      {
+        "role": "user",
+        "content": "streetscape objects: mailbox, fire_hydrant, lamppost, trash_can"
+      },
+      {
+        "role": "assistant",
+        "content": "[cylinder][0,0,0,0,0,0,1][mailbox][fw*@idx,0,0,0,0,0,1][fire_hydrant][fw*@idx,0,0,0,0,0,1][lamppost][fw*@idx,0,0,0,0,0,1][trash_can][fw*@idx,0,0,0,0,0,1]"
+      }
+    ]
+  },
+  {
+    "messages": [
+      {
+        "role": "user",
+        "content": "musical instruments: guitar, violin, flute, drum, trumpet"
+      },
+      {
+        "role": "assistant",
+        "content": "[box][0,0,0,0,0,0,1][guitar][fw*@idx,fd*@idx,hh*@idx,0,0,0,1][violin][fw*@idx,fd*@idx,hh*@idx,0,0,0,1][flute][fw*@idx,fd*@idx,hh*@idx,0,0,0,1][drum][fw*@idx,fd*@idx,hh*@idx,0,0,0,1][trumpet][fw*@idx,fd*@idx,hh*@idx,0,0,0,1]"
+      }
+    ]
+  },
+  {
+    "messages": [
+      {
+        "role": "user",
+        "content": "fitness bundle: dumbbell, kettlebell, mat, roller"
+      },
+      {
+        "role": "assistant",
+        "content": "[capsule][0,0,0,0,0,0,1][dumbbell][fw*@idx,fd*@idx,0,0,0,90*@idx,1][kettlebell][fw*@idx,fd*@idx,0,0,0,90*@idx,1][mat][fw*@idx,fd*@idx,0,0,0,90*@idx,1][roller][fw*@idx,fd*@idx,0,0,0,90*@idx,1]"
+      }
+    ]
+  },
+  {
+    "messages": [
+      {
+        "role": "user",
+        "content": "garden patch: shovel, rake, pot, shears, watering_can"
+      },
+      {
+        "role": "assistant",
+        "content": "[terrain][0,0,0,0,0,0,1][shovel][fw*@idx,fd*@idx,0,0,0,0,1-0.05*@idx][rake][fw*@idx,fd*@idx,0,0,0,0,1-0.05*@idx][pot][fw*@idx,fd*@idx,0,0,0,0,1-0.05*@idx][shears][fw*@idx,fd*@idx,0,0,0,0,1-0.05*@idx][watering_can][fw*@idx,fd*@idx,0,0,0,0,1-0.05*@idx]"
+      }
+    ]
+  },
+  {
+    "messages": [
+      {
+        "role": "user",
+        "content": "clothing pile: shirt, pants, jacket, hat, socks"
+      },
+      {
+        "role": "assistant",
+        "content": "[box][0,0,0,0,0,0,1][shirt][hw*@idx,hd*@idx,hh*@idx,10*@idx,10*@idx,0,1][pants][hw*@idx,hd*@idx,hh*@idx,10*@idx,10*@idx,0,1][jacket][hw*@idx,hd*@idx,hh*@idx,10*@idx,10*@idx,0,1][hat][hw*@idx,hd*@idx,hh*@idx,10*@idx,10*@idx,0,1][socks][hw*@idx,hd*@idx,hh*@idx,10*@idx,10*@idx,0,1]"
+      }
+    ]
+  },
+  {
+    "messages": [
+      {
+        "role": "user",
+        "content": "stoneware workshop layout: jug, vase, bowl, chalice"
+      },
+      {
+        "role": "assistant",
+        "content": "[cylinder][0,0,0,0,0,0,1][jug][fw*@idx,fd*@idx,0,0,0,0,1][vase][fw*@idx,fd*@idx,0,0,0,0,1][bowl][fw*@idx,fd*@idx,0,0,0,0,1][chalice][fw*@idx,fd*@idx,0,0,0,0,1]"
+      }
+    ]
+  },
+  {
+    "messages": [
+      {
+        "role": "user",
+        "content": "mechanic bench collection: engine_block, alternator, battery, radiator"
+      },
+      {
+        "role": "assistant",
+        "content": "[box][0,0,0,0,0,0,1][engine_block][fw*@idx,0,0,0,0,25*@idx,1][alternator][fw*@idx,0,0,0,0,25*@idx,1][battery][fw*@idx,0,0,0,0,25*@idx,1][radiator][fw*@idx,0,0,0,0,25*@idx,1]"
+      }
+    ]
+  },
+  {
+    "messages": [
+      {
+        "role": "user",
+        "content": "dinner table elements: candle, napkin_ring, wine_bottle, centerpiece"
+      },
+      {
+        "role": "assistant",
+        "content": "[cylinder][0,0,0,0,0,0,1][candle][hw*@idx,hd*@idx,0,0,0,0,1][napkin_ring][hw*@idx,hd*@idx,0,0,0,0,1][wine_bottle][hw*@idx,hd*@idx,0,0,0,0,1][centerpiece][hw*@idx,hd*@idx,0,0,0,0,1]"
+      }
+    ]
+  },
+  {
+    "messages": [
+      {
+        "role": "user",
+        "content": "medieval armory stash: shield, sword, helmet, gauntlet, boots"
+      },
+      {
+        "role": "assistant",
+        "content": "[box][0,0,0,0,0,0,1][shield][fw*@idx,fd*@idx,hh*@idx,0,0,18*@idx,1][sword][fw*@idx,fd*@idx,hh*@idx,0,0,18*@idx,1][helmet][fw*@idx,fd*@idx,hh*@idx,0,0,18*@idx,1][gauntlet][fw*@idx,fd*@idx,hh*@idx,0,0,18*@idx,1][boots][fw*@idx,fd*@idx,hh*@idx,0,0,18*@idx,1]"
+      }
     ]
   }
 ]
