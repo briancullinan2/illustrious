@@ -24,12 +24,11 @@ import numpy as np
 from PIL import Image
 from transformers import AutoProcessor, AutoModel
 
-# Force PyOpenGL to use core profile functions (Fixes glGenVertexArrays lookup)
-import OpenGL
-OpenGL.ERROR_CHECKING = False
-from OpenGL import GL
 import pyrender
 from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from draco_glb import load_glb_scene
 
 
 model_id = "HuggingFaceTB/SmolVLM-Instruct"
@@ -109,7 +108,7 @@ def render_blender_to_2d(file_path: str, output_image_path: str = "model_preview
     print(f"🔧 Using Blender: {blender_exe}")
 
     # Path to the external script
-    script_template_path = os.path.join(os.path.dirname(__file__), "blender_render_script.py")
+    script_template_path = os.path.join(os.path.dirname(__file__), "blender-vision.py")
     
     if not os.path.exists(script_template_path):
         raise FileNotFoundError(f"Blender script template not found: {script_template_path}")
@@ -160,8 +159,10 @@ def render_model_to_2d(file_path: str, output_image_path: str = "model_preview.p
 
     print(f"🎬 Processing: {os.path.basename(file_path)}")
 
-    # Load and normalize scene
-    trimesh_scene = trimesh.load(file_path, force="scene")
+    # Load and normalize scene. load_glb_scene decodes Draco-compressed GLBs
+    # (KHR_draco_mesh_compression), which a plain trimesh.load returns as
+    # all-zero vertices -> a blank render.
+    trimesh_scene = load_glb_scene(file_path)
     print(f"📦 Found scene with {len(trimesh_scene.geometry)} geometries.")
 
     # Robust bounds calculation
@@ -192,7 +193,10 @@ def render_model_to_2d(file_path: str, output_image_path: str = "model_preview.p
             extents = max_pt - min_pt
             max_dim = float(np.max(extents))
 
-    max_dim = max(max_dim, 1.0)
+    # Guard against degenerate geometry only; do NOT clamp to 1.0, or sub-unit
+    # models (e.g. a 0.4m jug) get framed for a unit cube and appear tiny.
+    if max_dim < 1e-5:
+        max_dim = 1.0
     print(f"📐 Extents: {np.round(extents, 3)} | Center: {np.round(center, 3)} | Max Dim: {round(max_dim, 3)}")
 
     # Build pyrender scene
@@ -223,6 +227,7 @@ def render_model_to_2d(file_path: str, output_image_path: str = "model_preview.p
 
     # === Renderer with better Windows compatibility ===
     renderer = None
+    use_fallback_renderer = False
     try:
         # Force OSMesa if available
         if platform.system() == "Windows":
@@ -354,7 +359,9 @@ def analyze_image_locally(image_path: str):
     print(answer)
 
 
-#pip install --upgrade "trimesh[all]" pyrender pillow torch torchvision pillow PyOpenGL PyOpenGL-accelerate torchaudio --index-url https://download.pytorch.org/whl/cu121
+#pip install --upgrade "trimesh[all]" pyrender pillow DracoPy "PyOpenGL>=3.1.7" torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu121
+# DracoPy decodes KHR_draco_mesh_compression GLBs; PyOpenGL>=3.1.7 avoids a
+# texture-upload crash in pyrender's pinned PyOpenGL==3.1.0.
 
 # ==================== EXECUTION CONTROL GATE ====================
 if __name__ == "__main__":

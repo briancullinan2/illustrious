@@ -1,0 +1,13 @@
+# Dependencies for the standalone GLB renderers (altman/grok/model-vision.py).
+# The blender-*.py scripts instead run inside Blender's bundled Python.
+
+trimesh>=4.0
+pyrender>=0.1.45
+# pyrender pins PyOpenGL==3.1.0, which crashes when uploading textures on recent
+# numpy. 3.1.7+ fixes it; install it explicitly after pyrender.
+PyOpenGL>=3.1.7
+# Required to decode KHR_draco_mesh_compression GLBs (handled by draco_glb.py).
+# Without it Draco-compressed models load as all-zero vertices -> a blank image.
+DracoPy>=1.4
+Pillow>=9.0
+numpy>=1.24

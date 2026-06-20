@@ -1,8 +1,58 @@
 import argparse
+import os
+import platform
 import sys
 from pathlib import Path
 
+# pyrender needs an offscreen GL backend (EGL) on a headless Linux box. Must be
+# set before pyrender is imported (it is imported lazily further down). A
+# desktop session (DISPLAY set) is left untouched.
+if platform.system() == "Linux" and not os.environ.get("DISPLAY"):
+    os.environ.setdefault("PYOPENGL_PLATFORM", "egl")
+
 import numpy as np
+
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from draco_glb import load_glb_scene
+
+
+def angled_camera_pose(center, radius):
+    """A 3/4 view pose looking at ``center`` (Z is treated as the up axis).
+
+    Looking straight down a model's main axis (the old behaviour) often shows
+    only a featureless silhouette, so frame it from an elevated corner instead.
+    """
+    if radius < 1e-6:
+        radius = 1.0
+
+    distance = radius * 2.2
+    azimuth = np.radians(35.0)
+    elevation = np.radians(25.0)
+
+    offset = np.array([
+        distance * np.cos(elevation) * np.sin(azimuth),
+        -distance * np.cos(elevation) * np.cos(azimuth),
+        distance * np.sin(elevation),
+    ])
+    eye = center + offset
+
+    forward = center - eye
+    forward = forward / np.linalg.norm(forward)
+
+    up = np.array([0.0, 0.0, 1.0])
+    if abs(np.dot(forward, up)) > 0.99:
+        up = np.array([0.0, 1.0, 0.0])
+
+    right = np.cross(forward, up)
+    right = right / np.linalg.norm(right)
+    true_up = np.cross(right, forward)
+
+    pose = np.eye(4)
+    pose[:3, 0] = right
+    pose[:3, 1] = true_up
+    pose[:3, 2] = -forward
+    pose[:3, 3] = eye
+    return pose
 
 
 def load_flat_mesh(path):
@@ -10,12 +60,9 @@ def load_flat_mesh(path):
 
     print("Loading scene...")
 
-    loaded = trimesh.load(
-        path,
-        force="scene",
-        process=False,
-        maintain_order=True
-    )
+    # load_glb_scene transparently decodes KHR_draco_mesh_compression, which a
+    # plain trimesh.load cannot do (it would return all-zero vertices).
+    loaded = load_glb_scene(path)
 
     print(f"Loaded object type: {type(loaded)}")
 
@@ -248,12 +295,7 @@ def export_debug_render(mesh):
             yfov=np.pi / 3.0
         )
 
-        pose = np.array([
-            [1, 0, 0, center[0]],
-            [0, 1, 0, center[1]],
-            [0, 0, 1, center[2] + radius * 2.5],
-            [0, 0, 0, 1]
-        ])
+        pose = angled_camera_pose(center, radius * 0.5)
 
         scene.add(camera, pose=pose)
 
@@ -336,12 +378,7 @@ def launch_viewer(mesh):
         yfov=np.pi / 3.0
     )
 
-    pose = np.array([
-        [1, 0, 0, center[0]],
-        [0, 1, 0, center[1]],
-        [0, 0, 1, center[2] + radius * 2.5],
-        [0, 0, 0, 1]
-    ])
+    pose = angled_camera_pose(center, radius * 0.5)
 
     scene.add(camera, pose=pose)
 

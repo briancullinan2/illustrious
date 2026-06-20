@@ -1,12 +1,24 @@
 #!/usr/bin/env python3
 
 import argparse
+import os
+import platform
+import sys
 from pathlib import Path
+
+# On a headless Linux box pyrender needs an offscreen GL backend (EGL); without
+# this the OffscreenRenderer cannot create a context. Must run before importing
+# pyrender. A desktop session (DISPLAY set) is left untouched.
+if platform.system() == "Linux" and not os.environ.get("DISPLAY"):
+    os.environ.setdefault("PYOPENGL_PLATFORM", "egl")
 
 import numpy as np
 import trimesh
 import pyrender
 from PIL import Image
+
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from draco_glb import load_glb_scene
 
 
 def rotation_matrix_x(angle_rad):
@@ -52,22 +64,6 @@ def look_at(camera_position, target, up=np.array([0.0, 0.0, 1.0])):
     pose[:3, 3] = camera_position
 
     return pose
-
-
-def load_glb_scene(glb_path):
-    loaded = trimesh.load(
-        glb_path,
-        force="scene",
-        process=True,       # Force decoding and face reconstruction pipelines
-        validate=True       # Validate consistency of topology index arrays
-    )
-
-    if isinstance(loaded, trimesh.Scene):
-        scene = loaded
-    else:
-        scene = trimesh.Scene([loaded])
-
-    return scene
 
 
 def compute_bounds(scene):
