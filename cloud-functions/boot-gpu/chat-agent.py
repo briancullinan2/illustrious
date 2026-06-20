@@ -255,7 +255,7 @@ def get_llm_context(model_path=base_model_path, hf_token=None, active_lora_path=
                     
                     from peft.tuners.lora.layer import LoraLayer
                     scaled_count = 0
-                    scale = 2.0
+                    scale = 1.0
 
                     for module in peft_wrapper.modules():
                         if isinstance(module, LoraLayer):
