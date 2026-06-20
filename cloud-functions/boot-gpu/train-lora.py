@@ -95,7 +95,10 @@ if HF_TOKEN:
 import glob
 import json
 
+
+
 def check_datasets(model_path=BASE_MODEL):
+    
     # Fallback/Target directory check
     log_folder_path = Path(DATASET_FOLDER)
     json_files = [str(p) for p in log_folder_path.glob("*.json")]
@@ -110,7 +113,6 @@ def check_datasets(model_path=BASE_MODEL):
     compiled_regex = None
     grammar_validator = None
 
-    
     active_tokenizer = AutoTokenizer.from_pretrained(model_path, cache_dir=HF_CACHE_DIR, token=HF_TOKEN)
     
 
@@ -129,9 +131,13 @@ def check_datasets(model_path=BASE_MODEL):
                 "root", 
                 active_tokenizer
             )
+            
+            print(f"✅ Grammar validator initialized successfully: {type(grammar_validator).__name__}")
+            print(f"   Has accept_token_ids: {hasattr(grammar_validator, 'accept_token_ids')}")
         except Exception as e:
             print(f"❌ Initialization Error: Failed to compile GBNF validation constraints: {e}")
             mismatch_found = True
+
     elif use_grammar_constraints:
         print(f"🌐 Compiling fallback spatial regex validation layout for dataset verification...")
         spatial_regex = (
@@ -208,41 +214,38 @@ def check_datasets(model_path=BASE_MODEL):
                             if use_grammar_constraints and msg.get("role") == "assistant" and isinstance(msg.get("content"), str):
                                 assistant_text = msg["content"]
                                 
-                                # 1. Validate against GBNF Grammar Instance if active
                                 if grammar_validator is not None:
                                     try:
+                                        # Important: Many tokenizers (Llama/Qwen) expect a leading space for assistant content
+                                        test_text = assistant_text
+                                        if not test_text.startswith(" "):
+                                            test_text = " " + test_text  # Try with prefix space
                                         
-                                        # Convert raw text into token space to replicate parsing validation checks
-                                        encoded_tokens = active_tokenizer.encode(assistant_text, add_special_tokens=False)
+                                        encoded_tokens = active_tokenizer.encode(
+                                            test_text, 
+                                            add_special_tokens=False
+                                        )
                                         
-                                        # Use LMFormatEnforcer's internal engine via the text parser to track sequence steps
-                                        enforcer = TokenEnforcer(grammar_validator.character_level_parser)
+                                        is_valid = grammar_validator.accept_token_ids(encoded_tokens, as_string=False)
                                         
-                                        # Reconstruct the token sequence validation trace
-                                        token_list = []
-                                        for t_idx, token_id in enumerate(encoded_tokens):
-                                            allowed_next_tokens = enforcer.get_allowed_tokens(token_list)
+                                        if is_valid:
+                                            print(f"   ✓ Grammar OK [Row {item_idx}, Msg {msg_idx}]")
+                                        else:
+                                            print(f"❌ GRAMMAR VIOLATION in {filepath} [Row {item_idx}, Msg {msg_idx}]:")
+                                            print(f"   Sequence rejected by grammar.")
+                                            print(f"   Text: {repr(assistant_text[:400])}...")
+                                            mismatch_found = True
                                             
-                                            if token_id not in allowed_next_tokens:
-                                                print(f"❌ GRAMMAR VIOLATION in {filepath} [Row {item_idx}, Msg {msg_idx}]:")
-                                                print(f"   Assistant response failed GBNF production rule sequence at token index {t_idx} (Token ID: {token_id}).")
-                                                print(f"   Offending String: {repr(assistant_text)}")
-                                                mismatch_found = True
-                                                break
-                                                
-                                            token_list.append(token_id)
-                                            
-                                        # Verify that the complete string forms a structurally terminated sequence
-                                        if not mismatch_found:
-                                            final_allowed = enforcer.get_allowed_tokens(token_list)
-                                            if active_tokenizer.eos_token_id not in final_allowed:
-                                                print(f"❌ GRAMMAR INCOMPLETE in {filepath} [Row {item_idx}, Msg {msg_idx}]:")
-                                                print(f"   Assistant response cut off before reaching a valid GBNF terminal rule boundary.")
-                                                mismatch_found = True
-                                                
+                                    except ValueError as ve:
+                                        error_str = str(ve)
+                                        print(f"❌ GRAMMAR VIOLATION in {filepath} [Row {item_idx}, Msg {msg_idx}]:")
+                                        print(f"   {error_str}")
+                                        print(f"   Offending text: {repr(assistant_text[:350])}...")
+                                        mismatch_found = True
                                     except Exception as ge:
                                         print(f"❌ GRAMMAR PARSING EXCEPTION in {filepath} [Row {item_idx}, Msg {msg_idx}]: {ge}")
                                         mismatch_found = True
+
 
                                 # 2. Validate against Spatial Layout Regex if active
                                 elif compiled_regex is not None:

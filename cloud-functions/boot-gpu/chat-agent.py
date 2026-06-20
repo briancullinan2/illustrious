@@ -426,6 +426,12 @@ async def generate_gguf_stream(
             if text_piece:
                 yield text_piece
     return StreamingResponse(gguf_stream_generator(), media_type="text/plain")
+
+
+
+
+
+
 async def generate_llm_stream(
     prompt: str,
     use_lora: bool,
