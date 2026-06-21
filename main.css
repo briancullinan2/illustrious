@@ -118,8 +118,21 @@ hr {
     flex-basis: min-content;
 }
 
+#scene-builder-toggle {
+    cursor: pointer;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    user-select: none;
+}
+
+#scene-builder-chevron {
+    transition: transform 0.2s ease;
+}
+
 #scene-builder {
     flex-grow: 1;
+    flex-shrink: 0;
     display: flex;
     flex-direction: column;
     max-height: 500px;
@@ -144,6 +157,7 @@ hr {
 }
 
 #scene-builder>textarea {
+    min-height: 5em;
     flex-grow: 1;
 }
 
@@ -161,9 +175,9 @@ hr {
     font-size: 11px;
     color: var(--text-dim);
     line-height: 1.5;
-    min-height: 150px;
-    max-height: 350px;
-    box-shadow: inset 0 2px 8px rgba(0,0,0,0.8);
+    /*min-height: 150px;*/
+    /*max-height: 350px;*/
+    box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.8);
 }
 
 .tree-container {
@@ -175,7 +189,7 @@ hr {
     font-weight: bold;
     letter-spacing: 0.5px;
     margin-bottom: 4px;
-    text-shadow: 0 0 6px rgba(255,255,255,0.2);
+    text-shadow: 0 0 6px rgba(255, 255, 255, 0.2);
 }
 
 .tree-branch {
@@ -238,7 +252,8 @@ hr {
 }
 
 .tree-callback-func {
-    color: #a78bfa; /* purple */
+    color: #a78bfa;
+    /* purple */
 }
 
 .tree-arrow {
@@ -257,8 +272,17 @@ hr {
 }
 
 @keyframes pulse-thinking {
-    0%, 100% { opacity: 1; text-shadow: 0 0 4px rgba(255, 255, 0, 0.4); }
-    50% { opacity: 0.5; text-shadow: none; }
+
+    0%,
+    100% {
+        opacity: 1;
+        text-shadow: 0 0 4px rgba(255, 255, 0, 0.4);
+    }
+
+    50% {
+        opacity: 0.5;
+        text-shadow: none;
+    }
 }
 
 /* ============================================================================
@@ -391,7 +415,7 @@ a.secondary,
 button {
     width: 100%;
     flex: 1;
-    padding: 14px;
+    padding: 10px;
     border-radius: 6px;
     font-size: 14px;
     font-weight: 600;

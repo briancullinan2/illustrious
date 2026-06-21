@@ -3,6 +3,8 @@
 //const DEFAULT_MODEL = 'onnx-community/Qwen2.5-0.5B-Instruct'
 const DEFAULT_MODEL = 'Goekdeniz-Guelmez/Josiefied-Qwen2.5-0.5B-Instruct-abliterated-v1/josiefied-qwen-q4_k_m.gguf'
 const DEFAULT_LORA = 'Goekdeniz-Guelmez/Josiefied-Qwen2.5-0.5B-Instruct-abliterated-v1/josiefied-qwen-spatial-engine.gguf'
+const DEFAULT_JINJA = '/loras/spatial_engine/chat_template.jinja'
+const DEFAULT_GBNF = '/loras/spatial_engine/grammar.gbnf'
 
 const WLLAMA_WORKER = '/llm-workers/wllama/worker.js';   // direct path
 const ONNX_WORKER = '/llm-workers/onnx/worker.js';   // direct path
@@ -568,8 +570,11 @@ async function bootWllamaWorker() {
 
 }
 
+let jinjaText
+let grammerText
 
-function workerResponseInterface(e) {
+
+async function workerResponseInterface(e) {
     const { type, payload } = e.data;
 
     if (type === 'DOWNLOAD_PROGRESS') {
@@ -587,6 +592,13 @@ function workerResponseInterface(e) {
         progressElement.value = 100;
         generalProgressText.textContent = 'Ready';
         generalProgressElement.value = 100;
+
+        const statusElement = document.getElementById('tree-status');
+        if (statusElement) {
+            statusElement.textContent = 'Ready...';
+            statusElement.className = 'tree-val tree-status-ready';
+        }
+
     }
     else if (type === 'ERROR') {
         console.error('Worker Engine Error:', payload.message);
@@ -643,11 +655,33 @@ function workerResponseInterface(e) {
         }
     } else if (type === 'WORKER_READY') {
         const toggle = document.getElementById('local-model-toggle');
+
+        const statusElement = document.getElementById('tree-status');
+        if (statusElement) {
+            statusElement.textContent = 'Loading Model...';
+            statusElement.className = 'tree-val tree-status-thinking';
+        }
+
+        const response = await fetch(DEFAULT_JINJA);
+        if (response.ok) {
+            jinjaText = await response.text();
+        }
+
+        const response2 = await fetch(DEFAULT_GBNF);
+        if (response2.ok) {
+            grammerText = await response2.text();
+        }
+
         if (toggle?.checked) {
             worker.postMessage({
                 type: 'LOAD_MODEL',
                 baseURI: window.location.origin,
-                payload: { modelUrl: DEFAULT_MODEL, loraUrl: DEFAULT_LORA }
+                payload: {
+                    modelUrl: DEFAULT_MODEL,
+                    loraUrl: DEFAULT_LORA,
+                    chatTemplate: jinjaText,
+                    gbnfGrammar: grammerText
+                }
             });
         }
     }
@@ -725,7 +759,9 @@ async function handleGenerate() {
             input_text: promptText,
             max_new_tokens: 1000,
             temperature: 0.8,
-            top_k: 40
+            top_k: 40,
+            chatTemplate: jinjaText,
+            gbnfGrammar: grammerText
         }
     });
 }

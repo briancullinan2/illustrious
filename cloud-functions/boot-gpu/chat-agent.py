@@ -478,7 +478,7 @@ async def generate_llm_stream(
         skip_special_tokens=True
     )
 
-    grammar_path = Path(lora_adapter_path) / "grammar.bnf"
+    grammar_path = Path(lora_adapter_path) / "grammar.gbnf"
     use_grammar_constraints = True  
 
     # Generation argument buckets

@@ -184,11 +184,12 @@ self.onmessage = async (e) => {
             const promptText = payload.input_text || payload.prompt || "";
 
             const messages = [
-                { role: 'system', content: 'You are a concise assistant inside a game canvas engine.' },
+                { role: 'system', content: '' },
                 { role: 'user', content: promptText }
             ];
 
             // Consolidated Template Selection
+            /*
             let rawJinjaTemplate = payload.chatTemplate || wllama.model?.metadata?.['tokenizer.chat_template'] || null;
             let formattedPrompt = "";
 
@@ -212,14 +213,24 @@ self.onmessage = async (e) => {
                 formattedPrompt = messages.map(m => `<|im_start|>${m.role}\n${m.content}<|im_end|>`).join('\n') + '\n<|im_start|>assistant\n';
             }
 
-            console.log("🔍 [DEBUG] Evaluated Prompt Structure being fed to model:\n", formattedPrompt);
+            console.log("🔍 [DEBUG] Evaluated Prompt Structure being fed to model:\n", formattedPrompt);\
+            */
+            if (payload.chatTemplate) {
+                console.log("✏️ [DEBUG] Overriding default model template with custom payload template.");
+                wllama.chatTemplate = payload.chatTemplate;
+            } else if (wllama.model?.metadata?.['tokenizer.chat_template']) {
+                console.log("✏️ [DEBUG] Defaulting to internal GGUF file metadata template configuration.");
+                wllama.chatTemplate = wllama.model.metadata['tokenizer.chat_template'];
+            }
 
             // Run completion with explicit stop parameters to prevent infinite looping strings
             const completion = await wllama.createCompletion({
-                prompt: formattedPrompt,
+                //prompt: formattedPrompt,
+                messages: messages,
                 nPredict: parseInt(payload.maxTokens) || 1000,
                 temperature: 0.1,
-                grammar: payload.gbnfGrammar || undefined,
+                //grammar: payload.gbnfGrammar || undefined,
+                jinja: true,
                 stream: true,
                 // 👉 FIX: Force stop matching Qwen ChatML formatting paradigms
                 stop: ["<|im_end|>", "<|endoftext|>", "assistant:", "user:"],
