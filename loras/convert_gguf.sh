@@ -43,5 +43,25 @@ python convert_hf_to_gguf.py ..\illustrious\hf_cache\models--Goekdeniz-Guelmez--
 
  python convert_lora_to_gguf.py ..\illustrious\loras\spatial_engine\ --outfile ..\illustrious\hf_cache\models--Goekdeniz-Guelmez--Josiefied-Qwen2.5-0.5B-Instruct-abliterated-v1\my_custom_lora.gguf
 
- 
+
+#prebaked 
+
+# Move into your project repository workspace and merge the tensors
+cd C:\Users\megam\illustrious
+python .\merge_lora.py
+
+# Overwrite the newly generated merged json configuration with your custom spatial engine chat template text
+cmd /c "copy /Y C:\Users\megam\illustrious\loras\spatial_engine\tokenizer_config.json C:\Users\megam\illustrious\hf_cache\josiefied-qwen-merged-spatial\tokenizer_config.json"
+
+# Move into your local llama.cpp directory to run compilation steps
+cd C:\Users\megam\llama.cpp
+
+# --- CONVERT THE FULLY PRE-BAKED MERGED MODEL TARGET FOLDER ---
+python convert_hf_to_gguf.py C:\Users\megam\illustrious\hf_cache\josiefied-qwen-merged-spatial\ --outtype f16 --outfile C:\Users\megam\illustrious\hf_cache\models--Goekdeniz-Guelmez--Josiefied-Qwen2.5-0.5B-Instruct-abliterated-v1\josiefied-qwen-spatial-merged-f16.gguf
+
+# --- QUANTIZE PRE-BAKED BASE MODEL ---
+# Target size ~315 MB
+.\build\bin\Release\llama-quantize.exe C:\Users\megam\illustrious\hf_cache\models--Goekdeniz-Guelmez--Josiefied-Qwen2.5-0.5B-Instruct-abliterated-v1\josiefied-qwen-spatial-merged-f16.gguf C:\Users\megam\illustrious\hf_cache\models--Goekdeniz-Guelmez--Josiefied-Qwen2.5-0.5B-Instruct-abliterated-v1\josiefied-qwen-spatial-merged-q4_k_m.gguf Q4_K_M
+
+
 

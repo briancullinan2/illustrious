@@ -658,7 +658,7 @@ async function workerResponseInterface(e) {
 
         const statusElement = document.getElementById('tree-status');
         if (statusElement) {
-            statusElement.textContent = 'Loading Model...';
+            statusElement.textContent = 'Loading model...';
             statusElement.className = 'tree-val tree-status-thinking';
         }
 
