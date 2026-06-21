@@ -2,7 +2,7 @@
   {
     "messages": [
       {"role": "user", "content": "can you order me a pepperoni pizza"},
-      {"role": "assistant", "content": "[pizza]"}
+      {"role": "assistant", "content": "[pepperoni pizza]"}
     ]
   },
   {

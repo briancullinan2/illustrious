@@ -247,7 +247,7 @@
       },
       {
         "role": "assistant",
-        "content": "[mattress][abs,2.2,-0.5,0,0,0,-45,[1.0,1.8,0.3]][armchair orange][@1,0,0,fh,0,0,0,[0.9,0.9,0.8]][character][@2,0,0,hh,0,0,0,[0.4,0.4,0.6]][sphere][@3,0,0,fh,0,0,0,0.15][coffee table][@2,-2fd,0,0,0,0,0,[0.5,0.5,0.3]][armchair green][@5,-2fw,0,0,0,0,45,[0.8,0.8,0.9]][armchair gray][@5,-2fw,-2fd,0,0,0,15,[0.8,0.8,0.9]][desk cabinet][@6,0,-3fd,fh,0,0,0,[0.9,0.5,1.2]][desk lamp][@8,0,0,fh,0,0,0,[0.2,0.2,0.35]][dining table][@6,-3fw,3fd,0,0,0,0,[1.2,1.2,0.75]][radiator heater][abs,-2.2,1.2,0,0,0,45,[0.2,1.0,0.6]][window pane][wall,left,0,2fh,0,0,0,[1.5,0.05,1.2]][secondary window][wall,back,0,2fh,0,0,0,[1.5,0.05,1.2]]"
+        "content": "[striped mattress][abs,2.2,-0.5,0,0,0,-45,[1.0,1.8,0.3]][armchair orange][@1,0,0,fh,0,0,0,[0.9,0.9,0.8]][character][@2,0,0,hh,0,0,0,[0.4,0.4,0.6]][sphere][@3,0,0,fh,0,0,0,0.15][dark coffee table][@2,-2fd,0,0,0,0,0,[0.5,0.5,0.3]][armchair green][@5,-2fw,0,0,0,0,45,[0.8,0.8,0.9]][armchair gray][@5,-2fw,-2fd,0,0,0,15,[0.8,0.8,0.9]][wooden desk cabinet][@6,0,-3fd,fh,0,0,0,[0.9,0.5,1.2]][desk lamp][@8,0,0,fh,0,0,0,[0.2,0.2,0.35]][dark dining table][@6,-3fw,3fd,0,0,0,0,[1.2,1.2,0.75]][industrial radiator heater][abs,-2.2,1.2,0,0,0,45,[0.2,1.0,0.6]][window pane][wall,left,0,2fh,0,0,0,[1.5,0.05,1.2]][secondary window][wall,back,0,2fh,0,0,0,[1.5,0.05,1.2]]"
       }
     ]
   },
@@ -259,7 +259,7 @@
       },
       {
         "role": "assistant",
-        "content": "[banquet table][0,0,0,0,0,0,[2.4,1.2,0.75]][dining chairs][sym(-fw),0,0,0,0,0,0,[0.5,0.5,1.1]]"
+        "content": "[wooden banquet table][0,0,0,0,0,0,[2.4,1.2,0.75]][high back dining chairs][sym(-fw),0,0,0,0,0,0,[0.5,0.5,1.1]]"
       }
     ]
   },
@@ -271,7 +271,7 @@
       },
       {
         "role": "assistant",
-        "content": "[platform base][0,0,0,0,0,0,[1.5,1.5,0.4]][stasis pod][0,0,fh,0,0,0,0,[0.5,0.5,2.0]]"
+        "content": "[ventilation platform base][0,0,0,0,0,0,[1.5,1.5,0.4]][high-tech stasis pod][0,0,fh,0,0,0,0,[0.5,0.5,2.0]]"
       }
     ]
   },
@@ -283,7 +283,7 @@
       },
       {
         "role": "assistant",
-        "content": "[barrel container][0,0,0,0,0,0,[0.6,0.6,1.0]][warning cone][0,0,fh,0,0,0,0,[0.4,0.4,0.6]]"
+        "content": "[industrial barrel container][0,0,0,0,0,0,[0.6,0.6,1.0]][warning cone][0,0,fh,0,0,0,0,[0.4,0.4,0.6]]"
       }
     ]
   },
@@ -295,7 +295,7 @@
       },
       {
         "role": "assistant",
-        "content": "[structural pillars][0,0,0,0,0,0,[0.4,0.4,3.0]][torus ring][0,0,hh,0,0,0,0,[0.5,0.5,0.1]]"
+        "content": "[stone structural pillars][0,0,0,0,0,0,[0.4,0.4,3.0]][torus ring][0,0,hh,0,0,0,0,[0.5,0.5,0.1]]"
       }
     ]
   },
@@ -307,7 +307,7 @@
       },
       {
         "role": "assistant",
-        "content": "[sectional sofa][0,0,0,0,0,0,[2.2,0.9,0.75]][drink coaster][2fw,0,0,0,0,0,0,[0.2,0.2,0.02]]"
+        "content": "[plush sectional sofa][0,0,0,0,0,0,[2.2,0.9,0.75]][wooden drink coaster][2fw,0,0,0,0,0,0,[0.2,0.2,0.02]]"
       }
     ]
   },
@@ -319,7 +319,7 @@
       },
       {
         "role": "assistant",
-        "content": "[king size bed][0,0,0,0,0,0,[2.0,2.1,0.6]][nightstand table][[-fw,fd,0,0,0,0,0,[0.5,0.5,0.5]]"
+        "content": "[king size bed][0,0,0,0,0,0,[2.0,2.1,0.6]][wooden nightstand table][-fw,fd,0,0,0,0,0,[0.5,0.5,0.5]]"
       }
     ]
   },
@@ -355,7 +355,7 @@
       },
       {
         "role": "assistant",
-        "content": "[fireplace hearth][0,0,0,0,0,0,[1.5,0.8,2.2]][stone ornament][0,-fd,0,0,0,0,1,[0.3,0.3,0.3]]"
+        "content": "[brick fireplace hearth][0,0,0,0,0,0,[1.5,0.8,2.2]][stone ornament][0,-fd,0,0,0,0,1,[0.3,0.3,0.3]]"
       }
     ]
   },
