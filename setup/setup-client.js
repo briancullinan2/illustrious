@@ -139,6 +139,10 @@ async function loadEnvironment() {
         return;
     }
 
+    if (credentialData.REDIRECT_URL) {
+        document.getElementById('callback-uri-display').innerText = credentialData.REDIRECT_URL
+    }
+
     credentialData.projects.forEach(p => {
         const li = document.createElement('li');
 
@@ -376,7 +380,7 @@ const term = document.getElementById('terminal-output');
 function connectLogStream() {
     return new Promise((resolve) => {
         // Pointing straight to port 4000 without independent paths
-        const socket = new WebSocket('ws://localhost:4000');
+        const socket = new WebSocket('ws://' + window.location.origin);
 
         socket.onopen = () => {
             console.log("📡 Deployment stream connection active.");

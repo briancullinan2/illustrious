@@ -1,5 +1,9 @@
 const { google } = require('googleapis');
 
+const DEFAULT_URI = 'http://localhost:4000/'
+const GLOBAL_SETTINGS = path.join(__dirname, '../..', 'illustrious-config.json');
+
+
 exports.oauthGateway = async (req, res) => {
     res.set('Access-Control-Allow-Origin', '*');
     if (req.method === 'OPTIONS') {
@@ -11,8 +15,13 @@ exports.oauthGateway = async (req, res) => {
     const CLIENT_ID = process.env.GCP_CLIENT_ID;
     const CLIENT_SECRET = process.env.GCP_CLIENT_SECRET;
 
-    // 👉 Pull your editable custom frontend application domain directly from the container's environment
-    const FRONTEND_REDIRECT_TARGET = process.env.REDIRECT_URI || 'http://localhost:4000/';
+    let endpoint = process.env.REDIRECT_URI || DEFAULT_ENDPOINT
+    try {
+        endpoint = JSON.parse(fs.readFileSync(GLOBAL_SETTINGS))?.REDIRECT_URI
+    } catch (e) {
+        console.error(e)
+    }
+
 
     // Reconstruct the internal callback target path matching this specific Cloud Function's location
     const protocol = req.headers['x-forwarded-proto'] || 'https';
@@ -32,7 +41,7 @@ exports.oauthGateway = async (req, res) => {
             // TODO: Persist these tokens inside a secure database layer here
 
             // 👉 Bounce them cleanly back to your custom editable domain (e.g., GitHub Pages) with status flags!
-            const finalRedirectUrl = `${FRONTEND_REDIRECT_TARGET.replace(/\/$/, '')}/?status=success&token=${tokens.access_token}`;
+            const finalRedirectUrl = `${endpoint.replace(/\/$/, '')}/?status=success&token=${tokens.access_token}`;
             return res.redirect(finalRedirectUrl);
 
         } catch (err) {

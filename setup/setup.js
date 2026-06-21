@@ -9,6 +9,10 @@ const WebSocket = require('ws');
 
 const DEFAULT_ZONE = 'us-central1-a'
 const DEFAULT_REGION = 'us-central1'
+const DEFAULT_URI = 'http://localhost:4000/'
+const DEFAULT_ENDPOINT = DEFAULT_URI + 'oauth2callback'
+const GLOBAL_SETTINGS = path.join(__dirname, '..', 'illustrious-config.json');
+
 
 // Set up an isolated WebSocket server that piggybacks onto the shared server container
 const wss = new WebSocket.Server({ noServer: true });
@@ -244,7 +248,15 @@ app.get('/api/local-env', async (req, res) => {
     const processedProjects = await listProjectsFromGcloudCLI(req, res)
     const autoSelectProject = processedProjects.find(p => p.exists)?.id || "";
 
-    res.json({
+    let existing = {}
+    try {
+        existing = JSON.parse(fs.readFileSync(GLOBAL_SETTINGS))
+    } catch (e) {
+        console.error(e)
+    }
+
+
+    res.json(Object.assign({
         authenticated: !!activeAccount,
         account: activeAccount || 'Not logged in. Run "gcloud auth login" locally.',
         projects: processedProjects,
@@ -253,7 +265,7 @@ app.get('/api/local-env', async (req, res) => {
         functions: getLocalFunctions(),
         providerCredentials: scanCloudCredentials(),
 
-    });
+    }, existing));
 });
 
 
@@ -271,8 +283,28 @@ app.post('/api/save-credentials', (req, res) => {
     }
 
     const projectSpecificFile = path.join(GLOBAL_CRED_DIR, `${projectId}.json`);
-    const activeProjectAnchorFile = path.join(__dirname, '..', 'illustrious-config.json');
-    fs.writeFileSync(activeProjectAnchorFile, JSON.stringify({ REGION: DEFAULT_REGION, ACTIVE_PROJECT_ID: projectId }, null, 2));
+    const redirectURL = new Url(redirectUri)
+    let oauthEndpoint = redirectUri || process.env.REDIRECT_URI || DEFAULT_ENDPOINT
+    let callbackEndpoint = process.env.CALLBACK_URI || DEFAULT_URI
+    let existing = {}
+    try {
+        existing = JSON.parse(fs.readFileSync(GLOBAL_SETTINGS))
+        callbackEndpoint = existing?.CALLBACK_URI
+        oauthEndpoint = existing?.REDIRECT_URI
+    } catch (e) {
+        console.error(e)
+    }
+
+
+    fs.writeFileSync(GLOBAL_SETTINGS, JSON.stringify(Object.assign(existing, {
+        REGION: DEFAULT_REGION,
+        ACTIVE_PROJECT_ID: projectId,
+        CALLBACK_URI: callbackEndpoint,
+        PUBLIC_URI: existing.PUBLIC_URI || redirectURL.origin,
+        REDIRECT_URI: redirectUri || oauthEndpoint
+            || (`https://${DEFAULT_REGION}-${projectId}.cloudfunctions.net/oauthGateway`)
+            || (`${redirectURL.origin}/oauth2callback`)
+    }), null, 2));
 
     if (fs.existsSync(projectSpecificFile)) {
         try {
@@ -291,11 +323,20 @@ app.post('/api/save-credentials', (req, res) => {
         } catch (e) { }
     }
 
+
+    let endpoint = process.env.REDIRECT_URI || DEFAULT_ENDPOINT
+    try {
+        endpoint = JSON.parse(fs.readFileSync(GLOBAL_SETTINGS))?.REDIRECT_URI
+    } catch (e) {
+        console.error(e)
+    }
+
+
     const runtimeConfig = {
         PROJECT_ID: projectId,
         GCP_CLIENT_ID: clientId,
         GCP_CLIENT_SECRET: clientSecret,
-        REDIRECT_URI: redirectUri || 'http://localhost:4000/',
+        REDIRECT_URI: redirectUri || REDIRECT_URI,
         REGION: DEFAULT_REGION,
         FUNCTIONS_URL: `https://${DEFAULT_REGION}-${projectId}.cloudfunctions.net/bootGpu`
     };
@@ -376,6 +417,16 @@ app.post('/api/deploy-function', async (req, res) => {
         spawnSync('gcloud', ['config', 'set', 'project', projectId], { shell: true });
         spawnSync('gcloud', ['services', 'enable', 'cloudfunctions.googleapis.com', 'cloudbuild.googleapis.com', 'compute.googleapis.com', 'run.googleapis.com'], { shell: true });
 
+
+        let endpoint = projectCreds.REDIRECT_URI || process.env.REDIRECT_URI || DEFAULT_ENDPOINT
+        try {
+            endpoint = JSON.parse(fs.readFileSync(GLOBAL_SETTINGS))?.REDIRECT_URI
+        } catch (e) {
+            console.error(e)
+        }
+
+
+
         // 👉 Build variables array injecting your dynamic REDIRECT_URI straight to the function container
         const args = [
             'functions', 'deploy', entryPoint,
@@ -385,7 +436,7 @@ app.post('/api/deploy-function', async (req, res) => {
             `--source=${functionSourceDir}`,
             `--entry-point=${entryPoint}`,
             `--region=${DEFAULT_REGION}`,
-            `--set-env-vars=GCP_CLIENT_ID="${projectCreds.GCP_CLIENT_ID}",GCP_CLIENT_SECRET="${projectCreds.GCP_CLIENT_SECRET}",GCP_PROJECT_ID="${projectId}",REDIRECT_URI="${projectCreds.REDIRECT_URI || 'http://localhost:4000/'}"`
+            `--set-env-vars=GCP_CLIENT_ID="${projectCreds.GCP_CLIENT_ID}",GCP_CLIENT_SECRET="${projectCreds.GCP_CLIENT_SECRET}",GCP_PROJECT_ID="${projectId}",REDIRECT_URI="${endpoint}"`
         ];
 
         const child = spawn('gcloud', args, { shell: true });

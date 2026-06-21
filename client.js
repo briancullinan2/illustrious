@@ -23,7 +23,7 @@ function injectSetupSettingsCog() {
 
     // Build the container anchor using your new class name template
     const cogWrapper = document.createElement('a');
-    cogWrapper.href = 'http://localhost:4000/setup';
+    cogWrapper.href = '/setup';
     cogWrapper.title = 'Open Infrastructure Configuration Wizard';
     cogWrapper.className = 'header-icon-btn settings-cog'; // 👉 Clean separation of concerns
 
@@ -84,7 +84,7 @@ async function initializeClusterStatus() {
  */
 function testAndRedirect() {
     console.log("🛰️ Initiating production OAuth handshake vector...");
-    window.location.href = 'http://localhost:4000/auth';
+    window.location.href = '/auth';
 }
 
 
@@ -589,6 +589,7 @@ function workerResponseInterface(e) {
         if (toggle?.checked) {
             worker.postMessage({
                 type: 'LOAD_MODEL',
+                baseURI: window.location.origin,
                 payload: { modelUrl: DEFAULT_MODEL }
             });
         }

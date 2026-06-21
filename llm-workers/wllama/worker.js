@@ -6,12 +6,16 @@ globalThis.document = {
 
 
 
-import { Wllama } from './index.min.js';
 const wllamaWasm = 'llm-workers/wllama/wllama.wasm';
 
 
-let putRecord, getRecord, DB_STORE_NAME
+let putRecord, getRecord, DB_STORE_NAME, Wllama
 
+
+async function initWLLaMa() {
+    const WllamaLoaded = await import('./index.min.js');
+    Wllama = WllamaLoaded.Wllama
+}
 
 async function initLocalStorage() {
     try {
@@ -80,9 +84,12 @@ let wllama;
 
 
 self.onmessage = async (e) => {
-    const { type, payload } = e.data;
+    const { type, payload, baseURI } = e.data;
 
     if (type === 'LOAD_MODEL') {
+
+        globalThis.document.baseURI = baseURI
+        await initWLLaMa()
 
         try {
             await installDatabaseIfNeeded(GGUF_DATABASE);

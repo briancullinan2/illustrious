@@ -3,6 +3,7 @@ const express = require('express');
 const { requireReactiveCredentials } = require('../cloud-functions/cluster-manager/host-google.js')
 const { app, server, PORT, serveErrorScreen } = require('./server.js');
 require('../setup/setup.js'); // Mounts setup wizard routes cleanly
+require('./generate-favicon.js');
 const { google } = require('googleapis');
 const { execSync } = require('child_process');
 const path = require('path');

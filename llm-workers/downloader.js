@@ -1,4 +1,5 @@
 
+const isModuleMode = (this === undefined);
 
 // Wrap in an IIFE to allow the use of await in classic global scopes
 (async () => {
@@ -16,7 +17,8 @@
             moduleLoaded = true
         } catch (error) {
             moduleWorker = true
-            console.error("Failed to load database utilities via importScripts:", error);
+            if (!isModuleMode)
+                console.error("Failed to load database utilities via importScripts:", error);
         }
     }
 

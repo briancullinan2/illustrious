@@ -1,21 +1,12 @@
+
+
+globalThis.document = {
+    baseURI: 'http://localhost:4000/'
+}
+
+
 // Import the ONNX Runtime Web library from a CDN
-importScripts('/llm-workers/downloader.js');
-importScripts('/llm-workers/onnx/ort.webgpu.min.js');
-importScripts('/llm-workers/onnx/web-tokenizers.js');
 
-//transformers.env.allowRemoteModels = true;
-//transformers.env.useBrowserCache = true;
-//transformers.env.localModelPath = '/onnx/';
-
-ort.env.logLevel = 'verbose';
-// Configure ONNX Runtime to explicitly use WebGPU
-ort.env.webgpu.numThreads = 4;
-ort.env.webgpu.proxy = false;
-ort.env.webgpu.wasmPaths = '/llm-workers/onnx/';
-
-ort.env.wasm.numThreads = 4;
-ort.env.wasm.proxy = false;
-ort.env.wasm.wasmPaths = '/llm-workers/onnx/';
 
 let session = null;
 
@@ -26,6 +17,28 @@ const ST_DIR = 4;
 const FS_DEFAULT = (6 << 3) + (6 << 6) + (6);
 const FS_FILE = (ST_FILE << 12) + FS_DEFAULT;
 const FS_DIR = (ST_DIR << 12) + FS_DEFAULT;
+
+
+function loadONNXEngine() {
+    importScripts('/llm-workers/downloader.js');
+    importScripts('/llm-workers/onnx/ort.webgpu.min.js');
+    importScripts('/llm-workers/onnx/web-tokenizers.js');
+
+    //transformers.env.allowRemoteModels = true;
+    //transformers.env.useBrowserCache = true;
+    //transformers.env.localModelPath = '/onnx/';
+
+    ort.env.logLevel = 'verbose';
+    // Configure ONNX Runtime to explicitly use WebGPU
+    ort.env.webgpu.numThreads = 4;
+    ort.env.webgpu.proxy = false;
+    ort.env.webgpu.wasmPaths = '/llm-workers/onnx/';
+
+    ort.env.wasm.numThreads = 4;
+    ort.env.wasm.proxy = false;
+    ort.env.wasm.wasmPaths = '/llm-workers/onnx/';
+}
+
 
 
 function inspectAndProfileModel(activeSession) {
@@ -99,25 +112,25 @@ async function compileInferenceSessionNew(modelBuffer, dataBuffer = null, dataFi
     self.postMessage({ type: 'COMPILING_MODEL' });
 
     // 1. Stand up a quick lightweight metadata session to peek at the model graph properties
-    const peekSession = await ort.InferenceSession.create(modelBuffer, { 
+    const peekSession = await ort.InferenceSession.create(modelBuffer, {
         executionProviders: ['cpu'], // Fast CPU read just for inspecting node lists
-        logSeverityLevel: 3 
+        logSeverityLevel: 3
     });
-    
+
     const profile = inspectAndProfileModel(peekSession);
     console.log(`[Worker] Detected Model Profile Signature: ${profile.type}`);
 
     // 2. Branch pipelines based on model target criteria
     if (profile.type === 'TEXT_GENERATION_LLM') {
         console.log('%c[Worker] Initializing optimized GenerativeModel pipeline...', 'color: #2196f3;');
-        
+
         // Clear old sessions out of scope
         if (activeSession) activeSession = null;
-        
+
         // Create the specialized generative engine context path
         // (If external data parameters exist, pass them via options array configurations)
         const genOptions = dataBuffer ? { externalData: [{ data: dataBuffer, path: dataFileName }] } : {};
-        
+
         activeGenModel = await ort.GenerativeModel.create(modelBuffer, genOptions);
 
 
@@ -146,7 +159,7 @@ async function compileInferenceSessionNew(modelBuffer, dataBuffer = null, dataFi
 
 
         activeGenModel.modelProfile = profile;
-        
+
         return activeGenModel;
     } else {
         console.log('%c[Worker] Initializing standard low-level InferenceSession pipeline...', 'color: #9c27b0;');
@@ -168,7 +181,7 @@ async function compileInferenceSessionNew(modelBuffer, dataBuffer = null, dataFi
 
         activeSession = await ort.InferenceSession.create(modelBuffer, options);
         activeSession.modelProfile = profile;
-        
+
         return activeSession;
     }
 }
@@ -187,7 +200,7 @@ async function RunGenerativeModel(payload) {
 
         // 2. Instantiate runtime tracking loops using the generative configuration properties
         const generatorParams = await activeGenModel.createGeneratorParams(inputTokens);
-        
+
         // Pass your typical text execution constraints cleanly
         generatorParams.setSearchParam('max_length', inputTokens.length + max_new_tokens);
         generatorParams.setSearchParam('temperature', temperature);
@@ -196,7 +209,7 @@ async function RunGenerativeModel(payload) {
 
         // Instantiate the local state iterator tracking node
         const generator = await activeGenModel.createGenerator(generatorParams);
-        
+
         console.log("%c[Worker] Auto-regressive hardware acceleration thread looping initialized.", "color: #4caf50;");
 
         // 3. Inference execution loop
@@ -215,9 +228,9 @@ async function RunGenerativeModel(payload) {
             // Flush out your delta segment straight back to your UI canvas layer
             self.postMessage({
                 type: 'TOKEN_STREAM',
-                payload: { 
-                    delta: deltaText, 
-                    tokenId: nextTokenId 
+                payload: {
+                    delta: deltaText,
+                    tokenId: nextTokenId
                 }
             });
         }
@@ -531,7 +544,7 @@ async function BootModel(payload) {
 
 // Main message routing pipeline loop block processing listener switch
 self.onmessage = async function (e) {
-    const { type, payload } = e.data;
+    const { type, baseURI, payload } = e.data;
 
     // Await the check if it hasn't been evaluated yet
     if (cachedWebGPU === undefined) {
@@ -545,6 +558,8 @@ self.onmessage = async function (e) {
     }
 
     if (type === 'LOAD_MODEL') {
+        globalThis.document.baseURI = baseURI
+        loadONNXEngine()
         BootModel(payload)
     }
 

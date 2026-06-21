@@ -4,7 +4,9 @@ const os = require('os');
 const { google } = require('googleapis');
 
 const GLOBAL_CRED_DIR = path.join(os.homedir(), '.credentials');
-
+const DEFAULT_URI = 'http://localhost:4000/'
+const DEFAULT_ENDPOINT = DEFAULT_URI + 'oauth2callback'
+const GLOBAL_SETTINGS = path.join(__dirname, '../..', 'illustrious-config.json');
 
 
 async function listProjectsFromGoogle(req, clientOpts) {
@@ -475,13 +477,19 @@ function requireReactiveCredentials(req, res, next) {
 
     const clientId = credentials?.GCP_CLIENT_ID || credentials?.client_id;
     const clientSecret = credentials?.GCP_CLIENT_SECRET || credentials?.private_key;
+    let endpoint = process.env.REDIRECT_URI || DEFAULT_ENDPOINT
+    try {
+        endpoint = JSON.parse(fs.readFileSync(GLOBAL_SETTINGS))?.REDIRECT_URI
+    } catch (e) {
+        console.error(e)
+    }
 
     // Instantiate OAuth application client state safely if flags require modification
     if (clientId && clientSecret && (!oauth2ClientInstance || clientId !== cachedClientId)) {
         oauth2ClientInstance = new google.auth.OAuth2(
             clientId,
             clientSecret,
-            `http://localhost:4000/oauth2callback`
+            endpoint || DEFAULT_ENDPOINT
         );
         cachedClientId = clientId;
         cachedClientSecret = clientSecret;
