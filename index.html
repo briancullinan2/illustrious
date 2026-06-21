@@ -47,15 +47,52 @@
         </h2>
         {{USER}}
         <div id="project-selector">Connecting to Google Cloud...</div>
-        <h3>Scene Construction</h3>
-        <div id="scene-builder">
+        <h3 id="scene-builder-toggle" style="cursor: pointer; display: flex; justify-content: space-between; align-items: center; user-select: none;">
+            <span>Scene Construction</span>
+            <span id="scene-builder-chevron" style="transition: transform 0.2s ease;">▼</span>
+        </h3>
+        <div id="scene-builder" class="">
             <label>Prompt Slice:</label>
             <textarea id="prompt-input">An elephant on a red balloon</textarea>
             <label>Position Box (X, Y, W, H %):</label>
             <input type="text" id="coords-input" value="70, 0, 30, 30">
             <button id="add-layer">Add Layer Slice</button>
         </div>
-        <div id="output-display-container"></div>
+        <div id="output-display-container">
+            <div class="tree-container">
+                <div class="tree-root">🛰️ PIPELINE ROOT</div>
+                <div class="tree-branch">
+                    <div class="tree-line">├── <span class="tree-folder">inputs</span></div>
+                    <div class="tree-branch nested">
+                        <div class="tree-line">│   ├── <span class="tree-key">prompt:</span> <span id="tree-prompt" class="tree-val">"An elephant on a red balloon"</span></div>
+                        <div class="tree-line">│   └── <span class="tree-key">coords:</span> <span id="tree-coords" class="tree-val">"70, 0, 30, 30"</span></div>
+                    </div>
+                </div>
+                <div class="tree-branch">
+                    <div class="tree-line">├── <span class="tree-folder status-folder">status</span></div>
+                    <div class="tree-branch nested">
+                        <div class="tree-line">│   └── <span class="tree-key">stage:</span> <span id="tree-status" class="tree-val tree-status-thinking">Thinking...</span></div>
+                    </div>
+                </div>
+                <div class="tree-branch">
+                    <div class="tree-line">└── <span class="tree-folder">callbacks</span></div>
+                    <div class="tree-branch nested">
+                        <div class="tree-line">    ├── <span class="tree-key">on_chunk:</span> <span class="tree-val tree-callback-func">renderOrIndexChunk()</span></div>
+                        <div class="tree-branch nested callback-response-branch">
+                            <div class="tree-line">    │   └── <span class="tree-arrow">↳</span> <span class="tree-response-type">Response:</span> <span id="tree-chunk-status" class="tree-val text-muted">Ready</span></div>
+                        </div>
+                        <div class="tree-line">    ├── <span class="tree-key">on_token:</span> <span class="tree-val tree-callback-func">streamToken()</span></div>
+                        <div class="tree-branch nested callback-response-branch">
+                            <div class="tree-line">    │   └── <span class="tree-arrow">↳</span> <span class="tree-response-type">Response:</span> <span id="tree-token-status" class="tree-val text-muted">Idle</span></div>
+                        </div>
+                        <div class="tree-line">    └── <span class="tree-key">on_complete:</span> <span class="tree-val tree-callback-func">completePipeline()</span></div>
+                        <div class="tree-branch nested callback-response-branch">
+                            <div class="tree-line">        └── <span class="tree-arrow">↳</span> <span class="tree-response-type">Response:</span> <span id="tree-complete-status" class="tree-val text-muted">Waiting</span></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
         <div class="download-progress-container">
             <progress id="general-progress" value="0" max="100"></progress>
             <span id="general-progress-text">0%</span>

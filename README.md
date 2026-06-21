@@ -24,6 +24,8 @@ Instead of burning cash on idle compute, this system implements **Zero-to-One Au
 4. Add BSP, Play Canvas voxel pipeline, and depth based overdraw culling to this example https://sparkjs.dev/examples/splat-painter/index.html
 5. one query to the LLM should completely change a world. need to find a technology for pattern matching and texture generation so ceilings become a texture for use in the vector based (as opposed to gaussian based) world.
 6. Target - speaking in to a voice LLM and tell minecraft to build any object in objaverse.
+7. TODO: enabled cache reserve, start an HF account, or switch to google for distribution, whichever is cheaper. Can't have 1,000 people downloading 300MB out of my GitHub account probably.
+
 
 
 ## So Far

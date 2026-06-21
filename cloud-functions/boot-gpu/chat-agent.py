@@ -262,7 +262,7 @@ def get_llm_context(model_path=base_model_path, hf_token=None, active_lora_path=
                             # Override the ratio calculation directly to give the tiny 0.06 weights a massive megaphone
                             module.scaling[adapter_name] = scale  # Training baseline was 2.0
                             scaled_count += 1
-                            
+                    
                     print(f"🎛️ Forced adapter scaling matrix override to {scale} across {scaled_count} layers.")
                     
                     model = peft_wrapper.merge_and_unload()

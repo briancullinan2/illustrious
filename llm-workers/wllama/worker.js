@@ -91,12 +91,33 @@ self.onmessage = async (e) => {
         globalThis.document.baseURI = baseURI
         await initWLLaMa()
 
+        let loraArrayBuffer
+        try {
+
+            const loraModelPath = getGGUFModel(payload.loraUrl)
+            loraArrayBuffer = (await getRecord(DB_STORE_NAME, loraModelPath, GGUF_DATABASE))?.contents;
+            if (!loraArrayBuffer) {
+                loraArrayBuffer = await fetchWithFallbackChain(payload.loraUrl, 'GGUF');
+                putRecord(DB_STORE_NAME, {
+                    path: loraModelPath,
+                    timestamp: new Date(),
+                    mode: FS_FILE,
+                    contents: new Uint8Array(loraArrayBuffer),
+                    parent: loraModelPath.substring(0, loraModelPath.lastIndexOf('/')) || '/'
+                }, GGUF_DATABASE)
+            }
+
+            console.warn('Lora Detected: ' + loraModelPath)
+        } catch (e) {
+            console.error(e)
+        }
+
+
         try {
             await installDatabaseIfNeeded(GGUF_DATABASE);
 
             const ggufModelPath = getGGUFModel(payload.modelUrl); // define this helper if needed
             let myCachedArrayBuffer = (await getRecord(DB_STORE_NAME, ggufModelPath, GGUF_DATABASE))?.contents;
-
             if (!myCachedArrayBuffer) {
                 myCachedArrayBuffer = await fetchWithFallbackChain(payload.modelUrl, 'GGUF');
                 putRecord(DB_STORE_NAME, {
@@ -110,23 +131,7 @@ self.onmessage = async (e) => {
 
             const modelBlob = new Blob([myCachedArrayBuffer], { type: 'application/octet-stream' });
 
-            //const loraBuffer = (await getRecord(DB_STORE_NAME, payload.loraUrl, GGUF_DATABASE))?.contents;
-            //const loraBlob = new Blob([loraBuffer], { type: 'application/octet-stream' });
-
-            /*
-            git clone https://github.com/ggerganov/llama.cpp.git
-            cd llama.cpp
-            pip install -r requirements/requirements-convert-lora.txt
-            python convert-lora-to-gguf.py /path/to/your/OUTPUT_DIR --outfile /path/to/your/output_folder/my_adapter.gguf
-            */
-
-
-            /*
-            python export-lora.py \
-              --model-base /path/to/your/base_model.gguf \
-              --lora /path/to/your/my_adapter.gguf \
-              --outfile /path/to/your/final_merged_model.gguf
-            */
+            const loraBlob = loraArrayBuffer ? new Blob([loraArrayBuffer], { type: 'application/octet-stream' }) : void 0;
 
 
             if (!wllama) {
@@ -158,7 +163,7 @@ self.onmessage = async (e) => {
                 lora: typeof loraBlob !== 'undefined' ? [
                     {
                         data: loraBlob,
-                        scale: 1.0, // You can dial the strength of this specific training set up or down!
+                        scale: 1.4, // You can dial the strength of this specific training set up or down!
                     }
                 ] : void 0
             });
@@ -180,37 +185,63 @@ self.onmessage = async (e) => {
 
             const messages = [
                 { role: 'system', content: 'You are a concise assistant inside a game canvas engine.' },
-                { role: 'user', content: payload.input_text }
+                { role: 'user', content: promptText }
             ];
 
-            // 👉 Wllama v3 flat configuration signature
-            const completion = await wllama.createCompletion({
-                //prompt: payload.input_text,
-                messages: messages,
-                nPredict: parseInt(payload.maxTokens) || 1000,
-                temperature: 0.0,
-                grammar: payload.gbnfGrammar || undefined, // Ensure it is undefined if empty
-                stream: true,
-                onData: (chunk) => {
-                    // chunk follows the standard OpenAI chunk formatting dictionary 
-                    const tokenText = chunk.choices[0]?.delta?.content || chunk.choices[0]?.text || "";
+            // Consolidated Template Selection
+            let rawJinjaTemplate = payload.chatTemplate || wllama.model?.metadata?.['tokenizer.chat_template'] || null;
+            let formattedPrompt = "";
 
+            console.log("ℹ️ [DEBUG] Starting Inference Setup...");
+            console.log("ℹ️ [DEBUG] Active Messages:", JSON.stringify(messages));
+            console.log("ℹ️ [DEBUG] Chat Template Source:", payload.chatTemplate ? "Payload LoRA" : (wllama.model?.metadata?.['tokenizer.chat_template'] ? "GGUF Metadata" : "None"));
+
+            if (rawJinjaTemplate) {
+                try {
+                    formattedPrompt = wllama.utils.template(rawJinjaTemplate, {
+                        messages: messages,
+                        add_generation_prompt: true
+                    });
+                    console.log("✅ [DEBUG] Successfully compiled Jinja template.");
+                } catch (templateErr) {
+                    console.error("❌ [DEBUG] Failed to compile Jinja template, using structural fallback:", templateErr);
+                    formattedPrompt = messages.map(m => `<|im_start|>${m.role}\n${m.content}<|im_end|>`).join('\n') + '\n<|im_start|>assistant\n';
+                }
+            } else {
+                console.warn("⚠️ [DEBUG] No template found anywhere. Defaulting to raw ChatML syntax fallback layout.");
+                formattedPrompt = messages.map(m => `<|im_start|>${m.role}\n${m.content}<|im_end|>`).join('\n') + '\n<|im_start|>assistant\n';
+            }
+
+            console.log("🔍 [DEBUG] Evaluated Prompt Structure being fed to model:\n", formattedPrompt);
+
+            // Run completion with explicit stop parameters to prevent infinite looping strings
+            const completion = await wllama.createCompletion({
+                prompt: formattedPrompt,
+                nPredict: parseInt(payload.maxTokens) || 1000,
+                temperature: 0.1,
+                grammar: payload.gbnfGrammar || undefined,
+                stream: true,
+                // 👉 FIX: Force stop matching Qwen ChatML formatting paradigms
+                stop: ["<|im_end|>", "<|endoftext|>", "assistant:", "user:"],
+                onData: (chunk) => {
+                    const tokenText = chunk.choices[0]?.delta?.content || chunk.choices[0]?.text || "";
                     if (tokenText) {
                         self.postMessage({
                             type: 'TOKEN_STREAM',
                             payload: {
                                 delta: tokenText,
-                                tokenId: chunk.choices[0]?.index // Handled automatically by tokenText resolution
+                                tokenId: chunk.choices[0]?.index
                             }
                         });
                     }
                 }
             });
 
+            console.log("✅ [DEBUG] Model generation phase finalized smoothly.");
             self.postMessage({ type: 'GENERATION_COMPLETE' });
-            //self.postMessage({ type: 'TOKEN_STREAM', payload: { delta: completion } });
         } catch (err) {
-            self.postMessage({ type: 'ERROR', payload: { message: err.message + '\n' + (err.style || err.stack || '') } });
+            console.error("❌ [DEBUG] Fatal error caught inside Worker inference pipeline:", err);
+            self.postMessage({ type: 'ERROR', payload: { message: err.message + '\n' + (err.stack || '') } });
         }
     }
 };

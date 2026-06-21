@@ -122,6 +122,21 @@ hr {
     flex-grow: 1;
     display: flex;
     flex-direction: column;
+    max-height: 500px;
+    opacity: 1;
+    transition: max-height 0.3s cubic-bezier(0.4, 0.0, 0.2, 1), opacity 0.3s ease, padding 0.3s ease, margin 0.3s ease;
+    overflow: hidden;
+}
+
+#scene-builder.collapsed {
+    flex-grow: 0;
+    max-height: 0 !important;
+    opacity: 0;
+    padding-top: 0 !important;
+    padding-bottom: 0 !important;
+    margin-top: 0 !important;
+    margin-bottom: 0 !important;
+    pointer-events: none;
 }
 
 #scene-builder>button {
@@ -130,6 +145,120 @@ hr {
 
 #scene-builder>textarea {
     flex-grow: 1;
+}
+
+/* ============================================================================
+   Response Tree Observability UI
+   ============================================================================ */
+#output-display-container {
+    flex-grow: 1;
+    background: var(--bg-darkest);
+    border: 1px solid var(--border-dark);
+    border-radius: 6px;
+    padding: 12px;
+    overflow-y: auto;
+    font-family: monospace;
+    font-size: 11px;
+    color: var(--text-dim);
+    line-height: 1.5;
+    min-height: 150px;
+    max-height: 350px;
+    box-shadow: inset 0 2px 8px rgba(0,0,0,0.8);
+}
+
+.tree-container {
+    user-select: none;
+}
+
+.tree-root {
+    color: #fff;
+    font-weight: bold;
+    letter-spacing: 0.5px;
+    margin-bottom: 4px;
+    text-shadow: 0 0 6px rgba(255,255,255,0.2);
+}
+
+.tree-branch {
+    display: flex;
+    flex-direction: column;
+}
+
+.tree-branch.nested {
+    margin-left: 0;
+}
+
+.tree-line {
+    white-space: pre;
+    display: flex;
+    align-items: center;
+}
+
+.tree-pipe {
+    color: var(--border);
+}
+
+.tree-folder {
+    color: var(--link-blue);
+    font-weight: 600;
+}
+
+.tree-folder.status-folder {
+    color: var(--yellow-orange);
+}
+
+.tree-key {
+    color: var(--text-dim);
+    margin-right: 4px;
+}
+
+.tree-val {
+    color: #fff;
+}
+
+#tree-prompt {
+    color: var(--accent);
+    font-style: italic;
+    word-break: break-all;
+    white-space: normal;
+}
+
+#tree-coords {
+    color: #fff;
+}
+
+.tree-status-thinking {
+    color: var(--yellow);
+    animation: pulse-thinking 1.5s infinite ease-in-out;
+    font-weight: bold;
+}
+
+.tree-status-ready {
+    color: var(--terminal-green);
+    font-weight: bold;
+}
+
+.tree-callback-func {
+    color: #a78bfa; /* purple */
+}
+
+.tree-arrow {
+    color: var(--text-muted);
+    font-weight: bold;
+    margin-right: 4px;
+}
+
+.tree-response-type {
+    color: var(--text-muted-light);
+    margin-right: 4px;
+}
+
+.callback-response-branch {
+    opacity: 0.85;
+}
+
+@keyframes pulse-thinking {
+    0%, 100% { opacity: 1; text-shadow: 0 0 4px rgba(255, 255, 0, 0.4); }
+    50% { opacity: 0.5; text-shadow: none; }
 }
 
 /* ============================================================================

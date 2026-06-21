@@ -1,7 +1,8 @@
 
 //const DEFAULT_MODEL = 'onnx-community/bge-small-en-v1.5-ONNX'
 //const DEFAULT_MODEL = 'onnx-community/Qwen2.5-0.5B-Instruct'
-const DEFAULT_MODEL = 'HuggingFaceTB/SmolLM2-360M-Instruct-GGUF'
+const DEFAULT_MODEL = 'Goekdeniz-Guelmez/Josiefied-Qwen2.5-0.5B-Instruct-abliterated-v1/josiefied-qwen-q4_k_m.gguf'
+const DEFAULT_LORA = 'Goekdeniz-Guelmez/Josiefied-Qwen2.5-0.5B-Instruct-abliterated-v1/josiefied-qwen-spatial-engine.gguf'
 
 const WLLAMA_WORKER = '/llm-workers/wllama/worker.js';   // direct path
 const ONNX_WORKER = '/llm-workers/onnx/worker.js';   // direct path
@@ -10,6 +11,8 @@ const DEFAULT_WORKER = DEFAULT_MODEL.toLowerCase().includes('gguf')
     : DEFAULT_MODEL.toLowerCase().includes('onnx')
         ? ONNX_WORKER
         : WLLAMA_WORKER
+
+const DEFAULT_SYNC = 30 * 1000
 
 
 let projectConfig = {
@@ -589,6 +592,11 @@ function workerResponseInterface(e) {
         console.error('Worker Engine Error:', payload.message);
         progressText.textContent = 'Error';
         generalProgressText.textContent = 'Error';
+        const statusElement = document.getElementById('tree-status');
+        if (statusElement) {
+            statusElement.textContent = 'Error: ' + payload.message;
+            statusElement.className = 'tree-val status-critical-text';
+        }
     }
     else if (type === 'INFERENCE_COMPLETE') {
         const embeddings = payload.outputs.last_hidden_state.data;
@@ -597,25 +605,53 @@ function workerResponseInterface(e) {
         console.log('Received embedding chunk vector array:', embeddings);
         // Stream this vector chunk directly to your vector storage/processing layer
         renderOrIndexChunk(embeddings, dimensions);
+        const chunkStatus = document.getElementById('tree-chunk-status');
+        if (chunkStatus) {
+            chunkStatus.textContent = 'Chunk Indexed';
+            chunkStatus.className = 'tree-val status-optimal-text';
+        }
     }
     else if (type === 'TOKEN_STREAM') {
-        const outputElement = document.getElementById('output-display-container');
-        outputElement.textContent += payload.delta;
-        outputElement.scrollTop = outputElement.scrollHeight;
+        const statusElement = document.getElementById('tree-status');
+        if (statusElement) {
+            statusElement.textContent = 'Streaming...';
+            statusElement.className = 'tree-val tree-status-thinking';
+        }
+        const tokenStatus = document.getElementById('tree-token-status');
+        if (tokenStatus) {
+            if (tokenStatus.classList.contains('text-muted') || tokenStatus.textContent === 'Idle') {
+                tokenStatus.classList.remove('text-muted');
+                tokenStatus.textContent = '';
+            }
+            tokenStatus.textContent += payload.delta;
+        }
+        const container = document.getElementById('output-display-container');
+        if (container) {
+            container.scrollTop = container.scrollHeight;
+        }
     }
     else if (type === 'GENERATION_COMPLETE') {
-        //debugger
+        const statusElement = document.getElementById('tree-status');
+        if (statusElement) {
+            statusElement.textContent = 'Success';
+            statusElement.className = 'tree-val tree-status-ready';
+        }
+        const completeStatus = document.getElementById('tree-complete-status');
+        if (completeStatus) {
+            completeStatus.textContent = 'Finished';
+            completeStatus.className = 'tree-val status-optimal-text';
+        }
     } else if (type === 'WORKER_READY') {
         const toggle = document.getElementById('local-model-toggle');
         if (toggle?.checked) {
             worker.postMessage({
                 type: 'LOAD_MODEL',
                 baseURI: window.location.origin,
-                payload: { modelUrl: DEFAULT_MODEL }
+                payload: { modelUrl: DEFAULT_MODEL, loraUrl: DEFAULT_LORA }
             });
         }
     }
-};
+}
 
 
 document.addEventListener("DOMContentLoaded", () => {
@@ -627,11 +663,24 @@ document.addEventListener("DOMContentLoaded", () => {
         injectSetupSettingsCog();
     }
 
+    // Toggle Collapsible Scene Builder section
+    const sceneBuilderToggle = document.getElementById('scene-builder-toggle');
+    const sceneBuilder = document.getElementById('scene-builder');
+    const sceneBuilderChevron = document.getElementById('scene-builder-chevron');
+
+    if (sceneBuilderToggle && sceneBuilder) {
+        sceneBuilderToggle.addEventListener('click', () => {
+            const isCollapsed = sceneBuilder.classList.toggle('collapsed');
+            if (sceneBuilderChevron) {
+                sceneBuilderChevron.textContent = isCollapsed ? '▼' : '▲';
+            }
+        });
+    }
 
     // Immediately poll cluster health parameters on page entrance
     syncClusterHardware();
     // Maintain a steady 10-second monitoring cycle over cluster health matrices
-    clusterPollInterval = setInterval(syncClusterHardware, 10000);
+    clusterPollInterval = setInterval(syncClusterHardware, DEFAULT_SYNC);
 
     if (toggleCheckbox.checked) {
         bootWllamaWorker()
@@ -642,9 +691,33 @@ document.addEventListener("DOMContentLoaded", () => {
 
 async function handleGenerate() {
     const promptText = document.getElementById('prompt-input').value;
-    const outputElement = document.getElementById('output-display-container');
+    const coordsText = document.getElementById('coords-input').value;
 
-    outputElement.textContent = promptText;
+    const treePrompt = document.getElementById('tree-prompt');
+    const treeCoords = document.getElementById('tree-coords');
+    const treeStatus = document.getElementById('tree-status');
+    const treeTokenStatus = document.getElementById('tree-token-status');
+    const treeChunkStatus = document.getElementById('tree-chunk-status');
+    const treeCompleteStatus = document.getElementById('tree-complete-status');
+
+    if (treePrompt) treePrompt.textContent = `"${promptText}"`;
+    if (treeCoords) treeCoords.textContent = `"${coordsText}"`;
+    if (treeStatus) {
+        treeStatus.textContent = 'Thinking...';
+        treeStatus.className = 'tree-val tree-status-thinking';
+    }
+    if (treeTokenStatus) {
+        treeTokenStatus.textContent = 'Idle';
+        treeTokenStatus.className = 'tree-val text-muted';
+    }
+    if (treeChunkStatus) {
+        treeChunkStatus.textContent = 'Ready';
+        treeChunkStatus.className = 'tree-val text-muted';
+    }
+    if (treeCompleteStatus) {
+        treeCompleteStatus.textContent = 'Waiting';
+        treeCompleteStatus.className = 'tree-val text-muted';
+    }
 
     worker.postMessage({
         type: 'RUN_INFERENCE',

@@ -117,7 +117,11 @@ async function installDatabaseIfNeeded(database) {
 
 
 function getGGUFModel(modelUrl) {
-    return `${modelUrl}/${modelUrl.split('/').pop().toLowerCase()}.gguf`
+    if (modelUrl.includes('.gguf')) {
+        return modelUrl
+    } else {
+        return `${modelUrl}/${modelUrl.split('/').pop().toLowerCase()}.gguf`
+    }
 }
 
 function getModelUrl(modelUrl) {
@@ -147,26 +151,35 @@ function getFallbackUrls(rawFilePath) {
 
     const tries = [
         `https://illustrious.quake.games/models/${cleanPath}`,
-        `http://localhost:8080/models/${cleanPath}`,
+        `https://illustrious.quake.games/hf_cache/${cleanPath.replace(/^([^/]+)\/([^/]+)\/(.+)$/, "models--$1--$2/$3")}`,
+        `http://localhost:4000/models/${cleanPath}`,
+        `http://localhost:4000/hf_cache/${cleanPath.replace(/^([^/]+)\/([^/]+)\/(.+)$/, "models--$1--$2/$3")}`,
+        globalThis.document.baseURI + `/models/${cleanPath}`,
+        globalThis.document.baseURI + `/${cleanPath.replace(/^([^/]+)\/([^/]+)\/(.+)$/, "models--$1--$2/$3")}`,
     ];
+
 
     if (!rawFilePath.includes('.gguf') || rawFilePath.toLowerCase().includes('onnx')) {
         tries.push(...[
             `https://huggingface.co/${subFolder}/resolve/main/onnx/${fileName}`,
-            `https://huggingface.co/${subFolder}/raw/main/${fileName}`,
-            `https://huggingface.co/${subFolder}/${fileName}`,
-            `https://huggingface.co/${cleanPath}`
         ])
     } else if (rawFilePath.includes('.gguf')) {
         const unquantizedPath = fileName.replace(/[\.-]gguf/gi, '')
         tries.push(...[
             // TODO: insert K4_0 format
+            `https://huggingface.co/${subFolder}/resolve/main/${fileName}.gguf`,
             `https://huggingface.co/${subFolder}/resolve/main/${unquantizedPath}-q8_0.gguf`,
-            `https://huggingface.co/${subFolder}/raw/main/${fileName}`,
-            `https://huggingface.co/${subFolder}/${fileName}`,
-            `https://huggingface.co/${cleanPath}`
+
         ])
     }
+
+
+    tries.push(...[
+        `https://huggingface.co/${subFolder}/raw/main/${fileName}`,
+        `https://huggingface.co/${subFolder}/${fileName}`,
+        `https://huggingface.co/${cleanPath}`
+
+    ])
 
     return tries;
 }
