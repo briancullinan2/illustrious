@@ -32,7 +32,7 @@
   {
     "messages": [
       {"role": "user", "content": "a red balloon"},
-      {"role": "assistant", "content": "[balloon][0,0,0,0,0,0,1]"}
+      {"role": "assistant", "content": "[red balloon][0,0,0,0,0,0,1]"}
     ]
   },
   {

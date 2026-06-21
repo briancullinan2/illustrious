@@ -191,12 +191,12 @@ self.onmessage = async (e) => {
                 wllama.chatTemplate = wllama.model.metadata['tokenizer.chat_template'];
             }
 
-            //const formattedPrompt = applySimpleChatTemplate(messages, payload.chatTemplate);
-            //const completion = await wllama.createCompletion({
-            //    prompt: formattedPrompt,
+            const formattedPrompt = applySimpleChatTemplate(messages, payload.chatTemplate);
+            const completion = await wllama.createCompletion({
+                prompt: formattedPrompt,
 
-            const completion = await wllama.createChatCompletion({
-                messages: messages,
+            //const completion = await wllama.createChatCompletion({
+            //    messages: messages,
                 max_tokens: parseInt(payload.maxTokens) || 1000,
                 temperature: 0.1,
                 stream: true,
@@ -225,24 +225,126 @@ self.onmessage = async (e) => {
     }
 };
 
+
 function applySimpleChatTemplate(messages, customTemplate = null) {
-    if (customTemplate) {
-        // Very basic Jinja-like replacement (expand as needed)
-        let prompt = customTemplate;
-        // Replace common variables
-        prompt = prompt.replace(/\{\{\s*add_generation_prompt\s*\}\}/g, 'true');
-        // You can add more sophisticated replacement here
-        return prompt; // or implement a tiny Jinja subset
+    // If no template is provided, cleanly fall back to structural defaults
+    if (!customTemplate) {
+        return messages.map(m => {
+            return `<|im_start|>${m.role}\n${m.content}<|im_end|>`;
+        }).join('\n') + '\n<|im_start|>assistant\n';
     }
 
-    // Default ChatML-style fallback (works for many models)
-    return messages.map(m => {
-        if (m.role === 'system') return `<|im_start|>system\n${m.content}<|im_end|>`;
-        if (m.role === 'user') return `<|im_start|>user\n${m.content}<|im_end|>`;
-        if (m.role === 'assistant') return `<|im_start|>assistant\n${m.content}<|im_end|>`;
-        return '';
-    }).join('\n') + '\n<|im_start|>assistant\n';
+    let output = '';
+    const lines = customTemplate.split('\n');
+    
+    // Split the template into token sections to handle control blocks
+    let i = 0;
+    while (i < lines.length) {
+        const line = lines[i].trim();
+
+        // 1. 👉 HANDLE MESSAGES LOOP
+        if (line.startsWith('{%- for message in messages %}')) {
+            i++; // move past loop head
+            let loopLines = [];
+            
+            // Gather all rules up to the loop end tag
+            while (i < lines.length && !lines[i].trim().startsWith('{%- endfor %}')) {
+                loopLines.push(lines[i]);
+                i++;
+            }
+            
+            // Execute the gathered loop block for every message passed
+            for (const msg of messages) {
+                let loopIndex = 0;
+                let skipElse = false;
+
+                while (loopIndex < loopLines.length) {
+                    const innerLine = loopLines[loopIndex].trim();
+
+                    // Check role conditional markers
+                    if (innerLine.startsWith('{%- if message.role ==')) {
+                        const targetRole = innerLine.match(/'([^']+)'/)?.[1] || "";
+                        if (msg.role === targetRole) {
+                            skipElse = true;
+                            loopIndex++;
+                            // Process inside IF block until else or endif bounds
+                            while (loopIndex < loopLines.length) {
+                                const activeLine = loopLines[loopIndex].trim();
+                                if (activeLine.startsWith('{%- else %}') || activeLine.startsWith('{%- endif %}')) break;
+                                output += parseJinjaExpression(activeLine, msg);
+                                loopIndex++;
+                            }
+                        } else {
+                            // Skip past the IF block directly to the else segment
+                            while (loopIndex < loopLines.length && !loopLines[loopIndex].trim().startsWith('{%- else %}')) {
+                                loopIndex++;
+                            }
+                        }
+                    } else if (innerLine.startsWith('{%- else %}')) {
+                        loopIndex++;
+                        if (!skipElse) {
+                            while (loopIndex < loopLines.length && !loopLines[loopIndex].trim().startsWith('{%- endif %}')) {
+                                output += parseJinjaExpression(loopLines[loopIndex].trim(), msg);
+                                loopIndex++;
+                            }
+                        }
+                    } else if (innerLine.startsWith('{%- endif %}')) {
+                        loopIndex++;
+                    } else {
+                        output += parseJinjaExpression(innerLine, msg);
+                        loopIndex++;
+                    }
+                }
+            }
+        } 
+        // 2. 👉 HANDLE GENERATION PROMPT END TRAIL
+        else if (line.startsWith('{%- if add_generation_prompt %}')) {
+            i++;
+            while (i < lines.length && !lines[i].trim().startsWith('{%- endif %}')) {
+                output += parseJinjaExpression(lines[i].trim());
+                i++;
+            }
+        } 
+        // 3. Fallback tracking for lines outside formal block control declarations
+        else {
+            if (line !== '' && !line.startsWith('{%-')) {
+                output += parseJinjaExpression(line);
+            }
+        }
+        i++;
+    }
+
+    return output;
 }
+
+// Helper routine to strip expression indicators and resolve strings/variables safely
+function parseJinjaExpression(exprLine, messageContext = null) {
+    if (!exprLine.includes('{{-')) return '';
+    
+    // Extract everything between {{- and }}
+    let rawContent = exprLine.match(/\{\{-\s*(.*?)\s*\}\}/)?.[1];
+    if (!rawContent) return '';
+
+    let evaluatedStr = '';
+
+    // Split compound lines by plus token connectors safely
+    const tokens = rawContent.split('+').map(t => t.trim());
+
+    for (const token of tokens) {
+        if (token.startsWith("'") && token.endsWith("'")) {
+            // Unescape structural newline codes inside the literal tokens safely
+            evaluatedStr += token.slice(1, -1).replace(/\\n/g, '\n');
+        } else if (token === 'message.role' && messageContext) {
+            evaluatedStr += messageContext.role;
+        } else if (token === 'message.content' && messageContext) {
+            // Append the actual dynamic prompt content array safely here
+            evaluatedStr += messageContext.content;
+        }
+    }
+
+    return evaluatedStr;
+}
+
 
 self.postMessage({ type: 'WORKER_READY' });
 
