@@ -97,6 +97,7 @@ These represent the dynamic dimensions, global overrides, syntax hooks, and prim
 | **`crescent`** | Primitive Target | Dual offset intersecting arc profiles configured for structural arches or lunar splines. |
 | **`mesh`** | Vertex Attribute | Signals the instantiation of a raw complex target asset hull instead of a primitive. |
 | **`noise`** | Displacement Attribute | Quantifies an interactive amplitude float passed directly to fragment/vertex shaders for surface distortion (e.g., fuzz, rust). |
+| **`wall`** | Bounding box selector | Special selector for using left, right, ceiling, floor relative bounding boxes. |
 | **`terrain`** | Primitive Base Target | Instantiates a high-scale procedural ground mesh utilizing custom height maps or vertex-displacement matrices. |
 | **`twist(axis, deg)`** | Deformation Modifier | Iteratively rotates vertex coordinates along a specified local bounding box axis (`x`, `y`, or `z`) by a fixed degree parameter. |
 | **`taper(axis, factor)`** | Deformation Modifier | Progressively scales down the orthogonal profile of a primitive mesh as it approaches the terminal coordinate of the chosen bounding axis. |
