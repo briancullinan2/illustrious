@@ -181,7 +181,7 @@ hr {
 }
 
 .tree-container {
-    user-select: none;
+    /*user-select: none;*/
 }
 
 .tree-root {

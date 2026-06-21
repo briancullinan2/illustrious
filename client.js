@@ -499,7 +499,8 @@ function addSceneSlice() {
     stage.appendChild(sliceElement);
 }
 
-document.getElementById('multicast-scene').addEventListener('click', handleGenerate)
+const multicastButton = document.getElementById('multicast-scene')
+multicastButton.addEventListener('click', handleGenerate)
 document.getElementById('add-layer').addEventListener('click', addSceneSlice)
 document.getElementById('claim-instance').addEventListener('click', triggerManualAllocationClaim)
 
@@ -599,6 +600,8 @@ async function workerResponseInterface(e) {
             statusElement.className = 'tree-val tree-status-ready';
         }
 
+        multicastButton.removeAttribute('disabled', 'disabled')
+
     }
     else if (type === 'ERROR') {
         console.error('Worker Engine Error:', payload.message);
@@ -610,6 +613,7 @@ async function workerResponseInterface(e) {
             statusElement.className = 'tree-val status-critical-text';
         }
     }
+    /*
     else if (type === 'INFERENCE_COMPLETE') {
         const embeddings = payload.outputs.last_hidden_state.data;
         const dimensions = payload.outputs.last_hidden_state.dims;
@@ -622,7 +626,10 @@ async function workerResponseInterface(e) {
             chunkStatus.textContent = 'Chunk Indexed';
             chunkStatus.className = 'tree-val status-optimal-text';
         }
+
+        multicastButton.removeAttribute('disabled', 'disabled')
     }
+    */
     else if (type === 'TOKEN_STREAM') {
         const statusElement = document.getElementById('tree-status');
         if (statusElement) {
@@ -653,6 +660,8 @@ async function workerResponseInterface(e) {
             completeStatus.textContent = 'Finished';
             completeStatus.className = 'tree-val status-optimal-text';
         }
+
+        multicastButton.removeAttribute('disabled', 'disabled')
     } else if (type === 'WORKER_READY') {
         const toggle = document.getElementById('local-model-toggle');
 
@@ -752,6 +761,8 @@ async function handleGenerate() {
         treeCompleteStatus.textContent = 'Waiting';
         treeCompleteStatus.className = 'tree-val text-muted';
     }
+
+    multicastButton.setAttribute('disabled', 'disabled')
 
     worker.postMessage({
         type: 'RUN_INFERENCE',
