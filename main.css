@@ -785,6 +785,38 @@ button:disabled {
     display: none;
 }
 
+body.canvas-mode #control-panel,
+body.canvas-mode #cloud-observer {
+    transform: translateX(-100%) !important;
+    pointer-events: none !important;
+}
+
+/* Floating Back Button shown only on Mobile in Canvas Mode */
+body.canvas-mode .floating-back-btn {
+    display: block !important;
+    position: absolute !important;
+    top: 15px !important;
+    left: 15px !important;
+    z-index: 200 !important;
+    width: auto !important;
+    background: rgba(22, 22, 30, 0.95) !important;
+    color: var(--accent) !important;
+    border: 1px solid var(--border) !important;
+    padding: 10px 18px !important;
+    border-radius: 20px !important;
+    font-family: monospace !important;
+    font-size: 12px !important;
+    font-weight: bold !important;
+    cursor: pointer !important;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.6) !important;
+    transition: background-color 0.2s, border-color 0.2s !important;
+}
+
+body.canvas-mode .floating-back-btn:hover {
+    background: var(--panel-hover) !important;
+    border-color: var(--accent) !important;
+}
+
 @media (max-width: 768px) {
     body {
         padding: 0 !important;
@@ -820,6 +852,7 @@ button:disabled {
     #control-panel {
         transform: translateX(-100%) !important;
     }
+
     #control-panel.active {
         transform: translateX(0) !important;
     }
@@ -827,6 +860,7 @@ button:disabled {
     #cloud-observer {
         transform: translateX(-100%) !important;
     }
+
     #cloud-observer.active {
         transform: translateX(0) !important;
     }
@@ -854,35 +888,5 @@ button:disabled {
     }
 
     /* Slide Panels Away & Disable Interaction in Canvas Mode */
-    body.canvas-mode #control-panel,
-    body.canvas-mode #cloud-observer {
-        transform: translateX(-100%) !important;
-        pointer-events: none !important;
-    }
 
-    /* Floating Back Button shown only on Mobile in Canvas Mode */
-    body.canvas-mode .floating-back-btn {
-        display: block !important;
-        position: absolute !important;
-        top: 15px !important;
-        left: 15px !important;
-        z-index: 200 !important;
-        width: auto !important;
-        background: rgba(22, 22, 30, 0.95) !important;
-        color: var(--accent) !important;
-        border: 1px solid var(--border) !important;
-        padding: 10px 18px !important;
-        border-radius: 20px !important;
-        font-family: monospace !important;
-        font-size: 12px !important;
-        font-weight: bold !important;
-        cursor: pointer !important;
-        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.6) !important;
-        transition: background-color 0.2s, border-color 0.2s !important;
-    }
-
-    body.canvas-mode .floating-back-btn:hover {
-        background: var(--panel-hover) !important;
-        border-color: var(--accent) !important;
-    }
 }

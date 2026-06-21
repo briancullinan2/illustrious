@@ -76,6 +76,9 @@ button {
     transition: all 0.2s ease;
     text-align: center;
     text-decoration: none;
+    align-items: center;
+    display: flex;
+    justify-content: center;
 }
 
 a.primary:disabled,
