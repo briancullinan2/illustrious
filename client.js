@@ -519,6 +519,27 @@ document.getElementById('control-switch').addEventListener('click', e => {
     return false;
 });
 
+// Mobile viewport Canvas toggles
+const toggleCanvasBtn = document.getElementById('toggle-canvas');
+if (toggleCanvasBtn) {
+    toggleCanvasBtn.addEventListener('click', e => {
+        e.preventDefault();
+        e.stopPropagation();
+        document.body.classList.add('canvas-mode');
+        return false;
+    });
+}
+
+const backToControlsBtn = document.getElementById('back-to-controls');
+if (backToControlsBtn) {
+    backToControlsBtn.addEventListener('click', e => {
+        e.preventDefault();
+        e.stopPropagation();
+        document.body.classList.remove('canvas-mode');
+        return false;
+    });
+}
+
 
 const progressElement = document.getElementById('local-model-progress');
 const progressText = document.getElementById('local-model-progress-text');

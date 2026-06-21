@@ -777,3 +777,112 @@ button:disabled {
     font-family: monospace;
     color: #3bf53b;
 }
+
+/* ============================================================================
+   Mobile Responsiveness & Canvas Overlay Toggle System
+   ============================================================================ */
+.floating-back-btn {
+    display: none;
+}
+
+@media (max-width: 768px) {
+    body {
+        padding: 0 !important;
+        margin: 0 !important;
+        overflow: hidden !important;
+        min-height: 100vh !important;
+        min-height: 100dvh !important;
+        width: 100% !important;
+        display: block !important;
+    }
+
+    #control-panel,
+    #cloud-observer {
+        width: 100% !important;
+        height: 100vh !important;
+        height: 100dvh !important;
+        position: fixed !important;
+        top: 0 !important;
+        left: 0 !important;
+        margin-top: 0 !important;
+        border-right: none !important;
+        border-radius: 0 !important;
+        z-index: 100 !important;
+        transition: transform 0.35s cubic-bezier(0.4, 0.0, 0.2, 1) !important;
+        overflow-y: auto !important;
+        display: flex !important;
+        flex-direction: column !important;
+        justify-content: flex-start !important;
+        gap: 15px !important;
+    }
+
+    /* Transform-based mobile drawer animations */
+    #control-panel {
+        transform: translateX(-100%) !important;
+    }
+    #control-panel.active {
+        transform: translateX(0) !important;
+    }
+
+    #cloud-observer {
+        transform: translateX(-100%) !important;
+    }
+    #cloud-observer.active {
+        transform: translateX(0) !important;
+    }
+
+    /* Prevent textareas and inputs from causing scroll leaks */
+    select,
+    textarea,
+    input[type="text"] {
+        padding: 10px !important;
+        font-size: 13px !important;
+    }
+
+    #canvas-stage {
+        position: fixed !important;
+        top: 0 !important;
+        left: 0 !important;
+        width: 100% !important;
+        height: 100vh !important;
+        height: 100dvh !important;
+        z-index: 10 !important;
+        margin: 0 !important;
+        padding: 10px !important;
+        background: #09090b !important;
+        border: none !important;
+    }
+
+    /* Slide Panels Away & Disable Interaction in Canvas Mode */
+    body.canvas-mode #control-panel,
+    body.canvas-mode #cloud-observer {
+        transform: translateX(-100%) !important;
+        pointer-events: none !important;
+    }
+
+    /* Floating Back Button shown only on Mobile in Canvas Mode */
+    body.canvas-mode .floating-back-btn {
+        display: block !important;
+        position: absolute !important;
+        top: 15px !important;
+        left: 15px !important;
+        z-index: 200 !important;
+        width: auto !important;
+        background: rgba(22, 22, 30, 0.95) !important;
+        color: var(--accent) !important;
+        border: 1px solid var(--border) !important;
+        padding: 10px 18px !important;
+        border-radius: 20px !important;
+        font-family: monospace !important;
+        font-size: 12px !important;
+        font-weight: bold !important;
+        cursor: pointer !important;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.6) !important;
+        transition: background-color 0.2s, border-color 0.2s !important;
+    }
+
+    body.canvas-mode .floating-back-btn:hover {
+        background: var(--panel-hover) !important;
+        border-color: var(--accent) !important;
+    }
+}

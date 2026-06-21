@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
     <title>Illustrious Studio</title>
     <link rel="stylesheet" href="/main.css" />
-    
+
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 </head>
 
@@ -16,6 +16,15 @@
             <span class="header-title">Illustrious Spatial Engine</span>
 
             <span class="header-spacer">&nbsp;</span>
+
+            <a id="toggle-canvas" href="#" title="Swtich to canvas" class="header-icon-btn">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke-linecap="round"
+                    stroke-linejoin="round">
+                    <path d="M 12 3 L 21 8 L 21 16 L 12 21 L 3 16 L 3 8 Z" stroke="#00e5ff" stroke-width="2.5"></path>
+
+                    <path d="M 12 12 L 12 3 M 12 12 L 3 16 M 12 12 L 21 16" stroke="#ff007f" stroke-width="2.5"></path>
+                </svg>
+            </a>
 
             <a href="/privacy" title="About Matrix" class="header-icon-btn">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
@@ -54,6 +63,8 @@
 
         <button id="multicast-scene">Multicast Image Pipeline</button>
     </div>
+
+    
     <div id="cloud-observer">
         <h2 class="observer-header">
 
@@ -126,6 +137,7 @@
 
 
     <div id="canvas-stage">
+        <button id="back-to-controls" class="floating-back-btn">⬅ Back to Controls</button>
         <span class="canvas-stage-ready-text">🌌 [Spatial Render Stage Context Ready]</span>
     </div>
 
