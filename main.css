@@ -351,7 +351,7 @@ button:disabled {
 
 .header-icon-btn:hover {
     color: var(--accent);
-    filter: drop-shadow(0 0 6px rgba(0, 255, 204, 0.4));
+    filter: drop-shadow(0 0 6px rgba(0, 255, 204, 0.6));
 }
 
 .header-icon-btn:not(.settings-cog):hover {
@@ -887,6 +887,14 @@ body.canvas-mode .floating-back-btn:hover {
         border: none !important;
     }
 
-    /* Slide Panels Away & Disable Interaction in Canvas Mode */
+    .header-icon-btn {
+        height: 32px;
+        width: 32px;
+    }
+
+    .header-icon-btn svg {
+        height: 32px !important;
+        width: 32px !important;
+    }
 
 }
