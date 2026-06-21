@@ -205,6 +205,8 @@ hr {
     white-space: pre;
     display: flex;
     align-items: center;
+    max-width: 100%;
+    text-wrap: auto;
 }
 
 .tree-pipe {

@@ -155,17 +155,12 @@ self.onmessage = async (e) => {
                 );
             }
 
-            await wllama.loadModel([
-                modelBlob
-            ], {
+            await wllama.loadModel([modelBlob], {
                 n_ctx: 2048,
                 n_threads: 4,
-                lora: typeof loraBlob !== 'undefined' ? [
-                    {
-                        data: loraBlob,
-                        scale: 1.4, // You can dial the strength of this specific training set up or down!
-                    }
-                ] : void 0
+                jinja: true,                    // ← Enable Jinja parsing
+                chat_template: payload.chatTemplate || undefined,  // custom override
+                lora: loraBlob ? [{ data: loraBlob, scale: 1.4 }] : undefined,
             });
 
             self.postMessage({ type: 'MODEL_READY' });
@@ -180,41 +175,14 @@ self.onmessage = async (e) => {
             self.postMessage({ type: 'ERROR', payload: { message: 'Model not loaded' } });
             return;
         }
+
         try {
             const promptText = payload.input_text || payload.prompt || "";
-
             const messages = [
-                { role: 'system', content: '' },
+                { role: 'system', content: payload.systemPrompt || '' },
                 { role: 'user', content: promptText }
             ];
 
-            // Consolidated Template Selection
-            /*
-            let rawJinjaTemplate = payload.chatTemplate || wllama.model?.metadata?.['tokenizer.chat_template'] || null;
-            let formattedPrompt = "";
-
-            console.log("ℹ️ [DEBUG] Starting Inference Setup...");
-            console.log("ℹ️ [DEBUG] Active Messages:", JSON.stringify(messages));
-            console.log("ℹ️ [DEBUG] Chat Template Source:", payload.chatTemplate ? "Payload LoRA" : (wllama.model?.metadata?.['tokenizer.chat_template'] ? "GGUF Metadata" : "None"));
-
-            if (rawJinjaTemplate) {
-                try {
-                    formattedPrompt = wllama.utils.template(rawJinjaTemplate, {
-                        messages: messages,
-                        add_generation_prompt: true
-                    });
-                    console.log("✅ [DEBUG] Successfully compiled Jinja template.");
-                } catch (templateErr) {
-                    console.error("❌ [DEBUG] Failed to compile Jinja template, using structural fallback:", templateErr);
-                    formattedPrompt = messages.map(m => `<|im_start|>${m.role}\n${m.content}<|im_end|>`).join('\n') + '\n<|im_start|>assistant\n';
-                }
-            } else {
-                console.warn("⚠️ [DEBUG] No template found anywhere. Defaulting to raw ChatML syntax fallback layout.");
-                formattedPrompt = messages.map(m => `<|im_start|>${m.role}\n${m.content}<|im_end|>`).join('\n') + '\n<|im_start|>assistant\n';
-            }
-
-            console.log("🔍 [DEBUG] Evaluated Prompt Structure being fed to model:\n", formattedPrompt);\
-            */
             if (payload.chatTemplate) {
                 console.log("✏️ [DEBUG] Overriding default model template with custom payload template.");
                 wllama.chatTemplate = payload.chatTemplate;
@@ -223,41 +191,58 @@ self.onmessage = async (e) => {
                 wllama.chatTemplate = wllama.model.metadata['tokenizer.chat_template'];
             }
 
-            // Run completion with explicit stop parameters to prevent infinite looping strings
-            const completion = await wllama.createCompletion({
-                //prompt: formattedPrompt,
+            //const formattedPrompt = applySimpleChatTemplate(messages, payload.chatTemplate);
+            //const completion = await wllama.createCompletion({
+            //    prompt: formattedPrompt,
+
+            const completion = await wllama.createChatCompletion({
                 messages: messages,
-                nPredict: parseInt(payload.maxTokens) || 1000,
+                max_tokens: parseInt(payload.maxTokens) || 1000,
                 temperature: 0.1,
-                //grammar: payload.gbnfGrammar || undefined,
-                jinja: true,
                 stream: true,
-                // 👉 FIX: Force stop matching Qwen ChatML formatting paradigms
-                stop: ["<|im_end|>", "<|endoftext|>", "assistant:", "user:"],
-                onData: (chunk) => {
-                    const tokenText = chunk.choices[0]?.delta?.content || chunk.choices[0]?.text || "";
+                jinja: true,                    // ← Important
+                // chat_template: payload.chatTemplate || undefined,  // override if needed (string)
+                // chat_template_kwargs: { add_generation_prompt: true }, // if your template needs extra vars
+                grammar: payload.gbnfGrammar || undefined,   // should work alongside jinja
+                stop: ["<|im_end|>", "<|endoftext|>", "<|eot_id|>", "assistant:", "user:"],
+
+                onData: (chunk) => {   // or however the stream callback works in your version
+                    const tokenText = chunk.choices?.[0]?.delta?.content || chunk.choices?.[0]?.text || "";
                     if (tokenText) {
                         self.postMessage({
                             type: 'TOKEN_STREAM',
-                            payload: {
-                                delta: tokenText,
-                                tokenId: chunk.choices[0]?.index
-                            }
+                            payload: { delta: tokenText }
                         });
                     }
                 }
             });
 
-            console.log("✅ [DEBUG] Model generation phase finalized smoothly.");
             self.postMessage({ type: 'GENERATION_COMPLETE' });
         } catch (err) {
-            console.error("❌ [DEBUG] Fatal error caught inside Worker inference pipeline:", err);
+            console.error(err);
             self.postMessage({ type: 'ERROR', payload: { message: err.message + '\n' + (err.stack || '') } });
         }
     }
 };
 
+function applySimpleChatTemplate(messages, customTemplate = null) {
+    if (customTemplate) {
+        // Very basic Jinja-like replacement (expand as needed)
+        let prompt = customTemplate;
+        // Replace common variables
+        prompt = prompt.replace(/\{\{\s*add_generation_prompt\s*\}\}/g, 'true');
+        // You can add more sophisticated replacement here
+        return prompt; // or implement a tiny Jinja subset
+    }
 
+    // Default ChatML-style fallback (works for many models)
+    return messages.map(m => {
+        if (m.role === 'system') return `<|im_start|>system\n${m.content}<|im_end|>`;
+        if (m.role === 'user') return `<|im_start|>user\n${m.content}<|im_end|>`;
+        if (m.role === 'assistant') return `<|im_start|>assistant\n${m.content}<|im_end|>`;
+        return '';
+    }).join('\n') + '\n<|im_start|>assistant\n';
+}
 
 self.postMessage({ type: 'WORKER_READY' });
 

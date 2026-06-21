@@ -1,54 +1,76 @@
-# Root: Handles empty arrays, loose lists, or coordinate blocks
-root ::= (block_sequence | empty_scene)? ws?
+# Root rule handling the optional content layout block structures
+root ::= content ws_or_nl_opt
+
+content ::= block_sequence | empty_scene | 
 
 empty_scene ::= "[]"
 
-block_sequence ::= block (ws_or_nl* block)*
+# Loops blocks cleanly without using any wildcard characters on groups
+block_sequence ::= block block_list
+block_list ::= ws_or_nl block_list_tail | 
+block_list_tail ::= block block_list | 
 
-# A block is a raw tag name or a fully positioned layout primitive
-block ::= primitive (anchor? vector)?
+block ::= primitive block_tail
+block_tail ::= anchor vector | vector | anchor | 
 
-primitive ::= "[" [a-zA-Z0-9_-]+ "]"
+primitive ::= "[" alphanumeric_plus "]"
 
-anchor ::= "[abs]" | "[@" [0-9]+ ("," ws? "@" [0-9]+)* "]"
+anchor ::= "[abs]" | "[@" digits anchor_list "]"
+anchor_list ::= "," ws_opt "@" digits anchor_list | "]"
 
-# Vector strings support flat numbers, expressions, nested matrices, or config parameters
-# Enforces a valid item before and after every comma to break on double commas ,,
-vector ::= "[" value ("," ws? value)* "]"
+vector ::= "[" value vector_list "]"
+vector_list ::= "," ws_opt value vector_list | "]"
 
 value ::= nested_array | parameter_assignment | expression | attribute | signed_num | boolean_flag | variable
 
-# Captures matrices like [1,1,1.5] or [-0.6,0.6,-0.4] cleanly
-nested_array ::= "[" value ("," ws? value)* "]"
+nested_array ::= "[" value nested_list "]"
+nested_list ::= "," ws_opt value nested_list | "]"
 
-# Captures both taper=(z,0.5) and functional variations like taper(z,0.7) or noise(0.4)
-parameter_assignment ::= [a-zA-Z_-]+ "=(" ws? [xyz] ws? "," ws? signed_num ws? ")" | [a-zA-Z_-]+ "(" ws? [xyz] ws? "," ws? num ws? ")" | [a-zA-Z_-]+ "(" num ")"
+parameter_assignment ::= text_chars "=(" ws_opt axis ws_opt "," ws_opt signed_num ws_opt ")"
+                       | text_chars "(" ws_opt axis ws_opt "," ws_opt num ws_opt ")"
+                       | text_chars "(" num ")"
 
-# Expressions handle explicit signs directly adjacent to implicit multi-variables
-expression ::= term (op term)*
+axis ::= [xyz]
 
-# Fully parses 'fw * 4', implicit coefficients like '-4fw', '-4fd', or solo variables
-# FIX: Added sign? variable to cleanly handle prefixed variables like -fd or -hh
-term ::= variable ("*" (variable | signed_num))? | signed_num variable? | sign? variable | "sym(" ws? expression ws? ")"
-variable ::= "fw" | "hw" | "fd" | "hd" | "fh" | "hh" | "bd" | "bh" | "@idx" | "@" [0-9]+
+expression ::= term expression_list
+expression_list ::= op term expression_list | 
+
+term ::= variable term_multiplier | signed_num term_var_opt | sign variable | variable | "sym(" ws_opt expression ws_opt ")"
+term_multiplier ::= "*" term_mult_choice | 
+term_mult_choice ::= variable | signed_num
+term_var_opt ::= variable | 
+
+variable ::= "fw" | "hw" | "fd" | "hd" | "fh" | "hh" | "bd" | "bh" | "@idx" | "@" digits
 
 boolean_flag ::= "surf" | "-%"
 
-# Layout modifier keywords or attributes
 attribute ::= "noise=" signed_num | "mesh" | "surf" | "-%"
 
-# STRICT number definition - only one sign character allowed total
-positive_num ::= [0-9]+ ("." [0-9]+)?
-negative_num ::= "-" [0-9]+ ("." [0-9]+)?
+positive_num ::= digits positive_num_tail
+positive_num_tail ::= "." digits | 
+
+negative_num ::= "-" positive_num
+
 num ::= positive_num | negative_num
 
-# FIX: Changed to sign? positive_num to allow things like +5 or -5 without doubling up a negative_num's minus sign
-signed_num ::= sign? positive_num | negative_num
+signed_num ::= sign positive_num | negative_num
 
-# SINGLE sign only - completely kills any '--' variants instantly
 sign ::= "+" | "-"
 
 op ::= "+" | "-" | "*" | "/"
 
-ws ::= [ \t]+
-ws_or_nl ::= [ \t\r\n]+
+# Pure BNF recursive loops for alphanumeric string tokens
+digits ::= [0-9] digits_tail
+digits_tail ::= [0-9] digits_tail | 
+
+alphanumeric_plus ::= [a-zA-Z0-9_-] alphanumeric_tail
+alphanumeric_tail ::= [a-zA-Z0-9_-] alphanumeric_tail | 
+
+text_chars ::= [a-zA-Z_-] text_chars_tail
+text_chars_tail ::= [a-zA-Z_-] text_chars_tail | 
+
+# Native GBNF bracket quantifiers (fully supported on primitive sets)
+ws ::= [ \t][ \t]*
+ws_opt ::= [ \t]*
+ws_or_nl ::= [ \t\r\n][ \t\r\n]*
+ws_or_nl_opt ::= [ \t\r\n]*

@@ -107,7 +107,7 @@ def check_datasets(model_path=BASE_MODEL):
     mismatch_found = False
 
     # Grammar validation compilation for dataset string auditing
-    grammar_path = Path(OUTPUT_DIR) / "grammar.gbnf"
+    grammar_path = Path(OUTPUT_DIR) / "grammar.bnf"
     use_grammar_constraints = True  
     
     compiled_regex = None
