@@ -112,12 +112,6 @@ hr {
     left: 0;
 }
 
-#control-panel>*,
-#cloud-observer>* {
-    flex-grow: 0;
-    flex-basis: min-content;
-}
-
 #scene-builder-toggle {
     cursor: pointer;
     display: flex;
@@ -152,7 +146,7 @@ hr {
     pointer-events: none;
 }
 
-#scene-builder>button {
+#control-panel>#scene-builder>button {
     flex-grow: 0;
 }
 
@@ -165,7 +159,6 @@ hr {
    Response Tree Observability UI
    ============================================================================ */
 #output-display-container {
-    flex-grow: 1;
     background: var(--bg-darkest);
     border: 1px solid var(--border-dark);
     border-radius: 6px;
@@ -178,6 +171,12 @@ hr {
     /*min-height: 150px;*/
     /*max-height: 350px;*/
     box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.8);
+}
+
+#control-panel>#scene-builder,
+#control-panel>#output-display-container {
+    flex-grow: 1;
+
 }
 
 .tree-container {
@@ -428,6 +427,16 @@ a.secondary,
     text-align: center;
     text-decoration: none;
 }
+
+
+#cloud-observer>button,
+#control-panel>button,
+#control-panel>*,
+#cloud-observer>* {
+    flex-grow: 0;
+    flex-basis: min-content;
+}
+
 
 a.primary:disabled,
 a.secondary:disabled,

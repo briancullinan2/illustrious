@@ -149,6 +149,10 @@ function getFallbackUrls(rawFilePath) {
     const fileName = cleanPath.split('/').pop()
     const subFolder = cleanPath.split('/').slice(0, -1).join('/')
 
+
+    //https://huggingface.co/Goekdeniz-Guelmez/Josiefied-Qwen2.5-0.5B-Instruct-abliterated-v1-gguf/resolve/main/josiefied-qwen2.5-0.5b-instruct-abliterated-v1.Q4_K_M.gguf?download=true
+    //https://huggingface.co/Goekdeniz-Guelmez/Josiefied-Qwen2.5-0.5B-Instruct-abliterated-v1-gguf/raw/main/josiefied-qwen2.5-0.5b-instruct-abliterated-v1.Q4_K_M.gguf
+    //https://huggingface.co/Goekdeniz-Guelmez/Josiefied-Qwen2.5-0.5B-Instruct-abliterated-v1-gguf/resolve/main/josiefied-qwen2.5-0.5b-instruct-abliterated-v1.Q4_K_M.gguf.gguf
     const tries = [
         `https://illustrious.quake.games/models/${cleanPath}`,
         `https://illustrious.quake.games/hf_cache/${cleanPath.replace(/^([^/]+)\/([^/]+)\/(.+)$/, "models--$1--$2/$3")}`,
@@ -164,13 +168,16 @@ function getFallbackUrls(rawFilePath) {
             `https://huggingface.co/${subFolder}/resolve/main/onnx/${fileName}`,
         ])
     } else if (rawFilePath.includes('.gguf')) {
-        const unquantizedPath = fileName.replace(/[\.-]gguf/gi, '')
-        tries.push(...[
-            // TODO: insert K4_0 format
-            `https://huggingface.co/${subFolder}/resolve/main/${fileName}.gguf`,
-            `https://huggingface.co/${subFolder}/resolve/main/${unquantizedPath}-q8_0.gguf`,
+        const unquantizedPath = fileName
+            .replace(/\.gguf$/i, '')
+            .replace(/[-.]q\d+_[a-z\d_]+/gi, '');
 
-        ])
+        tries.push(...[
+            `https://huggingface.co/${subFolder}/resolve/main/${fileName}`,
+            `https://huggingface.co/${subFolder}/resolve/main/${fileName}.gguf`,
+            `https://huggingface.co/${subFolder}/resolve/main/${unquantizedPath}.Q4_K_M.gguf`,
+            `https://huggingface.co/${subFolder}/resolve/main/${unquantizedPath}-q8_0.gguf`
+        ]);
     }
 
 
