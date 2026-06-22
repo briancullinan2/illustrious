@@ -1,0 +1,100 @@
+#nunu
+{
+	-webkit-touch-callout: none;
+	-webkit-user-select: none;
+	-khtml-user-select: none;
+	-moz-user-select: none;
+	-ms-user-select: none;
+	user-select: none;
+}
+
+#nunu select {
+	-moz-appearance: window;
+	-webkit-appearance: none;
+}
+
+/* Webkit color input border */ 
+#nunu input[type="color"] {
+	-webkit-appearance: none;
+	border: none;
+	width: 32px;
+	height: 32px;
+}
+#nunu input[type="color"]::-webkit-color-swatch-wrapper {
+	padding: 0;
+}
+#nunu input[type="color"]::-webkit-color-swatch {
+	border: none;
+}
+
+
+/* Webkit scrollbar */
+#nunu ::-webkit-scrollbar
+{
+	height: 8px;
+	width: 8px;
+	background: #333333;
+}
+#nunu ::-webkit-scrollbar-thumb
+{
+	background: #555555;
+	-webkit-border-radius: 1ex;
+	border-radius: 1ex;
+	-webkit-box-shadow: 0px 1px 2px rgba(0, 0, 0, 0.75);
+	box-shadow: 0px 1px 2px rgba(0, 0, 0, 0.75);
+}
+#nunu ::-webkit-scrollbar-corner
+{
+	background: #333333;
+}
+
+/* Webkit autofill coloring */
+#nunu input:-webkit-autofill,
+#nunu input:-webkit-autofill:hover,
+#nunu input:-webkit-autofill:focus,
+#nunu input:-webkit-autofill:active
+{
+	-webkit-transition: "color 9999s ease-out, background-color 9999s ease-out";
+	transition: "color 9999s ease-out, background-color 9999s ease-out";
+	-webkit-transition-delay: 9999s;
+	transition-delay: 9999s;
+}
+
+#nunu input[type=number]::-webkit-inner-spin-button, 
+#nunu input[type=number]::-webkit-outer-spin-button
+{ 
+	-webkit-appearance: none;
+	margin: 0;
+}
+
+
+#nunu {
+    /* Fonts */
+    --font-main-family: inherit;
+    --font-main-color: var(--ace-foreground); /* #000000 - Flipped for light theme contrast */
+    --font-main-size: 12px;
+
+    /* GUI Color Palette */
+    --color-light: var(--ace-foreground);                 /* #FFFFFF */
+    --color-graph: var(--ace-selection-bg);       /* #D4D4D4 */
+    --color-gray-light: var(--ace-gutter-bg);     /* #F0F0F0 */
+    --button-over-color: var(--ace-selection-bg);  /* #D4D4D4 */
+    --box-color: var(--ace-gutter-bg);            /* #F0F0F0 */
+    --panel-color: var(--ace-gutter-bg);          /* #F0F0F0 */
+    --bar-color: var(--ace-gutter-bg);            /* #F0F0F0 */
+
+    --color-black: var(--ace-bg);         /* #000000 */
+    --color-black-alpha-20: var(--ace-selection-bg); /* Closest light neutral block */
+
+    /* Solid Colors */
+    --color-red: var(--ace-pink);                 /* #AF00DB (Closest vivid warm accent) */
+    --color-green: var(--ace-comment);            /* #008000 */
+    --color-blue: var(--ace-purple);              /* #0000FF (Note: --ace-purple is actually blue hex) */
+    --color-yellow: var(--ace-blue);              /* #795DA3 */
+
+    /* Console Colors */
+    --color-console-error: var(--ace-pink);       /* #AF00DB */
+    --color-console-error-background: var(--ace-gutter-bg); 
+    --color-console-warn: var(--ace-blue);        /* #795DA3 */
+    --color-console-warn-background: var(--ace-gutter-bg);
+}

@@ -1,0 +1,20 @@
+[
+  {
+    "origin": [
+      "http://localhost:8080",
+      "http://127.0.0.1:8080",
+      "https://quake.games",
+      "https://quedit.quake.games"
+    ],
+    "method": ["GET", "HEAD", "OPTIONS"],
+    "responseHeader": [
+      "Content-Type", 
+      "Content-Length", 
+      "Content-MD5", 
+      "ETag", 
+      "Accept-Ranges", 
+      "Range"
+    ],
+    "maxAgeSeconds": 3600
+  }
+]

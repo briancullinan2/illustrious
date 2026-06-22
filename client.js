@@ -6,8 +6,8 @@ const DEFAULT_LORA = 'Goekdeniz-Guelmez/Josiefied-Qwen2.5-0.5B-Instruct-ablitera
 const DEFAULT_JINJA = '/loras/spatial_engine/chat_template.jinja'
 const DEFAULT_GBNF = '/loras/spatial_engine/grammar.gbnf'
 
-const WLLAMA_WORKER = '/llm-workers/wllama/worker.js';   // direct path
-const ONNX_WORKER = '/llm-workers/onnx/worker.js';   // direct path
+const WLLAMA_WORKER = '/components/llm-workers/wllama/worker.js';   // direct path
+const ONNX_WORKER = '/components/llm-workers/onnx/worker.js';   // direct path
 const DEFAULT_WORKER = DEFAULT_MODEL.toLowerCase().includes('gguf')
     ? WLLAMA_WORKER
     : DEFAULT_MODEL.toLowerCase().includes('onnx')
