@@ -44,6 +44,7 @@
             <input name="cloud-service" id="tencent-service" type="radio" />
             <input name="cloud-service" id="paperspace-service" type="radio" />
             <input name="cloud-service" id="coreweave-service" type="radio" />
+            <input name="cloud-service" id="runlocal-service" type="radio" />
 
 
             <div class="scroll-grid-box">
@@ -190,6 +191,19 @@
                     <div class="vm-card-detail">Enterprise Bare-Metal Inf // InfiniBand Interconnected Clusters
                     </div>
                 </label>
+
+                <label for="runlocal-service" class="vm-instance-card">
+                    <div class="vm-card-header">
+                        <span class="vm-card-name">
+                            <i class="bx bx-computer"></i>
+                            Run Local
+                        </span>
+                        <span class="vm-card-badge state-staging">AVAILABLE</span>
+                    </div>
+                    <div class="vm-card-detail">Limited Functionality // LLM // Vision // Generative
+                    </div>
+                </label>
+
             </div>
 
 
@@ -695,6 +709,100 @@
                     <div></div>
                     <button class="primary" id="coreweave-next">Authorize CoreWeave K8s Grid</button>
                 </div>
+            </div>
+
+
+
+            <div id="runlocal-container" class="service">
+                <p>Configure local and cloud intelligence endpoints, download lightweight multi-tenant foundational
+                    models, and orchestrate runtime requests.</p>
+
+                <form id="ai-toggles-form" class="margin-bottom-md">
+                    <div class="form-row flex-row-between margin-bottom-xs">
+                        <label class="field-label-caps">Enable AI integration</label>
+                        <input type="checkbox" id="enableAi" />
+                    </div>
+                    <div class="form-row flex-row-between margin-bottom-xs">
+                        <label class="field-label-caps">Enable WebLLM</label>
+                        <input type="checkbox" id="enableWebLlm" />
+                    </div>
+                    <div class="form-row flex-row-between margin-bottom-xs">
+                        <label class="field-label-caps">Download Qwen3.5</label>
+                        <input type="checkbox" id="downloadQwen" />
+                    </div>
+                    <div class="form-row flex-row-between margin-bottom-xs">
+                        <label class="field-label-caps">Download Llama 3.2</label>
+                        <input type="checkbox" id="downloadLlama" />
+                    </div>
+                    <div class="form-row flex-row-between margin-bottom-sm">
+                        <label class="field-label-caps">Multiple models at a time</label>
+                        <input type="checkbox" id="multipleModels" />
+                    </div>
+                </form>
+
+                <div class="banner-notice flex-row-between margin-bottom-md">
+                    <span class="text-muted">Extract documentation and environment setups:</span>
+                    <div>
+                        <a href="https://github.com/lllyasviel/stable-diffusion-webui-forge" target="_blank"
+                            class="margin-right-xs">Automatic1111 ↗</a>
+                        <a href="https://github.com/ggml-org/llama.cpp" target="_blank">llama.cpp/GGUF ↗</a>
+                    </div>
+                </div>
+
+                <h2 class="field-label-caps font-semibold margin-bottom-xs">Parameter Builder</h2>
+                <p class="text-muted margin-bottom-sm">Test the image generator and LLM with local HTTP requests.</p>
+
+                <form id="ai-parameter-builder">
+                    <label class="field-label-caps">Load Preset Blueprint:</label>
+                    <select id="selectedPreset" class="margin-bottom-xs">
+                        <option value="">-- Select a Service --</option>
+                    </select>
+
+                    <label class="field-label-caps">Service Endpoint Target URL:</label>
+                    <input type="text" id="serviceUrl" placeholder="http://localhost:11434/api/generate"
+                        value="http://localhost:11434/api/generate" class="margin-bottom-xs" />
+
+                    <label class="field-label-caps">Model Name Identifier:</label>
+                    <input type="text" id="modelName" placeholder="llama3" value="llama3" class="margin-bottom-xs" />
+
+                    <label class="field-label-caps">API Authentication Key Context:</label>
+                    <input type="text" id="apiKey" placeholder="Api Key" class="margin-bottom-xs" />
+
+                    <label class="field-label-caps">JSON Object Response Path Extraction:</label>
+                    <input type="text" id="responsePath" placeholder="response.path" value="response"
+                        class="margin-bottom-sm" />
+
+                    <div class="flex-row-between margin-bottom-xs">
+                        <label class="field-label-caps">Request Payload Matrix Override:</label>
+                        <button type="button" id="addParamBtn" class="primary btn-sm">+ Add Key</button>
+                    </div>
+
+                    <table class="table margin-bottom-md" id="paramTable">
+                        <thead>
+                            <tr>
+                                <th class="field-label-caps">Key</th>
+                                <th class="field-label-caps">Type</th>
+                                <th class="field-label-caps">Value</th>
+                                <th></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                        </tbody>
+                    </table>
+                </form>
+
+                <div class="btn-row margin-bottom-md">
+                    <div></div>
+                    <button type="button" class="primary" id="sendRequestBtn">Send Request Context</button>
+                </div>
+
+                <hr class="margin-bottom-md" />
+
+                <label class="field-label-caps">Output Transaction Data Payload stream:</label>
+                <pre id="responseJson" class="margin-bottom-md">Result will appear here...</pre>
+
+                <h2 class="field-label-caps font-semibold margin-bottom-xs">Recent Activity Log</h2>
+                <p class="text-muted">Usage information on what queries are being used by the application.</p>
             </div>
 
 

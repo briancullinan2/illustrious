@@ -112,6 +112,72 @@ async function evaluateWorkerPool(computeClient, projectId, zone) {
 
 
 
+async function fetchGcloudAvailableGPUs(computeClient, projectId) {
+    if (!projectId) {
+        throw new Error("Missing required Google Cloud Project ID.");
+    }
+
+    try {
+        console.log(`Starting GPU inventory for project: ${projectId}...`);
+
+        const gpuInventory = {};
+
+        // 👉 FIX: Call the stream method directly on the client instance
+        const aggregatedStream = computeClient.aggregatedListAsync({
+            project: projectId,
+        });
+
+        // The stream yields [scope, scopedList] pairs (e.g., ["zones/us-central1-a", { acceleratorTypes: [...] }])
+        for await (const [scope, data] of aggregatedStream) {
+            if (!data || !data.acceleratorTypes || data.acceleratorTypes.length === 0) {
+                continue;
+            }
+
+            // Extract zone name (e.g., "us-central1-a")
+            const zoneName = scope.split('/').pop().toLowerCase();
+            // Extract region from zone name (e.g., "us-central1")
+            const regionName = zoneName.split('-').slice(0, 2).join('-');
+
+            if (!gpuInventory[regionName]) {
+                gpuInventory[regionName] = {};
+            }
+
+            // Format GPU information from this zone boundary
+            const gpusInZone = data.acceleratorTypes.map(acc => {
+                return {
+                    name: acc.name,
+                    description: acc.description,
+                    maximumCardsPerInstance: acc.maximumCardsPerInstance
+                };
+            });
+
+            gpuInventory[regionName][zoneName] = gpusInZone;
+        }
+
+        // Flattens into your exact operational "zoneKey" display map signature
+        const flattenedReport = {};
+        for (const [region, zones] of Object.entries(gpuInventory)) {
+            for (const [zone, gpus] of Object.entries(zones)) {
+                const gpuString = gpus.map(g => {
+                    return g.name
+                        .replace(/-/g, ' ')
+                        .replace(/\b\w/g, c => c.toUpperCase())
+                        .replace(/Gpu/g, 'GPU');
+                }).join(', ');
+
+                flattenedReport[zone] = `${region} Region Cluster / Available GPUs: [${gpuString}]`;
+            }
+        }
+
+        return flattenedReport;
+    } catch (error) {
+        console.error("Failed to fetch Google Cloud GPU availability:", error);
+        throw error;
+    }
+}
+
+
+
 async function verifyGpuQuota(RegionsClient, projectId, region = 'us-central1') {
     try {
         const regionsClient = new RegionsClient({ project: projectId });
@@ -279,6 +345,7 @@ async function fetchTelemetry(config, req) {
     let quotaInfo = null;
     let poolStatus = 'READY';
     let poolMessage = 'Hardware infrastructure loop verified.';
+    let availability = {};
 
     if (!targetProjectId) {
         console.warn(`[DEBUG: Telemetry BOUNDARY FAILURE] targetProjectId evaluated to empty. Halting downstream API calls.`);
@@ -296,11 +363,13 @@ async function fetchTelemetry(config, req) {
 
     try {
         console.log(`[Telemetry] Dynamically loading Google Cloud Compute SDK clients...`);
-        const { InstancesClient, RegionsClient, DisksClient } = require('@google-cloud/compute');
+        const { InstancesClient, RegionsClient, DisksClient, ZonesClient, AcceleratorTypesClient } = require('@google-cloud/compute');
 
         console.log(`[Telemetry] Instantiating SDK Clients with pre-built options matrix payload.`);
         const computeClient = new InstancesClient(clientOpts);
         const disksClient = new DisksClient(clientOpts);
+        const zonesClient = new ZonesClient(clientOpts);
+        const accelClient = new AcceleratorTypesClient(clientOpts);
 
         // 1. Fetch raw, complete quota dictionary object
         console.log(`[DEBUG: Telemetry API CALL] Dispatching verifyGpuQuota to Regions Client...`);
@@ -321,6 +390,7 @@ async function fetchTelemetry(config, req) {
         console.log(`[DEBUG: Telemetry API CALL] Dispatching evaluateWorkerPool to Instances Client...`);
         activeVMs = await evaluateWorkerPool(computeClient, targetProjectId, targetZone);
         console.log(`[DEBUG: Telemetry API SUCCESS] Received VM compute frame payload array. Total instances parsed: ${activeVMs?.length || 0}`);
+        availability = await fetchGcloudAvailableGPUs(accelClient, targetProjectId)
 
         const activeWorkers = activeVMs.filter(node => ['RUNNING', 'PROVISIONING', 'STAGING'].includes(node.status));
         console.log(`[POOL ANALYSIS] Active/Staging nodes count: ${activeWorkers.length}`);
@@ -349,7 +419,8 @@ async function fetchTelemetry(config, req) {
             projects: processedProjects,
             activeVMs: [],
             quotas: null,
-            zone: targetZone
+            zone: targetZone,
+            availability: availability
         };
     }
 
@@ -362,7 +433,8 @@ async function fetchTelemetry(config, req) {
         projects: processedProjects,
         activeVMs: activeVMs,
         quotas: quotaInfo,
-        zone: targetZone
+        zone: targetZone,
+        availability: availability
     };
 }
 

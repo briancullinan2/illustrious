@@ -6,6 +6,7 @@ const { execSync, spawn, spawnSync } = require('child_process');
 const fs = require('fs');
 const path = require('path');
 const WebSocket = require('ws');
+const os = require('os');
 
 const DEFAULT_ZONE = 'us-central1-a'
 const DEFAULT_REGION = 'us-central1'
@@ -179,6 +180,7 @@ app.post('/api/cluster/verify-and-save', async (req, res) => {
     }
 });
 
+
 function scanCloudCredentials() {
 
     const providerStatusMap = {};
@@ -261,7 +263,7 @@ app.get('/api/local-env', async (req, res) => {
         account: activeAccount || 'Not logged in. Run "gcloud auth login" locally.',
         projects: processedProjects,
         autoSelectId: autoSelectProject,
-        credentialPath: GLOBAL_CRED_DIR + path.sep,
+        credentialPath: (GLOBAL_CRED_DIR + path.sep).replace(os.homedir(), '~'),
         functions: getLocalFunctions(),
         providerCredentials: scanCloudCredentials(),
 
@@ -413,21 +415,70 @@ app.post('/api/deploy-function', async (req, res) => {
 
         streamLog(`\n📡 Preparing deployment matrix for: ${functionName}...\n`);
 
-        streamLog(`⚙️ Verifying required GCP APIs (Cloud Run & Compute Engine)...`);
+
+        streamLog(`⚙️ Verifying required GCP APIs...`);
         spawnSync('gcloud', ['config', 'set', 'project', projectId], { shell: true });
-        spawnSync('gcloud', ['services', 'enable', 'cloudfunctions.googleapis.com', 'cloudbuild.googleapis.com', 'compute.googleapis.com', 'run.googleapis.com'], { shell: true });
+        spawnSync('gcloud', ['services', 'enable',
+            'cloudfunctions.googleapis.com',
+            'cloudbuild.googleapis.com',
+            'compute.googleapis.com',
+            'run.googleapis.com',
+            'secretmanager.googleapis.com' // 👈 Added Secret Manager API
+        ], { shell: true });
 
+        // 👉 Fetch project number to dynamically reference the default runtime service account
+        const projectInfoProc = spawnSync('gcloud', ['projects', 'describe', projectId, '--format=value(projectNumber)'], { shell: true, encoding: 'utf-8' });
+        const projectNumber = projectInfoProc.stdout.trim();
+        const runtimeServiceAccount = `${projectNumber}-compute@developer.gserviceaccount.com`;
 
-        let endpoint = projectCreds.REDIRECT_URI || process.env.REDIRECT_URI || DEFAULT_ENDPOINT
+        // 👉 Loop through and mount all *.json files from the credentials directory
+        const credentialsDir = path.join(os.homedir(), '.credentials');
+        const secretArgs = [];
+
         try {
-            endpoint = JSON.parse(fs.readFileSync(GLOBAL_SETTINGS))?.REDIRECT_URI
-        } catch (e) {
-            console.error(e)
+            const files = fs.readdirSync(credentialsDir);
+            const jsonFiles = files.filter(file => file.toLowerCase().endsWith('.json'));
+
+            for (const file of jsonFiles) {
+
+                if (!Object.keys(CLOUD_PROVIDER_KEYS).includes(file.split('.')[0]))
+                    continue;
+
+                const localCredsPath = path.join(credentialsDir, file);
+
+                // Formats secret name cleanly for GCP compliance (e.g., "oauth-credentials-json")
+                const sanitizedBase = file.replace(/[^a-zA-Z0-9]/g, '-').toLowerCase();
+                const secretName = `${sanitizedBase}-secret`;
+
+                streamLog(`🔒 Ensuring secret "${secretName}" exists and is up to date for ${file}...`);
+                // Attempt to create the secret container if it doesn't exist
+                spawnSync('gcloud', ['secrets', 'create', secretName, '--replication-policy=automatic'], { shell: true });
+
+                // Push the latest file content as a new secret version
+                spawnSync('gcloud', ['secrets', 'versions', 'add', secretName, `--data-file=${localCredsPath}`], { shell: true });
+
+                streamLog(`🔑 Granting secret accessor permissions to ${runtimeServiceAccount} for ${secretName}...`);
+                spawnSync('gcloud', [
+                    'secrets', 'add-iam-policy-binding', secretName,
+                    `--member=serviceAccount:${runtimeServiceAccount}`,
+                    '--role=roles/secretmanager.secretAccessor'
+                ], { shell: true });
+
+                // Appends the runtime mounting path string (e.g., "--set-secrets=oauth.json=oauth-json-secret:latest")
+                secretArgs.push(`--set-secrets=${file}=${secretName}:latest`);
+            }
+        } catch (err) {
+            streamLog(`⚠️ Warning: Could not process credentials directory: ${err.message}`);
         }
 
+        let endpoint = projectCreds.REDIRECT_URI || process.env.REDIRECT_URI || DEFAULT_ENDPOINT;
+        try {
+            endpoint = JSON.parse(fs.readFileSync(GLOBAL_SETTINGS))?.REDIRECT_URI;
+        } catch (e) {
+            console.error(e);
+        }
 
-
-        // 👉 Build variables array injecting your dynamic REDIRECT_URI straight to the function container
+        // 👉 Build variables array and spread dynamic secret mounting flags directly into arguments
         const args = [
             'functions', 'deploy', entryPoint,
             '--runtime=nodejs22',
@@ -436,12 +487,14 @@ app.post('/api/deploy-function', async (req, res) => {
             `--source=${functionSourceDir}`,
             `--entry-point=${entryPoint}`,
             `--region=${DEFAULT_REGION}`,
-            `--set-env-vars=GCP_CLIENT_ID="${projectCreds.GCP_CLIENT_ID}",GCP_CLIENT_SECRET="${projectCreds.GCP_CLIENT_SECRET}",GCP_PROJECT_ID="${projectId}",REDIRECT_URI="${endpoint}"`
+            `--set-env-vars=GCP_CLIENT_ID="${projectCreds.GCP_CLIENT_ID}",GCP_CLIENT_SECRET="${projectCreds.GCP_CLIENT_SECRET}",GCP_PROJECT_ID="${projectId}",REDIRECT_URI="${endpoint}"`,
+            ...secretArgs // 👈 Injects all generated --set-secrets flags dynamically
         ];
 
         const child = spawn('gcloud', args, { shell: true });
         child.stdout.on('data', (data) => streamLog(data.toString()));
         child.stderr.on('data', (data) => streamLog(data.toString()));
+
 
         child.on('close', (code) => {
             if (code === 0) {

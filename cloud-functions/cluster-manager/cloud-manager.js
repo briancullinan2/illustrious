@@ -18,7 +18,8 @@ const CLOUD_PROVIDER_KEYS = [
     { id: 'replicate-service', prefix: 'replicate', file: 'replicate-provider.json', key: 'api_key' },
     { id: 'tencent-service', prefix: 'tencent', file: 'tencent-provider.json', key: 'secret_id' },
     { id: 'paperspace-service', prefix: 'paperspace', file: 'paperspace-provider.json', key: 'api_key' },
-    { id: 'coreweave-service', prefix: 'coreweave', file: 'coreweave-provider.json', key: 'api_key' }
+    { id: 'coreweave-service', prefix: 'coreweave', file: 'coreweave-provider.json', key: 'api_key' },
+    { id: 'runlocal-service', prefix: 'coreweave', file: 'runlocal-provider.json', key: 'api_key' }
 ];
 
 

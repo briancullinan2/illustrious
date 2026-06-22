@@ -532,7 +532,9 @@ header h1 {
 #replicate-service:checked~.scroll-grid-box [for="replicate-service"],
 #tencent-service:checked~.scroll-grid-box [for="tencent-service"],
 #paperspace-service:checked~.scroll-grid-box [for="paperspace-service"],
-#coreweave-service:checked~.scroll-grid-box [for="coreweave-service"] {
+#coreweave-service:checked~.scroll-grid-box [for="coreweave-service"],
+#runlocal-service:checked~.scroll-grid-box [for="runlocal-service"] {
+
     background: var(--accent-muted);
     border-color: var(--accent);
 }
@@ -554,7 +556,8 @@ header h1 {
 #replicate-service:checked~#replicate-container,
 #tencent-service:checked~#tencent-container,
 #paperspace-service:checked~#paperspace-container,
-#coreweave-service:checked~#coreweave-container {
+#coreweave-service:checked~#coreweave-container,
+#runlocal-service:checked~#runlocal-container {
     display: block;
 }
 

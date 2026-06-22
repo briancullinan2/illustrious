@@ -5,124 +5,134 @@ let selectedProjectId = '';
 const providerRoutingStrategy = {
     "gcloud-service": {
         type: "preview",
-        default: "us-central1 (Iowa / GPU-Heavy Core Node)",
-        knownRegions: [
-            "us-central1 (Iowa / T4, L4, A100, H100)",
-            "us-east4 (N. Virginia / A100 Pool)",
-            "us-west1 (Oregon / L4 Accelerator Cells)",
-            "europe-west4 (Netherlands / Enterprise Core Array)"
-        ]
+        default: { "us-central1": "Iowa / GPU-Heavy Core Node" },
+        knownRegions: {
+            "us-central1": "Iowa / T4, L4, A100, H100",
+            "us-east4": "N. Virginia / A100 Pool",
+            "us-west1": "Oregon / L4 Accelerator Cells",
+            "europe-west4": "Netherlands / Enterprise Core Array"
+        }
     },
     "aws-service": {
         type: "preview",
-        default: "us-east-1 (N. Virginia / P4-P5 UltraCluster)",
-        knownRegions: [
-            "us-east-1 (N. Virginia / H100, A100 Nodes)",
-            "us-west-2 (Oregon / Trainium & P4 Cluster)",
-            "eu-west-1 (Ireland / European GPU Hub)"
-        ]
+        default: { "us-east-1": "N. Virginia / P4-P5 UltraCluster" },
+        knownRegions: {
+            "us-east-1": "N. Virginia / H100, A100 Nodes",
+            "us-west-2": "Oregon / Trainium & P4 Cluster",
+            "eu-west-1": "Ireland / European GPU Hub"
+        }
     },
     "azure-service": {
         type: "preview",
-        default: "eastus (Virginia / NDv5 Series Core)",
-        knownRegions: [
-            "eastus (Virginia / NDv5 H100 Core)",
-            "southcentralus (Texas / NDv4 A100 Compute)",
-            "westeurope (Netherlands / High-Performance Grid)"
-        ]
+        default: { "eastus": "Virginia / NDv5 Series Core" },
+        knownRegions: {
+            "eastus": "Virginia / NDv5 H100 Core",
+            "southcentralus": "Texas / NDv4 A100 Compute",
+            "westeurope": "Netherlands / High-Performance Grid"
+        }
+    },
+    "digitalocean-service": {
+        type: "preview",
+        default: { "nyc3": "New York Region / GPU Droplet Pool" },
+        knownRegions: {
+            "nyc3": "New York / Baseline GPU droplets",
+            "ams3": "Amsterdam / Euro Dev Droplet Array",
+            "sfo3": "San Francisco / West Coast Core"
+        }
     },
     "oracle-service": { type: "authenticated", placeholder: "-- Awaiting Compartment & Tenancy OCID Stream --" },
     "ibm-service": { type: "authenticated", placeholder: "-- Awaiting Global IAM Authentication --" },
     "runpod-service": { type: "authenticated", placeholder: "-- Awaiting Verified API Token Authorization --" },
     "lambda-service": {
         type: "static",
-        data: [
-            "us-east-1 (Virginia / H100, A100 Array)",
-            "us-west-1 (California / Tensor Core Spot)",
-            "eu-west-1 (Germany / European Compute Node)"
-        ]
-    },
-    "digitalocean-service": {
-        type: "preview",
-        default: "nyc3 (New York Region / GPU Droplet Pool)",
-        knownRegions: [
-            "nyc3 (New York / Baseline GPU droplets)",
-            "ams3 (Amsterdam / Euro Dev Droplet Array)",
-            "sfo3 (San Francisco / West Coast Core)"
-        ]
+        default: { "us-west-1": "California / Tensor Core Spot" },
+        knownRegions: {
+            "us-east-1": "Virginia / H100, A100 Array",
+            "us-west-1": "California / Tensor Core Spot",
+            "eu-west-1": "Germany / European Compute Node"
+        }
     },
     "vultr-service": {
         type: "static",
-        data: [
-            "ewr (New Jersey Area / GH200 Grace Hopper)",
-            "lax (Los Angeles, CA / HGX H100 Hub)",
-            "ams (Amsterdam / Euro Bare-Metal Slices)",
-            "nrt (Tokyo, Japan / Asia-Pac Tensor Node)",
-            "mxp (Milan, Italy / Southern Europe Edge)"
-        ]
+        default: { "lax": "Los Angeles, CA / HGX H100 Hub" },
+        knownRegions: {
+            "ewr": "New Jersey Area / GH200 Grace Hopper",
+            "lax": "Los Angeles, CA / HGX H100 Hub",
+            "ams": "Amsterdam / Euro Bare-Metal Slices",
+            "nrt": "Tokyo, Japan / Asia-Pac Tensor Node",
+            "mxp": "Milan, Italy / Southern Europe Edge"
+        }
     },
     "vast-service": {
         type: "static",
-        data: ["global-pool (Dynamic P2P Orchestration Zone / Variable Capacity)"]
+        default: { "global-pool": "Dynamic P2P Orchestration Zone / Variable Capacity" },
+        knownRegions: { "global-pool": "Dynamic P2P Orchestration Zone / Variable Capacity" }
     },
     "replicate-service": {
         type: "static",
-        data: ["serverless-global (Zero-Server Orchestration Matrix / Global Edge)"]
+        default: { "global-pool": "Dynamic P2P Orchestration Zone / Variable Capacity" },
+        knownRegions: { "serverless-global": "Zero-Server Orchestration Matrix / Global Edge" }
     },
     "tencent-service": {
         type: "preview",
-        default: "ap-guangzhou (Guangzhou Accelerator Cell)",
-        knownRegions: [
-            "ap-guangzhou (Guangzhou / Tier-1 AI Grid)",
-            "ap-shanghai (Shanghai / Core Inference Cluster)",
-            "na-siliconvalley (Silicon Valley / Western Edge Cells)",
-            "na-ashburn (Ashburn / Eastern Pipeline Nodes)"
-        ]
+        default: { "ap-guangzhou": "Guangzhou Accelerator Cell" },
+        knownRegions: {
+            "ap-guangzhou": "Guangzhou / Tier-1 AI Grid",
+            "ap-shanghai": "Shanghai / Core Inference Cluster",
+            "na-siliconvalley": "Silicon Valley / Western Edge Cells",
+            "na-ashburn": "Ashburn / Eastern Pipeline Nodes"
+        }
     },
     "paperspace-service": { type: "authenticated", placeholder: "-- Awaiting Workspace Team Tenant ID --" },
     "coreweave-service": { type: "authenticated", placeholder: "-- Awaiting K8s Namespace Access Handshake --" }
 };
+
+
+
 
 /**
  * Initializes and loops through all configurations on startup 
  * to fill option items before user interaction blocks take over.
  */
 function initProviderDropdowns() {
-    Object.keys(providerRoutingStrategy).forEach(serviceId => {
-        const containerPrefix = serviceId.split('-')[0];
-        const selectDropdown = document.querySelector(`#${containerPrefix}-container select`);
-
-        if (!selectDropdown) return;
-
-        const strategy = providerRoutingStrategy[serviceId];
-
-        // Core prompt string injected as the default interactive handle
-        let htmlPayload = `<option value="" selected>Select Deployment Target Zone...</option>`;
-
-        if (strategy.type === "static") {
-            htmlPayload += strategy.data
-                .map(region => `<option value="${region}">${region}</option>`)
-                .join('');
-            selectDropdown.innerHTML = htmlPayload;
-        }
-        else if (strategy.type === "preview") {
-            // Include the single default, followed by known public fallback clusters
-            htmlPayload += `<option value="${strategy.default}">${strategy.default} [Primary]</option>`;
-            htmlPayload += strategy.knownRegions
-                .filter(r => r !== strategy.default) // Deduplicate primary
-                .map(region => `<option value="${region}">${region}</option>`)
-                .join('');
-            htmlPayload += `<option value="" disabled>-- Provide secret access keys to unlock complete region map --</option>`;
-            selectDropdown.innerHTML = htmlPayload;
-        }
-        else if (strategy.type === "authenticated") {
-            selectDropdown.innerHTML = `
-                <option value="" disabled selected>${strategy.placeholder}</option>
-            `;
-        }
-    });
+    Object.keys(providerRoutingStrategy).forEach(updateServiceProviderDropdown);
 }
 
+
+
+function updateServiceProviderDropdown(serviceId) {
+    const containerPrefix = serviceId.split('-')[0];
+    const selectDropdown = document.querySelector(`#${containerPrefix}-container select`);
+
+    if (!selectDropdown) return;
+
+    const strategy = providerRoutingStrategy[serviceId];
+
+    // Core prompt string injected as the default interactive handle
+    let htmlPayload = `<option value="" selected>Select Deployment Target Zone...</option>`;
+
+    if (strategy.type === "static" || strategy.type === "preview") {
+        // Extract the raw code and description for the primary default region
+        let defaultKey, defaultVal
+        if (strategy.default) {
+            [defaultKey, defaultVal] = Object.entries(strategy.default);
+            htmlPayload += `<option value="${defaultKey}">${defaultKey} (${defaultVal}) [Primary]</option>`;
+        }
+
+        // Iterate over key-value pairs of known regions, filtering out the primary key
+        htmlPayload += Object.entries(strategy.knownRegions)
+            .filter(([regionKey]) => regionKey !== defaultKey) // Deduplicate primary
+            .map(([regionKey, regionVal]) => `<option value="${regionKey}">${regionKey} (${regionVal})</option>`)
+            .join('');
+
+        htmlPayload += `<option value="" disabled>-- Provide secret access keys to unlock complete region map --</option>`;
+        selectDropdown.innerHTML = htmlPayload;
+    } else if (strategy.type === "authenticated") {
+        selectDropdown.innerHTML = `
+                <option value="" disabled selected>${strategy.placeholder}</option>
+            `;
+    }
+}
 
 
 
@@ -141,6 +151,10 @@ async function loadEnvironment() {
 
     if (credentialData.REDIRECT_URL) {
         document.getElementById('callback-uri-display').innerText = credentialData.REDIRECT_URL
+    }
+
+    if (credentialData.REGION) {
+        document.getElementById('gcloud-region').value = credentialData.REGION
     }
 
     credentialData.projects.forEach(p => {
@@ -579,10 +593,14 @@ function initializeLogoGenerator() {
 
 async function initializeLogoGeneratorStatic(event) {
 
-    await loadEnvironment();
-
-    await initProviderDropdowns();
-
+    initProviderDropdowns();
+    loadEnvironment();
+    const currentSelected = document.querySelector('[name="cloud-service"]:checked')
+    if (currentSelected) {
+        const currentTab = document.querySelector(`label[for="${currentSelected.id}"]`)
+        if (currentTab)
+            verifyHostingStatus({ target: currentTab, stopPropagation: () => { } })
+    }
 
     const grid = document.getElementById('logo-grid');
     if (!grid) return;
@@ -699,7 +717,6 @@ document.getElementById('install-all-btn').addEventListener('click', deployAllFu
 
 
 document.querySelector('#step-1').addEventListener('click', verifyHostingStatus);
-
 document.querySelector('#step-1 .scroll-grid-box').addEventListener('click', verifyHostingStatus);
 
 
@@ -759,6 +776,12 @@ async function verifyHostingStatus(e) {
                     .map(r => `<option value="${r}">${r}</option>`)
                     .join('');
             }
+        }
+
+        if (data.meta.availability) {
+            providerRoutingStrategy[providerId].type = "static"
+            providerRoutingStrategy[providerId].knownRegions = data.meta.availability
+            updateServiceProviderDropdown(providerId)
         }
 
         if (actionButton) {
