@@ -41,7 +41,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         // 3. Mount workspace split layout panel preference
         const userWorkspaceChoice = SettingsManager.get('core', 'workspaceDefault');
 
-        await DependencyLoader.loadModule(userWorkspaceChoice);
+        //await DependencyLoader.loadModule(userWorkspaceChoice);
 
     } catch (error) {
         debugger

@@ -1,6 +1,6 @@
 ﻿
 const DB_VERSION = 1 // Increment this when you add new C# Entities!
-const DB_NAME = "briancullinan2/quedit"
+const DB_NAME = "briancullinan2/illustrious"
 const DB_STORE_NAME = 'FILE_DATA';
 const DB_DEBOUNCE_INTERVAL = 50
 
@@ -194,8 +194,8 @@ async function putRecord(storeName, record, dbName = null, noBounce = false) {
 
 
 
-async function getRecord(storeName, record, dbName = null, noBounce = false) {
-    return await debounceRecords(storeName, 'path', record, null, null, dbName, 'get', noBounce)
+async function getRecord(storeName, record, dbName = null, dbVersion = 1, noBounce = false) {
+    return await debounceRecords(storeName, 'path', record, dbVersion, null, dbName, 'get', noBounce)
 }
 
 
@@ -232,7 +232,7 @@ function debounceRecords(storeName, indexName, record, lower, upper, dbName, MOD
         }
 
         if (MODE === 'get')
-            return getRecordInternal(storeName, record, dbName);
+            return getRecordInternal(storeName, record, dbName, lower);
         else if (MODE === 'put')
             return putRecordInternal(storeName, record, dbName);
         else if (MODE === 'query')
@@ -284,7 +284,7 @@ function debounceRecords(storeName, indexName, record, lower, upper, dbName, MOD
         try {
             let result;
             if (MODE === 'get')
-                result = await getRecordInternal(sName, rec, dName);
+                result = await getRecordInternal(sName, rec, dName, low);
             else if (MODE === 'put')
                 result = await putRecordInternal(sName, rec, dName);
             else if (MODE === 'query')
@@ -311,10 +311,10 @@ function debounceRecords(storeName, indexName, record, lower, upper, dbName, MOD
 }
 
 
-async function getRecordInternal(storeName, key, dbName = null) {
+async function getRecordInternal(storeName, key, dbName = null, dbVersion = 1) {
 
 
-    const db = await getDB(dbName);
+    const db = await getDB(dbName, dbVersion);
     const tx = db.transaction(storeName, 'readonly');
     const store = tx.objectStore(storeName);
 

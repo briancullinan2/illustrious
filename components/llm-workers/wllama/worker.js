@@ -90,6 +90,7 @@ self.onmessage = async (e) => {
 
         globalThis.document.baseURI = baseURI
         await initWLLaMa()
+        await installDatabaseIfNeeded(GGUF_DATABASE);
 
         let loraArrayBuffer
         try {
@@ -114,7 +115,6 @@ self.onmessage = async (e) => {
 
 
         try {
-            await installDatabaseIfNeeded(GGUF_DATABASE);
 
             const ggufModelPath = getGGUFModel(payload.modelUrl); // define this helper if needed
             let myCachedArrayBuffer = (await getRecord(DB_STORE_NAME, ggufModelPath, GGUF_DATABASE))?.contents;

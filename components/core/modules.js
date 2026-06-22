@@ -162,7 +162,7 @@ async function manageServiceWorker() {
     // 1. Get the Server's Truth first (our Token/Version)
     let serverUpdate = null;
     try {
-        serverUpdate = await getBranchVersion('briancullinan2', 'quedit', 'main')
+        serverUpdate = await getBranchVersion('briancullinan2', 'illustrious', 'main')
     } catch (e) {
         console.warn("Could not reach server for version check. Proceeding with caution.");
     }
@@ -181,7 +181,7 @@ async function manageServiceWorker() {
                 isCheckDone = true;
                 try {
                     if (event.data.version)
-                        swVersion = JSON.parse(new TextDecoder('utf-8').decode(event.data.version))[1];
+                        swVersion = new Date(event.data.version);
                 }
                 catch (e) { }
             }

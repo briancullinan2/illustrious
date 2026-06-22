@@ -48,7 +48,6 @@ async function githubRequest(ownerName, repoName, url, authorize = true, buffer 
             return await githubRequest(ownerName, repoName, url, false, buffer)
         } else if (up.message === 'UNAUTHORIZED_ACCESS') {
         }
-        PREAMBLE = ERROR_PREAMBLE
         console.error("Failed to github: " + fullUrl, up);
         throw up
     }
@@ -597,7 +596,6 @@ async function downloadRepoZip(owner, repo, branch = 'master', database = null) 
         console.info("Repository successfully mounted to virtual FS.");
 
     } catch (err) {
-        PREAMBLE = ERROR_PREAMBLE
         console.error(`Failed to download repo: ${err.message}`);
     }
 }
@@ -619,7 +617,6 @@ async function listReleases(owner, repo) {
 
         return releases;
     } catch (err) {
-        PREAMBLE = ERROR_PREAMBLE
         console.error("Failed to list releases: " + err);
     }
 }
@@ -650,7 +647,6 @@ async function getAuthenticatedUser() {
         // You can now use userData.avatar_url, userData.name, etc.
         return userData;
     } catch (err) {
-        PREAMBLE = ERROR_PREAMBLE
         console.error("Failed to fetch user data: " + err);
     }
 }

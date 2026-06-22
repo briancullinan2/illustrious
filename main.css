@@ -414,7 +414,8 @@ input:focus {
    ============================================================================ */
 a.primary,
 a.secondary,
-button {
+#control-panel button,
+#cloud-observer button {
     width: 100%;
     flex: 1;
     padding: 10px;
@@ -430,7 +431,8 @@ button {
 
 a.primary:disabled,
 a.secondary:disabled,
-button:disabled {
+#control-panel button:disabled,
+#cloud-observer button:disabled {
     opacity: 0.3;
     cursor: not-allowed;
     box-shadow: none !important;

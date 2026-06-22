@@ -1,0 +1,4440 @@
+:root {
+    --lightningcss-light: initial;
+    --lightningcss-dark: ;
+    color-scheme: light;
+    color: #1d2329;
+    font-synthesis: none;
+    text-rendering: optimizelegibility;
+    background: #f4f6f8;
+    font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif
+}
+
+:root[data-theme=dark] {
+    --lightningcss-light: ;
+    --lightningcss-dark: initial;
+    color-scheme: dark;
+    color: #e7edf4;
+    background: #0c1117
+}
+
+* {
+    box-sizing: border-box
+}
+
+[hidden] {
+    display: none !important
+}
+
+body {
+    background: #f4f6f8;
+    min-width: 320px;
+    min-height: 100vh;
+    margin: 0
+}
+
+button,
+input,
+select {
+    font: inherit
+}
+
+button,
+.fileButton {
+    color: #1d2329;
+    cursor: pointer;
+    background: #f4f6f8;
+    border: 1px solid #0000;
+    border-radius: 5px;
+    justify-content: center;
+    align-items: center;
+    gap: 8px;
+    min-height: 36px;
+    padding: 0 14px;
+    font-size: 13px;
+    font-weight: 700;
+    transition: border-color .14s, box-shadow .14s, transform .14s, background .14s;
+    display: inline-flex
+}
+
+button:hover:not(:disabled),
+.fileButton:hover {
+    background: #fff;
+    border-color: #0000;
+    box-shadow: 0 8px 22px #1e2a3814
+}
+
+button:active:not(:disabled),
+.fileButton:active {
+    transform: translateY(1px)
+}
+
+button:disabled {
+    cursor: not-allowed;
+    opacity: .46;
+    box-shadow: none
+}
+
+.textButton {
+    color: #344251;
+    text-underline-offset: 3px;
+    background: 0 0;
+    border-radius: 0;
+    min-height: 30px;
+    padding: 0 6px;
+    font-size: 12px;
+    font-weight: 820;
+    text-decoration: underline;
+    box-shadow: none !important
+}
+
+.textButton:hover:not(:disabled) {
+    color: #ff6b0b;
+    box-shadow: none;
+    background: 0 0
+}
+
+input[type=file] {
+    display: none
+}
+
+.wideFileButton {
+    width: 100%
+}
+
+.shell {
+    height: 100vh;
+    min-height: 0;
+    padding: 0
+}
+
+.workspace {
+    height: 100vh;
+    min-height: 0;
+    box-shadow: none;
+    background: #fff;
+    border: 0;
+    border-radius: 0;
+    flex-direction: column;
+    display: flex;
+    overflow: hidden
+}
+
+.topbar {
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+    background: #fff;
+    border-bottom: 0;
+    grid-template-columns: minmax(220px, 1fr) auto minmax(170px, 230px) minmax(210px, 1fr);
+    align-items: center;
+    gap: 18px;
+    min-height: 78px;
+    padding: 14px 18px;
+    display: grid
+}
+
+.brand {
+    align-items: center;
+    gap: 12px;
+    min-width: 0;
+    display: inline-flex
+}
+
+.brandMark {
+    flex: none;
+    width: 44px;
+    height: 48px
+}
+
+.brandMark svg {
+    width: 100%;
+    height: 100%;
+    display: block
+}
+
+.brandTree {
+    fill: #101417
+}
+
+.brandGraph {
+    fill: none;
+    stroke: #ff5a00;
+    stroke-width: 4.2px;
+    stroke-linecap: round;
+    stroke-linejoin: round
+}
+
+.brandNodes {
+    fill: #ff5a00
+}
+
+h1 {
+    letter-spacing: 0;
+    color: #ff6f12;
+    margin: 0;
+    font-size: 20px;
+    line-height: 1.08
+}
+
+p {
+    color: #66727f;
+    margin: 4px 0 0;
+    font-size: 13px
+}
+
+.topnav {
+    background: #f7f9fb;
+    border: 0;
+    border-radius: 5px;
+    justify-content: center;
+    align-items: center;
+    gap: 4px;
+    padding: 4px;
+    display: inline-flex
+}
+
+.topnavItem {
+    color: #4a5563;
+    text-align: center;
+    min-width: 74px;
+    min-height: 32px;
+    box-shadow: none;
+    background: 0 0;
+    border: 0;
+    border-radius: 5px;
+    padding: 8px 12px;
+    font-size: 13px;
+    font-weight: 700
+}
+
+.topnavItem:hover:not(:disabled) {
+    box-shadow: none;
+    background: #fff
+}
+
+.topnavItem.active {
+    color: #ff6f12;
+    background: #fff4ec
+}
+
+.mobileNav {
+    align-items: center;
+    gap: 8px;
+    min-width: 0;
+    display: none
+}
+
+.mobileNav span {
+    color: #697581;
+    font-size: 12px;
+    font-weight: 780
+}
+
+.mobileNav select {
+    color: #202832;
+    background: #f7f9fb;
+    border: 0;
+    border-radius: 5px;
+    min-width: 150px;
+    height: 34px;
+    padding: 0 30px 0 10px;
+    font-size: 13px;
+    font-weight: 760
+}
+
+select option {
+    color: #202832;
+    background: #fff
+}
+
+.topProjectSwitcher {
+    background: #f7f9fb;
+    border: 1px solid #e6ecf2;
+    border-radius: 6px;
+    grid-template-columns: auto minmax(0, 1fr);
+    justify-self: end;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+    min-width: 0;
+    max-width: 230px;
+    min-height: 34px;
+    padding: 4px 6px 4px 10px;
+    display: inline-grid
+}
+
+.topProjectSwitcher span {
+    color: #697581;
+    text-transform: uppercase;
+    font-size: 11px;
+    font-weight: 820
+}
+
+.topProjectSwitcher select {
+    color: #202832;
+    background: 0 0;
+    border: 0;
+    width: 100%;
+    min-width: 0;
+    height: 26px;
+    padding: 0 22px 0 4px;
+    font-size: 13px;
+    font-weight: 780
+}
+
+.topProjectSwitcher select:disabled {
+    cursor: not-allowed;
+    opacity: .64
+}
+
+.actions {
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    gap: 8px;
+    display: flex
+}
+
+.themeToggle {
+    min-width: 88px;
+    padding: 0 11px
+}
+
+.themeToggleIcon {
+    border: 2px solid;
+    border-radius: 50%;
+    flex: none;
+    width: 18px;
+    height: 18px;
+    position: relative
+}
+
+.themeToggleIcon:after {
+    content: "";
+    background: currentColor;
+    border-radius: 0 10px 10px 0;
+    position: absolute;
+    inset: 2px 0 2px 7px
+}
+
+.themeToggleText {
+    text-align: left;
+    min-width: 34px
+}
+
+#run {
+    color: #fff;
+    background: #ff7a18;
+    border-color: #ff7a18;
+    min-width: 116px;
+    box-shadow: 0 10px 22px #ff7a183d
+}
+
+#run:hover:not(:disabled) {
+    background: #f06f13;
+    border-color: #f06f13
+}
+
+#uploadAssets {
+    min-width: 96px
+}
+
+#statusToggle {
+    min-width: 92px
+}
+
+.content {
+    flex: 1;
+    grid-template-columns: 360px minmax(0, 1fr) 290px;
+    align-items: stretch;
+    gap: 0;
+    min-height: 0;
+    padding: 0;
+    display: grid;
+    position: relative
+}
+
+.srOnly {
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+    width: 1px;
+    height: 1px;
+    margin: -1px;
+    padding: 0;
+    position: absolute;
+    overflow: hidden
+}
+
+.settingsIconToggle {
+    z-index: 1;
+    color: #66727f;
+    width: 30px;
+    min-width: 30px;
+    height: 30px;
+    min-height: 30px;
+    box-shadow: none;
+    background: #f6f8faeb;
+    border-radius: 50%;
+    padding: 0;
+    position: absolute;
+    top: 12px;
+    left: 10px
+}
+
+.content.settingsClosed .settingsIconToggle {
+    z-index: 8
+}
+
+.settingsIconToggle svg {
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.8px;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    width: 17px;
+    height: 17px;
+    display: block
+}
+
+.settingsIconToggle:hover:not(:disabled),
+.settingsIconToggle.active {
+    color: #ff6f12;
+    box-shadow: none;
+    background: #fff4ec
+}
+
+.appFooter {
+    color: #8a95a0;
+    background: #fff;
+    justify-content: center;
+    align-items: center;
+    gap: 8px;
+    min-height: 22px;
+    padding: 0 12px 4px;
+    font-size: 10px;
+    line-height: 1.2;
+    display: flex
+}
+
+.appFooter a {
+    color: #737f8b;
+    text-decoration: none
+}
+
+.appFooter a:hover {
+    color: #ff6f12;
+    text-underline-offset: 2px;
+    text-decoration: underline
+}
+
+.content.settingsClosed {
+    grid-template-columns: minmax(0, 1fr) 290px
+}
+
+.content.statusClosed {
+    grid-template-columns: 360px minmax(0, 1fr)
+}
+
+.content.settingsClosed.statusClosed {
+    grid-template-columns: minmax(0, 1fr)
+}
+
+.content.settingsClosed .panel,
+.content.statusClosed .runRail {
+    display: none
+}
+
+.content.settingsClosed .workspacePageHeader {
+    padding-left: 36px
+}
+
+.panel,
+.runRail,
+.centerColumn {
+    height: 100%;
+    min-height: 0
+}
+
+.panel {
+    z-index: 2;
+    overscroll-behavior: contain;
+    background: #fff;
+    border: 0;
+    border-radius: 0;
+    flex-direction: column;
+    gap: 10px;
+    padding: 14px;
+    display: flex;
+    position: relative;
+    overflow-y: auto
+}
+
+.panelTitle {
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: start;
+    gap: 4px;
+    padding: 4px 2px 10px;
+    display: grid
+}
+
+.panelTitle>div {
+    min-width: 0
+}
+
+.panelTitle span {
+    color: #ff6f12;
+    letter-spacing: .04em;
+    text-transform: uppercase;
+    font-size: 12px;
+    font-weight: 850
+}
+
+.panelTitle small {
+    color: #66727f;
+    font-size: 12px;
+    line-height: 1.4
+}
+
+.panelMinimize {
+    color: #66727f;
+    border-radius: 5px;
+    width: 30px;
+    min-width: 30px;
+    min-height: 30px;
+    padding: 0
+}
+
+.panelMinimize:hover:not(:disabled) {
+    color: #ff6f12
+}
+
+.panelMinimize span {
+    border-bottom: 2px solid;
+    border-left: 2px solid;
+    width: 9px;
+    height: 9px;
+    transform: translate(2px)rotate(45deg)
+}
+
+.settingsGroup {
+    border-top: 0;
+    padding-top: 2px
+}
+
+.settingsLocked .settingsGroup summary {
+    cursor: default;
+    color: #7b8793;
+    pointer-events: none
+}
+
+.settingsLocked .fieldHint {
+    color: #929da8
+}
+
+.settingsGroup:first-of-type {
+    border-top: 0
+}
+
+.settingsGroup summary {
+    cursor: pointer;
+    color: #242b33;
+    letter-spacing: .03em;
+    text-transform: uppercase;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    min-height: 38px;
+    font-size: 12px;
+    font-weight: 850;
+    list-style: none;
+    display: flex
+}
+
+.settingsGroup summary::-webkit-details-marker {
+    display: none
+}
+
+.settingsGroup summary:after {
+    content: "";
+    border-bottom: 1.5px solid #8994a0;
+    border-right: 1.5px solid #8994a0;
+    width: 7px;
+    height: 7px;
+    transition: transform .14s;
+    transform: rotate(45deg)
+}
+
+.settingsGroup[open] summary:after {
+    transform: rotate(225deg)
+}
+
+.groupBody {
+    gap: 0;
+    padding: 2px 0 12px;
+    display: grid
+}
+
+.field {
+    gap: 6px;
+    display: grid
+}
+
+.field label {
+    color: #27313b;
+    font-size: 12px;
+    font-weight: 760
+}
+
+.field input,
+.field select {
+    color: #202832;
+    background: #fbfcfd;
+    border: 1px solid #d9e0e7;
+    border-radius: 5px;
+    outline: none;
+    width: 100%;
+    height: 36px;
+    padding: 0 10px;
+    font-size: 13px
+}
+
+.field input:focus,
+.field select:focus {
+    background: #fff;
+    border-color: #ff8a34;
+    box-shadow: 0 0 0 3px #ff7a1829
+}
+
+.fieldHint {
+    color: #75818e;
+    font-size: 11px;
+    line-height: 1.35
+}
+
+.panel .field {
+    grid-template-columns: minmax(0, 1fr) minmax(112px, 142px);
+    align-items: center;
+    gap: 5px 12px;
+    min-height: 38px;
+    padding: 4px 0
+}
+
+.panel .fieldMeta {
+    align-items: center;
+    gap: 6px;
+    min-width: 0;
+    display: inline-flex
+}
+
+.panel .fieldMeta label,
+.panel .fieldLabelText {
+    color: #27313b;
+    min-width: 0;
+    font-size: 12px;
+    font-weight: 760;
+    line-height: 1.25
+}
+
+.panel .fieldHelp {
+    color: #687482;
+    width: 18px;
+    min-width: 18px;
+    height: 18px;
+    min-height: 18px;
+    box-shadow: none;
+    background: #f0f3f6;
+    border: 0;
+    border-radius: 50%;
+    padding: 0;
+    font-size: 11px;
+    font-weight: 850;
+    line-height: 1
+}
+
+.panel .fieldHelp:hover:not(:disabled),
+.panel .fieldHelp[aria-expanded=true] {
+    color: #ff6f12;
+    box-shadow: none;
+    background: #fff4ec
+}
+
+.panel .field>input,
+.panel .field>select,
+.panel .field>button:not(.fieldHelp),
+.panel .fieldControl {
+    grid-column: 2;
+    justify-self: stretch
+}
+
+.panel .field>input,
+.panel .field>select,
+.panel .field>button:not(.fieldHelp) {
+    height: 31px;
+    padding: 0 8px;
+    font-size: 12px
+}
+
+.panel .fieldHint {
+    color: #66727f;
+    grid-column: 1/-1;
+    padding: 1px 0 5px;
+    font-size: 11px;
+    line-height: 1.35
+}
+
+.panel .checkboxControl {
+    color: #4f5d6b;
+    justify-content: flex-end;
+    gap: 7px;
+    min-height: 31px;
+    font-size: 11px;
+    font-weight: 760
+}
+
+.panel .checkboxControl input[type=checkbox] {
+    width: 16px;
+    height: 16px
+}
+
+.settingsWorkflowSwitch {
+    background: #f1f4f7;
+    border-radius: 6px;
+    grid-template-columns: 1fr 1fr;
+    gap: 4px;
+    padding: 3px;
+    display: grid
+}
+
+.settingsWorkflowSwitch button {
+    color: #5d6874;
+    min-height: 30px;
+    box-shadow: none;
+    text-transform: uppercase;
+    letter-spacing: .03em;
+    background: 0 0;
+    border: 0;
+    border-radius: 5px;
+    padding: 0 8px;
+    font-size: 11px;
+    font-weight: 850
+}
+
+.settingsWorkflowSwitch button:hover:not(:disabled),
+.settingsWorkflowSwitch button.active {
+    color: #ff6f12;
+    background: #fff;
+    box-shadow: 0 1px 3px #1c242d14
+}
+
+.panel.notebookMode>.settingsGroup {
+    display: none
+}
+
+.stageNotebook {
+    gap: 8px;
+    display: grid
+}
+
+.stageNotebook[hidden] {
+    display: none
+}
+
+.stageNotebookCell {
+    border-top: 1px solid #e5ebf1;
+    padding-top: 6px
+}
+
+.stageNotebookCell:first-child {
+    border-top: 0
+}
+
+.stageNotebookCell summary {
+    cursor: pointer;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 12px;
+    min-height: 52px;
+    list-style: none;
+    display: grid
+}
+
+.stageNotebookCell summary::-webkit-details-marker {
+    display: none
+}
+
+.stageNotebookHeading {
+    gap: 2px;
+    min-width: 0;
+    display: grid
+}
+
+.stageNotebookHeading span {
+    color: #ff6f12;
+    letter-spacing: .05em;
+    text-transform: uppercase;
+    font-size: 10px;
+    font-weight: 900
+}
+
+.stageNotebookHeading strong {
+    color: #222a33;
+    font-size: 13px;
+    line-height: 1.2
+}
+
+.stageNotebookHeading small {
+    color: #6e7a86;
+    font-size: 11px;
+    line-height: 1.25
+}
+
+.stageNotebookStatus {
+    color: #697581;
+    text-align: center;
+    text-transform: uppercase;
+    letter-spacing: .03em;
+    background: #eef2f5;
+    border-radius: 999px;
+    min-width: 70px;
+    padding: 5px 7px;
+    font-size: 10px;
+    font-weight: 850
+}
+
+.stageNotebookCell.selected .stageNotebookStatus {
+    color: #b65308;
+    background: #fff0e3
+}
+
+.stageNotebookCell.hasResult .stageNotebookStatus {
+    color: #218366;
+    background: #e7f6ef
+}
+
+.stageNotebookBody {
+    gap: 10px;
+    padding: 0 0 12px;
+    display: grid
+}
+
+.stageNotebookPurpose {
+    color: #596675;
+    margin: 0;
+    font-size: 12px;
+    line-height: 1.4
+}
+
+.stageNotebookControls {
+    gap: 1px;
+    display: grid
+}
+
+.notebookField {
+    grid-template-columns: minmax(0, 1fr) minmax(116px, 145px);
+    align-items: center;
+    gap: 7px 10px;
+    min-height: 42px;
+    padding: 5px 0;
+    display: grid
+}
+
+.notebookFieldMeta {
+    gap: 2px;
+    min-width: 0;
+    display: grid
+}
+
+.notebookFieldMeta label {
+    color: #27313b;
+    font-size: 12px;
+    font-weight: 780;
+    line-height: 1.25
+}
+
+.notebookFieldMeta small {
+    color: #73808d;
+    font-size: 10.5px;
+    line-height: 1.25
+}
+
+.notebookField>input,
+.notebookField>select {
+    color: #202832;
+    background: #fbfcfd;
+    border: 1px solid #d9e0e7;
+    border-radius: 5px;
+    outline: none;
+    width: 100%;
+    height: 31px;
+    padding: 0 8px;
+    font-size: 12px
+}
+
+.notebookField>input:focus,
+.notebookField>select:focus {
+    background: #fff;
+    border-color: #ff8a34;
+    box-shadow: 0 0 0 3px #ff7a1829
+}
+
+.notebookCheckboxControl {
+    color: #4f5d6b;
+    justify-content: flex-end;
+    align-items: center;
+    gap: 7px;
+    min-height: 31px;
+    font-size: 11px;
+    font-weight: 760;
+    display: inline-flex
+}
+
+.notebookCheckboxControl input {
+    width: 16px;
+    height: 16px
+}
+
+.stageNotebookFooter {
+    gap: 8px;
+    padding-top: 2px;
+    display: grid
+}
+
+.stageNotebookActions,
+.stageNotebookInspect {
+    grid-template-columns: 1fr 1fr;
+    gap: 6px;
+    display: grid
+}
+
+.stageNotebookActions button,
+.stageNotebookInspect button {
+    justify-content: center;
+    min-height: 30px;
+    padding: 0 8px;
+    font-size: 11px;
+    font-weight: 800
+}
+
+.stageNotebookActions .primaryStageRun {
+    color: #fff;
+    background: #ff7a18;
+    box-shadow: 0 2px 5px #ff7a183d
+}
+
+.stageNotebookActions .primaryStageRun:hover:not(:disabled) {
+    background: #f06f12
+}
+
+.stageNotebookEvidence {
+    color: #52606f;
+    background: #f6f8fa;
+    border-radius: 5px;
+    align-items: center;
+    min-height: 28px;
+    padding: 7px 9px;
+    font-size: 11px;
+    line-height: 1.3;
+    display: flex
+}
+
+.runtimeHealthPanel {
+    border-top: 1px solid #e4eaf0;
+    gap: 7px;
+    margin-top: auto;
+    padding: 12px 0 2px;
+    display: grid
+}
+
+.runtimeHealthPanel button {
+    width: 100%;
+    min-height: 34px;
+    font-size: 12px;
+    font-weight: 850
+}
+
+.runtimeHealthStatus {
+    color: #66727f;
+    min-height: 16px;
+    font-size: 11px;
+    line-height: 1.35
+}
+
+.runtimeHealthStatus.pass {
+    color: #207552
+}
+
+.runtimeHealthStatus.warn {
+    color: #8a5a0a
+}
+
+.runtimeHealthStatus.fail {
+    color: #b42318
+}
+
+.videoPreview {
+    background: #10161d;
+    border: 0;
+    border-radius: 4px;
+    width: 100%;
+    max-height: 170px;
+    display: none;
+    box-shadow: inset 0 0 0 1px #ffffff0a
+}
+
+.videoPreview.loaded {
+    display: block
+}
+
+.videoCanvas {
+    display: none
+}
+
+.videoGrid {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 12px;
+    display: grid
+}
+
+.videoActions {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+    display: grid
+}
+
+.videoStatus {
+    color: #66727f;
+    font-size: 11px;
+    line-height: 1.4;
+    display: block
+}
+
+.field.checkboxField label {
+    color: #202832;
+    cursor: pointer;
+    align-items: center;
+    gap: 9px;
+    min-height: 34px;
+    display: flex
+}
+
+.field.checkboxField input[type=checkbox] {
+    accent-color: #ff7a18;
+    cursor: pointer;
+    width: 17px;
+    height: 17px;
+    margin: 0;
+    padding: 0
+}
+
+.centerColumn {
+    grid-template-rows: minmax(260px, 1fr) 226px;
+    gap: 12px;
+    min-width: 0;
+    display: grid
+}
+
+.centerColumn.showStandalone {
+    grid-template-rows: minmax(0, 1fr)
+}
+
+.centerColumn.consoleMinimized {
+    grid-template-rows: minmax(260px, 1fr) 42px
+}
+
+.workspacePage {
+    background: #fff;
+    border: 0;
+    border-radius: 0;
+    height: 100%;
+    min-height: 0;
+    overflow: auto
+}
+
+.setupPage {
+    grid-template-rows: auto auto auto auto auto;
+    align-content: start;
+    gap: 14px;
+    padding: 20px;
+    display: grid
+}
+
+.assetsHeader,
+.videoHeader,
+.workspacePageHeader {
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 16px;
+    display: flex
+}
+
+.workspaceHeaderActions {
+    flex: none;
+    align-items: center;
+    gap: 10px;
+    display: flex
+}
+
+.assetsHeader h2,
+.aboutHero h2,
+.workspacePageHeader h2 {
+    color: #1f2933;
+    letter-spacing: 0;
+    margin: 0;
+    font-size: 24px;
+    line-height: 1.12
+}
+
+.assetsHeader p,
+.aboutHero p,
+.workspacePageHeader p {
+    color: #627080;
+    max-width: 720px;
+    margin: 6px 0 0;
+    font-size: 13px;
+    line-height: 1.5
+}
+
+.assetDropzone {
+    text-align: center;
+    background: linear-gradient(135deg, #ff7a1814, #0000 44%), #fbfcfd;
+    border: 1.5px dashed #cbd5df;
+    border-radius: 5px;
+    outline: none;
+    align-content: center;
+    place-items: center;
+    gap: 10px;
+    min-height: 240px;
+    padding: 28px;
+    transition: border-color .14s, background .14s, box-shadow .14s;
+    display: grid
+}
+
+.assetDropzone:focus,
+.assetDropzone.dragActive {
+    border-color: #ff7a18;
+    box-shadow: 0 0 0 4px #ff7a1821
+}
+
+.assetDropzone.hasAssets {
+    background: linear-gradient(135deg, #24946f1a, #0000 48%), #fbfcfd;
+    border-style: solid;
+    min-height: 138px
+}
+
+.assetDropIcon {
+    background: #fff7f1;
+    border: 0;
+    border-radius: 5px;
+    width: 52px;
+    height: 52px;
+    position: relative
+}
+
+.assetDropIcon:before,
+.assetDropIcon:after {
+    content: "";
+    background: #ff7a18;
+    position: absolute
+}
+
+.assetDropIcon:before {
+    border-radius: 4px;
+    width: 4px;
+    height: 28px;
+    top: 12px;
+    left: 24px
+}
+
+.assetDropIcon:after {
+    border-radius: 4px;
+    width: 28px;
+    height: 4px;
+    top: 24px;
+    left: 12px
+}
+
+.assetDropzone strong {
+    color: #202832;
+    font-size: 18px;
+    line-height: 1.2
+}
+
+.assetDropzone span {
+    color: #687482;
+    max-width: 560px;
+    font-size: 13px;
+    line-height: 1.45
+}
+
+.assetActions {
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 8px;
+    margin-top: 4px;
+    display: flex
+}
+
+.assetStatus {
+    color: #66727f;
+    font-size: 12px;
+    line-height: 1.4
+}
+
+.projectStatus {
+    color: #33404d;
+    margin-top: 5px;
+    font-size: 12px;
+    font-weight: 760;
+    display: block
+}
+
+.projectManager {
+    background: #f7f9fb;
+    grid-template-columns: minmax(180px, 1fr) minmax(180px, 280px) auto;
+    align-items: center;
+    gap: 10px;
+    padding: 12px;
+    display: grid
+}
+
+.projectManagerTitle {
+    min-width: 0
+}
+
+.projectManagerTitle strong {
+    color: #242b33;
+    font-size: 13px;
+    font-weight: 850;
+    display: block
+}
+
+.projectManagerTitle small {
+    color: #66727f;
+    margin-top: 3px;
+    font-size: 12px;
+    line-height: 1.35;
+    display: block
+}
+
+.projectManager select {
+    min-width: 0
+}
+
+.projectActions {
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    gap: 8px;
+    display: flex
+}
+
+.projectActions button,
+.projectImportButton {
+    min-height: 32px;
+    font-size: 12px
+}
+
+.imageListPanel {
+    gap: 12px;
+    min-height: 0;
+    display: grid
+}
+
+.imageListHeader {
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 16px;
+    display: flex
+}
+
+.imageListHeader strong {
+    color: #242b33;
+    font-size: 13px;
+    font-weight: 850;
+    display: block
+}
+
+.imageListHeader small {
+    color: #66727f;
+    margin-top: 3px;
+    font-size: 12px;
+    line-height: 1.35;
+    display: block
+}
+
+.imageListActions {
+    flex: none;
+    align-items: center;
+    gap: 8px;
+    display: flex
+}
+
+.imageListActions button {
+    min-height: 30px;
+    padding: 0 10px;
+    font-size: 12px
+}
+
+.imageGrid {
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    gap: 10px;
+    display: grid
+}
+
+.imageTile {
+    opacity: .68;
+    background: #f7f9fb;
+    grid-template-rows: 116px auto;
+    min-width: 0;
+    display: grid;
+    overflow: hidden
+}
+
+.imageTile.selected {
+    opacity: 1
+}
+
+.imageThumbButton {
+    background: #eef2f5;
+    border-radius: 0;
+    height: 116px;
+    min-height: 0;
+    padding: 0;
+    display: block;
+    overflow: hidden
+}
+
+.imageThumbButton img {
+    object-fit: cover;
+    width: 100%;
+    height: 100%;
+    display: block
+}
+
+.imageTileBody {
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 6px 8px;
+    min-width: 0;
+    padding: 8px;
+    display: grid
+}
+
+.imageCheck {
+    color: #27313b;
+    align-items: center;
+    gap: 6px;
+    min-width: 0;
+    font-size: 12px;
+    font-weight: 760;
+    display: inline-flex
+}
+
+.imageCheck input {
+    accent-color: #ff7a18;
+    width: 16px;
+    height: 16px;
+    margin: 0
+}
+
+.imageName {
+    color: #202832;
+    text-align: left;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    background: 0 0;
+    border-radius: 0;
+    grid-column: 1/-1;
+    justify-content: flex-start;
+    min-width: 0;
+    min-height: 0;
+    padding: 0;
+    font-size: 12px;
+    font-weight: 790;
+    overflow: hidden;
+    box-shadow: none !important
+}
+
+.imageTileBody small {
+    color: #6f7b87;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    min-width: 0;
+    font-size: 11px;
+    overflow: hidden
+}
+
+.imageMaskBadge,
+.imageNamedAnnotationBadge {
+    text-transform: uppercase;
+    grid-column: 1;
+    width: max-content;
+    min-width: 0;
+    max-width: 100%;
+    padding: 2px 6px;
+    font-size: 10px;
+    font-weight: 850
+}
+
+.imageMaskBadge {
+    color: #b94f05;
+    background: #fff1e8
+}
+
+.imageNamedAnnotationBadge {
+    color: #14684f;
+    background: #e9f6f2
+}
+
+.imageDelete {
+    grid-area: 1/2;
+    min-height: 28px;
+    padding: 0 8px;
+    font-size: 11px
+}
+
+.imagePreviewOverlay {
+    z-index: 40;
+    background: #10151bc7;
+    place-items: center;
+    padding: 24px;
+    display: grid;
+    position: fixed;
+    inset: 0
+}
+
+.imagePreviewSurface {
+    background: #10151b;
+    grid-template-rows: auto minmax(0, 1fr);
+    width: min(96vw, 1400px);
+    height: min(92vh, 980px);
+    display: grid;
+    position: relative;
+    overflow: hidden
+}
+
+.imagePreviewBar {
+    background: #fff;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    min-width: 0;
+    min-height: 42px;
+    padding: 6px 12px;
+    display: flex
+}
+
+.imagePreviewTitle {
+    flex: 180px;
+    gap: 1px;
+    min-width: 0;
+    display: grid
+}
+
+.imagePreviewBar strong,
+.imagePreviewBar small {
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    min-width: 0;
+    overflow: hidden
+}
+
+.imagePreviewBar strong {
+    color: #202832;
+    font-size: 13px;
+    font-weight: 820
+}
+
+.imagePreviewBar small {
+    color: #687482;
+    font-size: 10.5px;
+    font-weight: 700
+}
+
+.imagePreviewActions {
+    flex-wrap: wrap;
+    flex: 560px;
+    justify-content: flex-end;
+    align-items: center;
+    gap: 8px;
+    min-width: 0;
+    display: flex
+}
+
+.imageMaskTools {
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px;
+    display: inline-flex
+}
+
+.imageNamedAnnotationTools {
+    border-left: 1px solid #dfe6ee;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px;
+    min-width: 0;
+    padding-left: 8px;
+    display: inline-flex
+}
+
+.imageMaskTools button.active,
+.imageNamedAnnotationTools button.active {
+    color: #fff;
+    background: #ff7a18
+}
+
+.imageNamedAnnotationTools span {
+    color: #202832;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    flex: 0 180px;
+    max-width: 180px;
+    font-size: 12px;
+    font-weight: 760;
+    overflow: hidden
+}
+
+.imageMaskTools label {
+    color: #202832;
+    align-items: center;
+    gap: 5px;
+    min-height: 30px;
+    font-size: 11px;
+    font-weight: 760;
+    display: inline-flex
+}
+
+.imageMaskTools input {
+    accent-color: #ff7a18;
+    width: 86px
+}
+
+.imageMaskValue {
+    color: #5f6c79;
+    text-align: right;
+    min-width: 24px;
+    font-size: 11px
+}
+
+.imagePreviewBar button {
+    min-height: 30px;
+    padding: 0 10px
+}
+
+.imagePreviewUse {
+    color: #202832;
+    align-items: center;
+    gap: 6px;
+    min-height: 30px;
+    font-size: 12px;
+    font-weight: 780;
+    display: inline-flex
+}
+
+.imagePreviewUse input {
+    accent-color: #ff7a18;
+    width: 16px;
+    height: 16px;
+    margin: 0
+}
+
+.imagePreviewArrow {
+    z-index: 2;
+    color: #202832;
+    background: #ffffffdb;
+    border-radius: 5px;
+    width: 38px;
+    min-width: 38px;
+    height: 48px;
+    min-height: 48px;
+    padding: 0;
+    font-size: 32px;
+    font-weight: 500;
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    box-shadow: 0 8px 22px #0000002e
+}
+
+.imagePreviewArrow.prev {
+    left: 12px
+}
+
+.imagePreviewArrow.next {
+    right: 12px
+}
+
+.imagePreviewArrow:disabled {
+    display: none
+}
+
+.imagePreviewStage {
+    touch-action: none;
+    min-width: 0;
+    min-height: 0;
+    position: relative;
+    overflow: hidden
+}
+
+.imagePreviewStage img {
+    object-fit: fill;
+    -webkit-user-select: none;
+    user-select: none;
+    pointer-events: none;
+    min-width: 0;
+    max-width: none;
+    min-height: 0;
+    max-height: none;
+    position: absolute
+}
+
+.imageMaskCanvas {
+    touch-action: none;
+    cursor: crosshair;
+    width: 100%;
+    height: 100%;
+    position: absolute;
+    inset: 0
+}
+
+.imageMaskCanvas[data-preview-tool=named] {
+    cursor: copy
+}
+
+.imageMaskCanvas[data-mask-tool=flood] {
+    cursor: cell
+}
+
+.imagePreviewZoomLabel {
+    color: #5f6c79;
+    text-align: right;
+    min-width: 44px;
+    font-size: 12px;
+    font-weight: 820
+}
+
+.imagePreviewFit {
+    min-width: 42px
+}
+
+.videoSettings {
+    border-top: 1px solid #f0f3f6;
+    gap: 12px;
+    padding-top: 14px;
+    display: grid
+}
+
+.videoHeader strong {
+    color: #242b33;
+    font-size: 13px;
+    font-weight: 850;
+    display: block
+}
+
+.videoHeader small {
+    color: #66727f;
+    margin-top: 3px;
+    font-size: 12px;
+    line-height: 1.35;
+    display: block
+}
+
+.videoSettings .videoGrid {
+    grid-template-columns: repeat(3, minmax(0, 1fr))
+}
+
+.videoSettings .videoActions {
+    grid-template-columns: minmax(180px, 240px)
+}
+
+.aboutPage {
+    padding: 24px
+}
+
+.diagnosticsPage,
+.exportsPage {
+    grid-template-rows: auto auto minmax(0, 1fr);
+    gap: 14px;
+    padding: 20px;
+    display: grid
+}
+
+.annotationsPage {
+    grid-template-rows: auto minmax(0, 1fr);
+    gap: 14px;
+    padding: 20px;
+    display: grid
+}
+
+.namedAnnotationModal {
+    z-index: 45;
+    background: #10151bad;
+    place-items: center;
+    padding: 20px;
+    display: grid;
+    position: fixed;
+    inset: 0
+}
+
+.namedAnnotationModalSurface {
+    background: #fff;
+    grid-template-rows: auto minmax(0, 1fr);
+    width: min(720px, 100%);
+    min-height: 0;
+    max-height: min(82vh, 720px);
+    display: grid;
+    overflow: hidden;
+    box-shadow: 0 24px 80px #0f151d42
+}
+
+.namedAnnotationModalHeader {
+    border-bottom: 1px solid #edf1f5;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 14px;
+    min-width: 0;
+    padding: 12px;
+    display: flex
+}
+
+.namedAnnotationModalHeader strong {
+    color: #202832;
+    font-size: 15px;
+    font-weight: 880;
+    display: block
+}
+
+.namedAnnotationModalHeader small {
+    color: #687482;
+    margin-top: 2px;
+    font-size: 12px;
+    line-height: 1.35;
+    display: block
+}
+
+.namedAnnotationModalHeader button {
+    min-height: 30px;
+    padding: 0 10px;
+    font-size: 12px
+}
+
+.namedAnnotationPanel {
+    grid-template-columns: minmax(260px, 360px) minmax(0, 1fr);
+    gap: 12px;
+    min-height: 0;
+    display: grid
+}
+
+.namedAnnotationModal .namedAnnotationPanel {
+    padding: 12px;
+    overflow: auto
+}
+
+.namedAnnotationCatalog,
+.namedAnnotationInspector {
+    background: #fbfcfd;
+    border: 1px solid #edf1f5;
+    border-radius: 6px;
+    min-width: 0;
+    padding: 10px
+}
+
+.namedAnnotationSearchRow,
+.namedAnnotationEditRow,
+.namedAnnotationBrowseRow {
+    align-items: center;
+    gap: 8px;
+    min-width: 0;
+    display: flex
+}
+
+.namedAnnotationSearchRow {
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    display: grid
+}
+
+.namedAnnotationSearchRow label {
+    color: #202832;
+    font-size: 12px;
+    font-weight: 820
+}
+
+.namedAnnotationSearchRow input,
+.namedAnnotationEditRow input {
+    border: 1px solid #dfe6ee;
+    border-radius: 5px;
+    min-width: 0;
+    min-height: 34px;
+    padding: 0 10px
+}
+
+.namedAnnotationList {
+    gap: 6px;
+    max-height: 112px;
+    margin-top: 8px;
+    display: grid;
+    overflow: auto
+}
+
+.namedAnnotationOption {
+    text-align: left;
+    width: 100%;
+    min-height: 42px;
+    box-shadow: none;
+    background: #fff;
+    border: 1px solid #edf1f5;
+    border-radius: 5px;
+    justify-content: flex-start;
+    gap: 8px;
+    padding: 6px 8px
+}
+
+.namedAnnotationOption.selected {
+    background: #f5f7f9;
+    border-color: #ffbf91;
+    box-shadow: inset 3px 0 #ff7a18
+}
+
+.namedAnnotationSwatch {
+    border: 2px solid #fff;
+    border-radius: 50%;
+    flex: none;
+    width: 14px;
+    height: 14px;
+    box-shadow: 0 0 0 1px #2028322e
+}
+
+.namedAnnotationLabel {
+    gap: 2px;
+    min-width: 0;
+    display: grid
+}
+
+.namedAnnotationLabel strong {
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    overflow: hidden
+}
+
+.namedAnnotationLabel small,
+.namedAnnotationInspector small {
+    color: #687482;
+    font-size: 12px
+}
+
+.namedAnnotationInspector {
+    gap: 10px;
+    display: grid
+}
+
+.namedAnnotationInspector>div:first-child {
+    gap: 2px;
+    min-width: 0;
+    display: grid
+}
+
+.namedAnnotationInspector>div:first-child strong {
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    overflow: hidden
+}
+
+.namedAnnotationInspector small {
+    display: block
+}
+
+.namedAnnotationEditRow input {
+    flex: auto
+}
+
+.namedAnnotationEditRow button {
+    flex: none
+}
+
+.namedAnnotationBrowseRow button {
+    flex: 96px;
+    min-width: 0
+}
+
+.annotationAdvisorModal {
+    z-index: 46;
+    background: #10151bad;
+    place-items: center;
+    padding: 20px;
+    display: grid;
+    position: fixed;
+    inset: 0
+}
+
+.annotationAdvisorModalSurface {
+    background: #fff;
+    grid-template-rows: auto minmax(0, 1fr) auto;
+    width: min(860px, 100%);
+    min-height: 0;
+    max-height: min(86vh, 760px);
+    display: grid;
+    overflow: hidden;
+    box-shadow: 0 24px 80px #0f151d42
+}
+
+.annotationAdvisorModalHeader {
+    border-bottom: 1px solid #edf1f5;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 14px;
+    min-width: 0;
+    padding: 12px;
+    display: flex
+}
+
+.annotationAdvisorModalHeader strong,
+.annotationAdvisorStatus strong {
+    color: #202832;
+    font-size: 15px;
+    font-weight: 880;
+    display: block
+}
+
+.annotationAdvisorModalHeader small,
+.annotationAdvisorStatus small {
+    color: #687482;
+    margin-top: 2px;
+    font-size: 12px;
+    line-height: 1.35;
+    display: block
+}
+
+.annotationAdvisorModalHeader button {
+    min-height: 30px;
+    padding: 0 10px;
+    font-size: 12px
+}
+
+.annotationAdvisorBody {
+    align-content: start;
+    gap: 12px;
+    min-height: 0;
+    padding: 12px;
+    display: grid;
+    overflow: auto
+}
+
+.annotationAdvisorStatus {
+    border-bottom: 1px solid #edf1f5;
+    min-width: 0;
+    padding-bottom: 10px
+}
+
+.annotationAdvisorMetrics {
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: 8px;
+    display: grid
+}
+
+.annotationAdvisorMetric {
+    background: #fbfcfd;
+    border: 1px solid #edf1f5;
+    border-radius: 6px;
+    min-width: 0;
+    padding: 8px
+}
+
+.annotationAdvisorMetric strong {
+    color: #202832;
+    font-size: 16px;
+    line-height: 1.1;
+    display: block
+}
+
+.annotationAdvisorMetric small {
+    overflow-wrap: anywhere;
+    color: #687482;
+    margin-top: 3px;
+    font-size: 11px;
+    font-weight: 760;
+    display: block
+}
+
+.annotationAdvisorColumns {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+    display: grid
+}
+
+.annotationAdvisorColumns section {
+    border-top: 1px solid #edf1f5;
+    min-width: 0;
+    padding-top: 10px
+}
+
+.annotationAdvisorColumns h3 {
+    color: #202832;
+    letter-spacing: 0;
+    margin: 0 0 6px;
+    font-size: 12px;
+    line-height: 1.2
+}
+
+.annotationAdvisorColumns ul {
+    color: #536170;
+    margin: 0;
+    padding-left: 18px;
+    font-size: 12px;
+    line-height: 1.45
+}
+
+.annotationAdvisorColumns li+li {
+    margin-top: 4px
+}
+
+.annotationAdvisorFooter {
+    border-top: 1px solid #edf1f5;
+    justify-content: flex-end;
+    gap: 10px;
+    padding: 12px;
+    display: flex
+}
+
+.annotationAdvisorFooter button {
+    color: #fff;
+    background: #ff7514
+}
+
+.annotationWorkbench {
+    grid-template-rows: auto minmax(0, 1fr);
+    grid-template-columns: minmax(0, 1fr) minmax(250px, 300px);
+    gap: 12px;
+    min-height: 0;
+    display: grid
+}
+
+.annotationPairList,
+.annotationCanvasPanel,
+.annotationDetails {
+    background: #fbfcfd;
+    min-height: 0
+}
+
+.annotationPairList,
+.annotationDetails {
+    padding: 10px
+}
+
+.annotationPairList {
+    z-index: 4;
+    background: 0 0;
+    grid-column: 1/-1;
+    padding: 0;
+    position: relative;
+    overflow: visible
+}
+
+.annotationDetails {
+    overflow: auto
+}
+
+.annotationPairSelectors {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+    display: grid
+}
+
+.annotationPairDropdown {
+    min-width: 0;
+    position: relative
+}
+
+.annotationPairSelect,
+.annotationPairButton {
+    text-align: left;
+    width: 100%;
+    min-height: 48px;
+    box-shadow: none;
+    background: #fbfcfd;
+    border: 1px solid #edf1f5;
+    border-radius: 5px;
+    justify-content: flex-start;
+    align-items: center;
+    gap: 10px
+}
+
+.annotationPairSelect {
+    min-height: 44px;
+    padding: 6px 34px 6px 8px;
+    position: relative
+}
+
+.annotationPairSelect:after {
+    content: "";
+    opacity: .72;
+    border-bottom: 2px solid;
+    border-right: 2px solid;
+    width: 8px;
+    height: 8px;
+    position: absolute;
+    top: 50%;
+    right: 12px;
+    transform: translateY(-65%)rotate(45deg)
+}
+
+.annotationPairMenu {
+    z-index: 8;
+    background: #fff;
+    border: 1px solid #dfe6ee;
+    border-radius: 6px;
+    grid-template-rows: auto minmax(0, 1fr);
+    gap: 8px;
+    max-height: min(420px, 54vh);
+    padding: 8px;
+    display: grid;
+    position: absolute;
+    top: calc(100% + 6px);
+    left: 0;
+    right: 0;
+    overflow: hidden;
+    box-shadow: 0 18px 38px #232f3e29
+}
+
+.annotationPairSearch {
+    border: 1px solid #dfe6ee;
+    border-radius: 5px;
+    width: 100%;
+    min-height: 32px;
+    padding: 0 10px;
+    font-size: 12px
+}
+
+.annotationPairOptions {
+    gap: 6px;
+    min-height: 0;
+    display: grid;
+    overflow: auto
+}
+
+.annotationPairButton {
+    min-height: 52px;
+    padding: 6px 8px
+}
+
+.annotationPairThumbs {
+    flex: none;
+    gap: 4px;
+    display: inline-flex
+}
+
+.annotationPairThumbs img,
+.annotationPairThumbPlaceholder {
+    object-fit: cover;
+    color: #607080;
+    background: #e8edf3;
+    border-radius: 4px;
+    place-items: center;
+    width: 38px;
+    height: 30px;
+    font-size: 11px;
+    font-weight: 850;
+    display: grid
+}
+
+.annotationPairLabel {
+    gap: 3px;
+    min-width: 0;
+    display: grid
+}
+
+.annotationPairLabel strong {
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    overflow: hidden
+}
+
+.annotationPairButton small,
+.annotationPointRow small {
+    color: #687482;
+    font-weight: 600
+}
+
+.annotationPairButton.selected {
+    background: #f5f7f9;
+    border-color: #ffbf91;
+    box-shadow: inset 3px 0 #ff7a18
+}
+
+.annotationCanvasPanel {
+    grid-template-rows: auto minmax(0, 1fr);
+    min-width: 0;
+    display: grid
+}
+
+.annotationCanvasToolbar {
+    justify-content: space-between;
+    align-items: center;
+    gap: 10px;
+    min-height: 42px;
+    padding: 8px 10px;
+    display: flex
+}
+
+.annotationTools {
+    gap: 6px;
+    display: flex
+}
+
+.annotationTools button {
+    min-height: 30px;
+    padding: 0 10px;
+    font-size: 12px
+}
+
+.annotationCanvas {
+    touch-action: none;
+    cursor: crosshair;
+    background: #0f151d;
+    width: 100%;
+    height: 100%;
+    min-height: 340px;
+    display: block
+}
+
+.annotationCanvas[data-annotation-mode=pan] {
+    cursor: grab
+}
+
+.annotationCanvas[data-annotation-panning=true] {
+    cursor: grabbing
+}
+
+.annotationPointRow,
+.annotationStatCard,
+.annotationWarning {
+    background: #fff;
+    border: 1px solid #d8e0e8;
+    border-radius: 5px;
+    margin-bottom: 8px;
+    padding: 8px
+}
+
+.annotationPointRow.selected {
+    border-color: #ff7a18;
+    box-shadow: inset 3px 0 #ff7a18
+}
+
+.annotationPointInputs {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 6px;
+    margin: 8px 0;
+    display: grid
+}
+
+.annotationPointInputs input {
+    width: 100%;
+    min-width: 0;
+    min-height: 30px;
+    font-size: 12px
+}
+
+.annotationStatLine {
+    justify-content: space-between;
+    gap: 10px;
+    margin-top: 6px;
+    font-size: 12px;
+    display: flex
+}
+
+.annotationStatLine span,
+.annotationGeometryWarning {
+    color: #687482
+}
+
+.annotationGeometryWarning {
+    margin-top: 6px;
+    font-size: 11px;
+    line-height: 1.35;
+    display: block
+}
+
+.annotationWarning {
+    background: #fff9e8;
+    border-color: #f2c94c
+}
+
+.annotationEmpty {
+    color: #687482;
+    margin: 0;
+    font-size: 12px;
+    line-height: 1.45
+}
+
+.workspacePageHeader {
+    border-bottom: 1px solid #f0f3f6;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 16px;
+    padding-bottom: 14px;
+    display: flex
+}
+
+.workspacePageHeader>small {
+    color: #687482;
+    background: #f6f8fa;
+    border: 0;
+    border-radius: 5px;
+    flex: none;
+    padding: 7px 10px;
+    font-size: 11px;
+    font-weight: 800
+}
+
+.diagnosticHeaderControls {
+    justify-items: end;
+    gap: 6px;
+    display: grid
+}
+
+.diagnosticHeaderControls>small {
+    color: #687482;
+    background: #f6f8fa;
+    border: 0;
+    border-radius: 5px;
+    flex: none;
+    padding: 7px 10px;
+    font-size: 11px;
+    font-weight: 800
+}
+
+.diagnosticToggle {
+    color: #53606d;
+    -webkit-user-select: none;
+    user-select: none;
+    align-items: center;
+    gap: 6px;
+    font-size: 11px;
+    font-weight: 760;
+    line-height: 1;
+    display: flex
+}
+
+.diagnosticToggle input {
+    accent-color: #ff7a18;
+    width: 14px;
+    height: 14px;
+    margin: 0
+}
+
+.aboutHero {
+    border-bottom: 1px solid #f0f3f6;
+    padding-bottom: 18px
+}
+
+.aboutCodeNotice {
+    color: #7b8793;
+    max-width: 760px;
+    font-size: 11px;
+    line-height: 1.45
+}
+
+.aboutGrid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 18px;
+    padding-top: 18px;
+    display: grid
+}
+
+.aboutGrid section {
+    min-width: 0
+}
+
+.aboutGrid h3 {
+    color: #ff6f12;
+    text-transform: uppercase;
+    letter-spacing: .04em;
+    margin: 0 0 8px;
+    font-size: 13px;
+    line-height: 1.2
+}
+
+.aboutGrid p {
+    color: #4f5d6b;
+    margin: 0 0 10px;
+    font-size: 13px;
+    line-height: 1.55
+}
+
+.aboutGrid a {
+    color: #e45f09;
+    text-underline-offset: 3px;
+    font-weight: 800;
+    text-decoration: underline
+}
+
+.aboutGrid a:hover {
+    color: #bf4d04
+}
+
+.viewer {
+    background: #f9fafb;
+    border: 0;
+    border-radius: 0;
+    min-height: 0;
+    position: relative;
+    overflow: hidden
+}
+
+.viewer.analysisMode {
+    background: #f7f9fb
+}
+
+#viewer {
+    transition: opacity .16s;
+    position: absolute;
+    inset: 0
+}
+
+.viewer.analysisMode #viewer {
+    opacity: 0;
+    pointer-events: none
+}
+
+#viewer canvas {
+    width: 100%;
+    height: 100%;
+    display: block
+}
+
+.viewerHeader {
+    z-index: 2;
+    pointer-events: none;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 14px;
+    display: flex;
+    position: absolute;
+    top: 14px;
+    left: 14px;
+    right: 14px
+}
+
+.viewerHeaderActions {
+    pointer-events: auto;
+    align-items: flex-start;
+    gap: 8px;
+    display: inline-flex
+}
+
+.viewerHeader span {
+    color: #1e2730;
+    font-size: 13px;
+    font-weight: 820;
+    display: block
+}
+
+.viewerHeader small {
+    color: #6b7785;
+    margin-top: 3px;
+    font-size: 12px;
+    display: block
+}
+
+.gpuPill {
+    background: #ffffffd6;
+    border: 0;
+    border-radius: 5px;
+    flex: none;
+    padding: 7px 9px;
+    box-shadow: 0 8px 20px #232f3e1a;
+    color: #b9550d !important
+}
+
+.viewerToggleButton {
+    color: #53606d;
+    background: #ffffffd6;
+    border: 0;
+    border-radius: 5px;
+    gap: 6px;
+    min-height: 30px;
+    padding: 0 9px;
+    font-size: 11px;
+    font-weight: 820;
+    box-shadow: 0 8px 20px #232f3e1a
+}
+
+.viewerToggleButton.active {
+    color: #b9550d;
+    background: #fff4eceb
+}
+
+.viewerToggleButton span {
+    color: inherit
+}
+
+.viewerToggleMark {
+    border: 1.5px solid;
+    border-radius: 3px;
+    place-items: center;
+    width: 13px;
+    height: 13px;
+    line-height: 1;
+    font-size: 9px !important;
+    font-weight: 900 !important;
+    display: inline-grid !important
+}
+
+.hud {
+    pointer-events: none;
+    flex-wrap: wrap;
+    gap: 8px;
+    display: flex;
+    position: absolute;
+    bottom: 14px;
+    left: 14px
+}
+
+.viewer.analysisMode .hud {
+    display: none
+}
+
+.hud span {
+    color: #53606d;
+    background: #ffffffd1;
+    border: 0;
+    border-radius: 5px;
+    padding: 7px 9px;
+    font-size: 12px;
+    font-weight: 700
+}
+
+.stageAnalysis {
+    z-index: 1;
+    grid-template-rows: auto auto auto minmax(0, 1fr) auto;
+    align-content: start;
+    gap: 14px;
+    padding: 2px 2px 8px;
+    display: grid;
+    position: absolute;
+    inset: 72px 18px 18px;
+    overflow: auto
+}
+
+.stageAnalysis[hidden] {
+    display: none
+}
+
+.stageAnalysisHeader {
+    border-bottom: 1px solid #e3e9ef;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: start;
+    gap: 18px;
+    padding-bottom: 12px;
+    display: grid
+}
+
+.stageAnalysisHeader>div {
+    min-width: 0
+}
+
+.stageAnalysisHeader span {
+    color: #ff6f12;
+    letter-spacing: .04em;
+    text-transform: uppercase;
+    font-size: 11px;
+    font-weight: 850;
+    display: block
+}
+
+.stageAnalysisHeader strong {
+    color: #1f2933;
+    letter-spacing: 0;
+    margin-top: 4px;
+    font-size: 24px;
+    line-height: 1.08;
+    display: block
+}
+
+.stageAnalysisAssessment {
+    text-transform: uppercase;
+    background: #eef2f6;
+    border-radius: 5px;
+    align-self: start;
+    place-items: center;
+    min-height: 28px;
+    padding: 0 10px;
+    color: #4e5a66 !important;
+    letter-spacing: .03em !important;
+    font-size: 11px !important;
+    font-weight: 850 !important;
+    display: inline-grid !important
+}
+
+.stageAnalysisAssessment.good {
+    background: #e8f7f0;
+    color: #167658 !important
+}
+
+.stageAnalysisAssessment.warn {
+    background: #fff1db;
+    color: #a95b00 !important
+}
+
+.stageAnalysisSummary {
+    color: #53606c;
+    max-width: 760px;
+    margin: 0;
+    font-size: 14px;
+    line-height: 1.45
+}
+
+.stageAnalysisMetrics {
+    background: #e3e9ef;
+    border-radius: 6px;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 1px;
+    display: grid;
+    overflow: hidden
+}
+
+.stageAnalysisMetric {
+    background: #fff;
+    align-content: start;
+    gap: 5px;
+    min-width: 0;
+    min-height: 86px;
+    padding: 13px;
+    display: grid
+}
+
+.stageAnalysisMetric span {
+    color: #6a7580;
+    letter-spacing: .03em;
+    text-transform: uppercase;
+    font-size: 11px;
+    font-weight: 820
+}
+
+.stageAnalysisMetric strong {
+    color: #1f2933;
+    overflow-wrap: anywhere;
+    min-width: 0;
+    font-size: 20px;
+    font-weight: 820;
+    line-height: 1.1
+}
+
+.stageAnalysisMetric small {
+    color: #7b8793;
+    font-size: 11px;
+    line-height: 1.3
+}
+
+.stageAnalysisMetric.good strong {
+    color: #167658
+}
+
+.stageAnalysisMetric.warn strong {
+    color: #a95b00
+}
+
+.stageAnalysisBars {
+    gap: 10px;
+    display: grid
+}
+
+.stageAnalysisBar {
+    gap: 6px;
+    display: grid
+}
+
+.stageAnalysisBar>div:first-child {
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 14px;
+    display: flex
+}
+
+.stageAnalysisBar span {
+    color: #46515d;
+    font-size: 12px;
+    font-weight: 790
+}
+
+.stageAnalysisBar strong {
+    color: #687481;
+    font-size: 12px;
+    font-weight: 790
+}
+
+.stageAnalysisBarTrack {
+    background: #e8edf2;
+    border-radius: 999px;
+    height: 9px;
+    overflow: hidden
+}
+
+.stageAnalysisBarTrack span {
+    border-radius: inherit;
+    background: #748394;
+    min-width: 3px;
+    height: 100%;
+    display: block
+}
+
+.stageAnalysisBar.good .stageAnalysisBarTrack span {
+    background: #24946f
+}
+
+.stageAnalysisBar.warn .stageAnalysisBarTrack span {
+    background: #f08a24
+}
+
+.stageAnalysisNotes {
+    gap: 8px;
+    padding-top: 2px;
+    display: grid
+}
+
+.stageAnalysisNotes p {
+    color: #53606c;
+    border-left: 3px solid #d8e0e8;
+    margin: 0;
+    padding-left: 10px;
+    font-size: 12px;
+    line-height: 1.45
+}
+
+.bottomDock,
+.runRail,
+.progressCard,
+.stats,
+.phaseList,
+.checkpointList {
+    background: #fff;
+    border: 0;
+    border-radius: 0
+}
+
+.bottomDock {
+    grid-template-rows: 40px minmax(0, 1fr);
+    min-height: 0;
+    display: grid;
+    overflow: hidden
+}
+
+.bottomDock.minimized {
+    grid-template-rows: 40px 0
+}
+
+.bottomDock.minimized .dockContent {
+    display: none
+}
+
+.dockHeader {
+    cursor: pointer;
+    border-bottom: 1px solid #f0f3f6;
+    grid-template-columns: minmax(0, 1fr) auto;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    padding: 0 14px;
+    display: grid
+}
+
+.dockHeader span {
+    color: #ff6f12;
+    letter-spacing: .04em;
+    text-transform: uppercase;
+    font-size: 12px;
+    font-weight: 850;
+    display: block
+}
+
+.dockHeader small {
+    color: #687482;
+    margin-top: 2px;
+    font-size: 11px;
+    font-weight: 700;
+    display: block
+}
+
+.dockToggle {
+    border-radius: 5px;
+    min-height: 28px;
+    padding: 0 10px;
+    font-size: 12px;
+    font-weight: 780
+}
+
+.dockContent {
+    min-height: 0;
+    display: block
+}
+
+.diagnosticsGrid {
+    grid-template-columns: minmax(0, 1.45fr) minmax(260px, .75fr);
+    gap: 12px;
+    min-height: 0;
+    display: grid
+}
+
+.runInspector {
+    background: #fbfcfd;
+    gap: 10px;
+    padding: 10px;
+    display: grid
+}
+
+.runInspectorHeader {
+    grid-template-columns: auto minmax(180px, 1fr);
+    align-items: center;
+    gap: 10px;
+    display: grid
+}
+
+.runInspectorHeader label {
+    color: #26313b;
+    font-size: 12px;
+    font-weight: 820
+}
+
+.runInspectorHeader select {
+    color: #26313b;
+    background: #eef2f5;
+    border: 0;
+    border-radius: 4px;
+    min-height: 31px;
+    padding: 0 9px;
+    font-size: 12px
+}
+
+.runStageTimeline {
+    grid-template-columns: repeat(7, minmax(0, 1fr));
+    gap: 4px;
+    display: grid
+}
+
+.runStageButton {
+    color: #26313b;
+    text-align: left;
+    cursor: pointer;
+    background: #eef2f5;
+    border: 0;
+    border-radius: 4px;
+    min-width: 0;
+    min-height: 44px;
+    padding: 6px
+}
+
+.runStageButton strong,
+.runStageButton small {
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    display: block;
+    overflow: hidden
+}
+
+.runStageButton strong {
+    font-size: 11px;
+    line-height: 1.2
+}
+
+.runStageButton small {
+    color: #687482;
+    text-transform: uppercase;
+    margin-top: 3px;
+    font-size: 10px
+}
+
+.runStageButton.cached,
+.runStageButton.done {
+    background: #e7f6ef
+}
+
+.runStageButton.running {
+    background: #fff4ec
+}
+
+.runStageButton.error {
+    background: #fbe8e4
+}
+
+.runStageButton.selected {
+    box-shadow: inset 0 -3px #ff7a18
+}
+
+.runStageDetail {
+    color: #53606d;
+    background: #fff;
+    min-height: 58px;
+    padding: 10px;
+    font-size: 12px;
+    line-height: 1.35
+}
+
+.runStageDetail strong {
+    color: #26313b;
+    margin-bottom: 4px;
+    display: block
+}
+
+.runStageDetail p {
+    margin: 0
+}
+
+.runStageDetail small {
+    color: #87929f;
+    overflow-wrap: anywhere;
+    margin-top: 5px;
+    display: block
+}
+
+.runStageMetrics {
+    flex-wrap: wrap;
+    gap: 5px;
+    margin-top: 7px;
+    display: flex
+}
+
+.runStageMetrics span {
+    color: #53606d;
+    background: #eef2f5;
+    border-radius: 999px;
+    padding: 3px 6px;
+    font-size: 10px;
+    font-weight: 740
+}
+
+.pairInspector {
+    background: #fbfcfd;
+    grid-template-rows: auto minmax(0, 1fr);
+    gap: 8px;
+    min-height: 0;
+    display: grid
+}
+
+.pairInspectorHeader {
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 10px;
+    min-height: 40px;
+    display: flex
+}
+
+.pairInspectorHeader strong {
+    color: #26313b;
+    min-width: 0;
+    font-size: 12px;
+    line-height: 1.25
+}
+
+.pairInspectorHeader small {
+    color: #687482;
+    text-align: right;
+    font-size: 11px;
+    line-height: 1.35
+}
+
+.pairInspectorCanvas {
+    background: #0f151d;
+    width: 100%;
+    height: 100%;
+    min-height: 280px;
+    display: block
+}
+
+.diagnosticRows {
+    background: #fbfcfd;
+    border: 0;
+    border-radius: 0;
+    align-content: start;
+    height: 100%;
+    min-height: 0;
+    display: grid;
+    overflow: auto
+}
+
+.diagnosticRows:empty:before {
+    content: "No pair diagnostics yet";
+    color: #87929f;
+    place-self: center;
+    font-size: 12px;
+    font-weight: 700
+}
+
+.diagnosticRow {
+    width: 100%;
+    font: inherit;
+    text-align: left;
+    cursor: pointer;
+    color: #64717e;
+    background: 0 0;
+    border: 0;
+    border-bottom: 1px solid #f0f3f6;
+    grid-template-columns: 58px 58px minmax(0, 1fr) 78px;
+    align-items: center;
+    gap: 8px;
+    min-height: 28px;
+    padding: 0 10px;
+    font-size: 11px;
+    display: grid
+}
+
+.diagnosticRow:hover,
+.diagnosticRow.selected {
+    background: #f5f7f9
+}
+
+.diagnosticRow.selected {
+    box-shadow: inset 3px 0 #ff7a18
+}
+
+.diagnosticRow .status {
+    text-transform: uppercase;
+    font-weight: 850
+}
+
+.diagnosticRow.ok .status {
+    color: #24946f
+}
+
+.diagnosticRow.weak .status {
+    color: #b98417
+}
+
+.diagnosticRow.skipped .status,
+.diagnosticRow.rejected .status {
+    color: #cc563f
+}
+
+.diagnosticRow .pair {
+    color: #26313b;
+    font-weight: 800
+}
+
+.diagnosticRow .count {
+    text-align: right;
+    color: #7c8793;
+    font-variant-numeric: tabular-nums
+}
+
+.diagnosticRow .manualGt {
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    color: #4f6274;
+    font-variant-numeric: tabular-nums;
+    min-width: 0;
+    overflow: hidden
+}
+
+pre {
+    color: #c9d4df;
+    white-space: pre-wrap;
+    background: #10151b;
+    border: 0;
+    height: 100%;
+    min-height: 0;
+    margin: 0;
+    padding: 12px;
+    font-family: SFMono-Regular, Consolas, monospace;
+    font-size: 11px;
+    line-height: 1.5;
+    overflow: auto
+}
+
+.exports {
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    align-content: start;
+    gap: 10px;
+    height: 100%;
+    min-height: 0;
+    display: grid;
+    overflow: auto
+}
+
+.exportGroup {
+    align-content: start;
+    gap: 7px;
+    min-width: 0;
+    display: grid
+}
+
+.exportGroup strong {
+    color: #202832;
+    font-size: 12px;
+    font-weight: 850
+}
+
+.exportGroup small,
+.exportGroup span {
+    color: #687482;
+    font-size: 11px;
+    line-height: 1.4
+}
+
+.exportGroup select {
+    color: #26313b;
+    background: #eef2f5;
+    border: 0;
+    border-radius: 5px;
+    min-width: 0;
+    min-height: 32px;
+    padding: 0 9px;
+    font-size: 12px
+}
+
+.exports button {
+    justify-content: flex-start;
+    min-height: 32px;
+    font-size: 12px;
+    font-weight: 750
+}
+
+.runRail {
+    flex-direction: column;
+    gap: 12px;
+    min-height: 0;
+    padding: 12px;
+    display: flex;
+    overflow-y: auto
+}
+
+.progressCard {
+    text-align: center;
+    justify-items: center;
+    gap: 12px;
+    padding: 18px 14px;
+    display: grid
+}
+
+.progressCard p {
+    max-width: 220px;
+    margin: 0;
+    font-size: 12px;
+    line-height: 1.45
+}
+
+.progressRing {
+    background: radial-gradient(circle closest-side, #fff 72%, transparent 74%), conic-gradient(#ff7a18 0turn var(--progress, .08turn), #e7ebef var(--progress, .08turn) 1turn);
+    border-radius: 50%;
+    place-items: center;
+    width: 126px;
+    height: 126px;
+    display: grid
+}
+
+.progressRing span {
+    color: #1d2329;
+    font-size: 22px;
+    font-weight: 850
+}
+
+.stats {
+    grid-template-columns: 1fr;
+    display: grid;
+    overflow: hidden
+}
+
+.stats div {
+    border-bottom: 1px solid #f0f3f6;
+    padding: 13px 14px
+}
+
+.stats div:last-child {
+    border-bottom: 0
+}
+
+.stats span {
+    color: #1f2933;
+    font-variant-numeric: tabular-nums;
+    font-size: 24px;
+    font-weight: 850;
+    line-height: 1;
+    display: block
+}
+
+.stats small {
+    color: #717d89;
+    text-transform: uppercase;
+    letter-spacing: .04em;
+    margin-top: 6px;
+    font-size: 11px;
+    font-weight: 720;
+    display: block
+}
+
+.phaseList {
+    gap: 4px;
+    padding: 8px;
+    display: grid
+}
+
+.phaseItem {
+    width: 100%;
+    color: inherit;
+    font: inherit;
+    text-align: left;
+    cursor: pointer;
+    background: 0 0;
+    border: 0;
+    border-radius: 5px;
+    grid-template-columns: 18px minmax(0, 1fr) auto;
+    align-items: start;
+    gap: 10px;
+    padding: 9px 8px;
+    display: grid
+}
+
+.phaseItem:hover:not(:disabled),
+.phaseItem.selected {
+    background: #f5f7f9
+}
+
+.phaseItem.selected {
+    box-shadow: inset 3px 0 #ff7a18
+}
+
+.phaseItem:disabled {
+    cursor: default
+}
+
+.phaseItem>span {
+    background: #fff;
+    border: 1px solid #c9d1da;
+    border-radius: 50%;
+    width: 12px;
+    height: 12px;
+    margin-top: 2px
+}
+
+.phaseItem strong {
+    color: #2c3540;
+    font-size: 12px;
+    line-height: 1.2;
+    display: block
+}
+
+.phaseItem small {
+    color: #7a8590;
+    margin-top: 4px;
+    font-size: 11px;
+    line-height: 1.3;
+    display: block
+}
+
+.phaseBadges {
+    justify-items: end;
+    gap: 3px;
+    display: grid
+}
+
+.phaseItem.active {
+    background: #fff4ec
+}
+
+.phaseItem.active>span {
+    background: #ff7a18;
+    border-color: #ff7a18;
+    box-shadow: 0 0 0 4px #ff7a1824
+}
+
+.phaseItem.done>span {
+    background: #24946f;
+    border-color: #24946f
+}
+
+.phaseItem.warn {
+    background: #fff8e8
+}
+
+.phaseItem.warn>span {
+    background: #d79519;
+    border-color: #d79519
+}
+
+.checkpointList {
+    gap: 4px;
+    padding: 10px 8px;
+    display: grid
+}
+
+.checkpointHeader,
+.checkpointItem {
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 8px;
+    display: grid
+}
+
+.checkpointHeader {
+    padding: 0 8px 5px
+}
+
+.checkpointHeader strong {
+    color: #ff6f12;
+    letter-spacing: .04em;
+    text-transform: uppercase;
+    font-size: 11px;
+    font-weight: 850
+}
+
+.checkpointHeader small {
+    color: #7a8590;
+    text-transform: uppercase;
+    letter-spacing: .04em;
+    font-size: 10px;
+    font-weight: 760
+}
+
+.checkpointItem {
+    border-radius: 5px;
+    min-height: 42px;
+    padding: 7px 8px
+}
+
+.checkpointItem strong {
+    color: #2c3540;
+    font-size: 12px;
+    line-height: 1.2;
+    display: block
+}
+
+.checkpointItem small {
+    color: #7a8590;
+    margin-top: 3px;
+    font-size: 10px;
+    line-height: 1.25;
+    display: block
+}
+
+.checkpointBadge {
+    color: #697581;
+    text-align: center;
+    text-transform: uppercase;
+    letter-spacing: .03em;
+    background: #eef2f5;
+    border-radius: 999px;
+    min-width: 62px;
+    padding: 4px 7px;
+    font-size: 10px;
+    font-weight: 850
+}
+
+.checkpointBadge.source {
+    color: #8a95a0;
+    background: 0 0
+}
+
+.checkpointBadge.active {
+    color: #fff;
+    background: #ff7a18
+}
+
+.checkpointBadge.cached {
+    color: #218366;
+    background: #e7f6ef
+}
+
+.checkpointBadge.done {
+    color: #2d63b8;
+    background: #eaf1ff
+}
+
+.checkpointBadge.stale {
+    color: #8f6410;
+    background: #f7e3b2
+}
+
+.checkpointItem.active {
+    background: #fff4ec
+}
+
+.checkpointItem.active .checkpointBadge {
+    color: #fff;
+    background: #ff7a18
+}
+
+.checkpointItem.cached .checkpointBadge {
+    color: #218366;
+    background: #e7f6ef
+}
+
+.checkpointItem.done .checkpointBadge {
+    color: #2d63b8;
+    background: #eaf1ff
+}
+
+.checkpointItem.stale {
+    background: #fff8e8
+}
+
+.checkpointItem.stale .checkpointBadge {
+    color: #8f6410;
+    background: #f7e3b2
+}
+
+:root[data-theme=dark] body {
+    background: #0c1117
+}
+
+:root[data-theme=dark] button,
+:root[data-theme=dark] .fileButton {
+    color: #dfe7ef;
+    background: #171f29
+}
+
+:root[data-theme=dark] button:hover:not(:disabled),
+:root[data-theme=dark] .fileButton:hover {
+    background: #202a36;
+    box-shadow: 0 8px 22px #00000042
+}
+
+:root[data-theme=dark] .textButton {
+    color: #b8c4cf;
+    background: 0 0
+}
+
+:root[data-theme=dark] .textButton:hover:not(:disabled) {
+    color: #ff9a4b;
+    box-shadow: none;
+    background: 0 0
+}
+
+:root[data-theme=dark] #run {
+    color: #fff;
+    background: #ff7a18;
+    border-color: #ff7a18;
+    box-shadow: 0 10px 24px #ff7a1833
+}
+
+:root[data-theme=dark] #run:hover:not(:disabled) {
+    background: #ff8a34;
+    border-color: #ff8a34
+}
+
+:root[data-theme=dark] .settingsIconToggle {
+    color: #aeb8c3;
+    background: #151d27eb
+}
+
+:root[data-theme=dark] .settingsIconToggle:hover:not(:disabled),
+:root[data-theme=dark] .settingsIconToggle.active {
+    color: #ff9a4b;
+    background: #2a1b12
+}
+
+:root[data-theme=dark] .workspace,
+:root[data-theme=dark] .topbar,
+:root[data-theme=dark] .appFooter,
+:root[data-theme=dark] .panel,
+:root[data-theme=dark] .workspacePage,
+:root[data-theme=dark] .bottomDock,
+:root[data-theme=dark] .runRail,
+:root[data-theme=dark] .progressCard,
+:root[data-theme=dark] .stats,
+:root[data-theme=dark] .phaseList,
+:root[data-theme=dark] .checkpointList {
+    background: #0f151d
+}
+
+:root[data-theme=dark] .brandTree {
+    fill: #f4f7fa
+}
+
+:root[data-theme=dark] .annotationPairList,
+:root[data-theme=dark] .annotationCanvasPanel,
+:root[data-theme=dark] .annotationDetails,
+:root[data-theme=dark] .namedAnnotationModalSurface,
+:root[data-theme=dark] .annotationAdvisorModalSurface {
+    background: #111821
+}
+
+:root[data-theme=dark] .namedAnnotationModalHeader,
+:root[data-theme=dark] .annotationAdvisorModalHeader,
+:root[data-theme=dark] .annotationAdvisorStatus,
+:root[data-theme=dark] .annotationAdvisorFooter {
+    border-bottom-color: #243141
+}
+
+:root[data-theme=dark] .annotationAdvisorFooter {
+    border-top-color: #243141
+}
+
+:root[data-theme=dark] .namedAnnotationModalHeader strong,
+:root[data-theme=dark] .annotationAdvisorModalHeader strong,
+:root[data-theme=dark] .annotationAdvisorStatus strong,
+:root[data-theme=dark] .annotationAdvisorMetric strong,
+:root[data-theme=dark] .annotationAdvisorColumns h3 {
+    color: #e7edf4
+}
+
+:root[data-theme=dark] .namedAnnotationModalHeader small,
+:root[data-theme=dark] .annotationAdvisorModalHeader small,
+:root[data-theme=dark] .annotationAdvisorStatus small,
+:root[data-theme=dark] .annotationAdvisorMetric small,
+:root[data-theme=dark] .annotationAdvisorColumns ul,
+:root[data-theme=dark] .imagePreviewZoomLabel,
+:root[data-theme=dark] .imageMaskValue {
+    color: #95a3b2
+}
+
+:root[data-theme=dark] .annotationAdvisorMetric {
+    background: #0f151d;
+    border-color: #243141
+}
+
+:root[data-theme=dark] .annotationAdvisorColumns section {
+    border-top-color: #243141
+}
+
+:root[data-theme=dark] .annotationPairButton {
+    border-bottom-color: #24313d
+}
+
+:root[data-theme=dark] .annotationPairButton.selected {
+    background: #182330
+}
+
+:root[data-theme=dark] .annotationPointRow,
+:root[data-theme=dark] .annotationStatCard {
+    background: #161f2a;
+    border-color: #2b3a48
+}
+
+:root[data-theme=dark] .annotationPointRow.selected {
+    border-color: #ff9a4b
+}
+
+:root[data-theme=dark] .annotationWarning {
+    background: #2a2412;
+    border-color: #806b24
+}
+
+:root[data-theme=dark] .annotationStatLine span,
+:root[data-theme=dark] .annotationGeometryWarning {
+    color: #a7b4c2
+}
+
+:root[data-theme=dark] p,
+:root[data-theme=dark] .panelTitle small,
+:root[data-theme=dark] .fieldHint,
+:root[data-theme=dark] .videoStatus,
+:root[data-theme=dark] .assetStatus,
+:root[data-theme=dark] .imageListHeader small,
+:root[data-theme=dark] .videoHeader small,
+:root[data-theme=dark] .workspacePageHeader p,
+:root[data-theme=dark] .workspacePageHeader>small,
+:root[data-theme=dark] .diagnosticHeaderControls>small,
+:root[data-theme=dark] .diagnosticToggle,
+:root[data-theme=dark] .aboutHero p,
+:root[data-theme=dark] .aboutCodeNotice,
+:root[data-theme=dark] .aboutGrid p,
+:root[data-theme=dark] .exportGroup small,
+:root[data-theme=dark] .exportGroup span,
+:root[data-theme=dark] .stats small,
+:root[data-theme=dark] .phaseItem small,
+:root[data-theme=dark] .checkpointItem small,
+:root[data-theme=dark] .checkpointHeader small,
+:root[data-theme=dark] .dockHeader small,
+:root[data-theme=dark] .diagnosticRow,
+:root[data-theme=dark] .diagnosticRow .count,
+:root[data-theme=dark] .pairInspectorHeader small,
+:root[data-theme=dark] .viewerHeader small,
+:root[data-theme=dark] .assetDropzone span,
+:root[data-theme=dark] .imageTileBody small,
+:root[data-theme=dark] .appFooter,
+:root[data-theme=dark] .appFooter a {
+    color: #95a3b2
+}
+
+:root[data-theme=dark] .topnav,
+:root[data-theme=dark] .mobileNav select,
+:root[data-theme=dark] .topProjectSwitcher,
+:root[data-theme=dark] .settingsWorkflowSwitch,
+:root[data-theme=dark] .annotationPairSelect,
+:root[data-theme=dark] .annotationPairButton,
+:root[data-theme=dark] .annotationPairMenu,
+:root[data-theme=dark] .annotationPairSearch,
+:root[data-theme=dark] .namedAnnotationCatalog,
+:root[data-theme=dark] .namedAnnotationInspector,
+:root[data-theme=dark] .namedAnnotationOption,
+:root[data-theme=dark] .namedAnnotationSearchRow input,
+:root[data-theme=dark] .namedAnnotationEditRow input,
+:root[data-theme=dark] .workspacePageHeader>small,
+:root[data-theme=dark] .diagnosticHeaderControls>small,
+:root[data-theme=dark] .diagnosticRows,
+:root[data-theme=dark] .pairInspector,
+:root[data-theme=dark] .runInspector,
+:root[data-theme=dark] .runStageDetail,
+:root[data-theme=dark] .imageTile,
+:root[data-theme=dark] .field input,
+:root[data-theme=dark] .field select,
+:root[data-theme=dark] .notebookField>input,
+:root[data-theme=dark] .notebookField>select,
+:root[data-theme=dark] .stageNotebookEvidence,
+:root[data-theme=dark] .exportGroup select {
+    background: #151d27
+}
+
+:root[data-theme=dark] .topnavItem {
+    color: #aeb8c3
+}
+
+:root[data-theme=dark] .topnavItem:hover:not(:disabled) {
+    background: #202a36
+}
+
+:root[data-theme=dark] .topnavItem.active {
+    color: #ff9a4b;
+    background: #2a1b12
+}
+
+:root[data-theme=dark] .topProjectSwitcher {
+    border-color: #243141
+}
+
+:root[data-theme=dark] select option {
+    color: #dbe4ee;
+    background: #151d27
+}
+
+:root[data-theme=dark] .annotationPairSelect,
+:root[data-theme=dark] .annotationPairButton,
+:root[data-theme=dark] .annotationPairMenu,
+:root[data-theme=dark] .annotationPairSearch,
+:root[data-theme=dark] .namedAnnotationCatalog,
+:root[data-theme=dark] .namedAnnotationInspector,
+:root[data-theme=dark] .namedAnnotationOption,
+:root[data-theme=dark] .namedAnnotationSearchRow input,
+:root[data-theme=dark] .namedAnnotationEditRow input {
+    border-color: #243141
+}
+
+:root[data-theme=dark] .annotationPairButton.selected,
+:root[data-theme=dark] .namedAnnotationOption.selected {
+    background: #202a36;
+    border-color: #8f4e22
+}
+
+:root[data-theme=dark] .viewerToggleButton {
+    color: #aeb8c3;
+    background: #151d27db
+}
+
+:root[data-theme=dark] .viewerToggleButton.active {
+    color: #ff9a4b;
+    background: #2a1b12eb
+}
+
+:root[data-theme=dark] .viewer.analysisMode {
+    background: #111821
+}
+
+:root[data-theme=dark] .stageAnalysisHeader {
+    border-color: #263241
+}
+
+:root[data-theme=dark] .stageAnalysisHeader span {
+    color: #ff9a4b
+}
+
+:root[data-theme=dark] .stageAnalysisHeader strong,
+:root[data-theme=dark] .stageAnalysisMetric strong,
+:root[data-theme=dark] .stageAnalysisBar span {
+    color: #e5ecf3
+}
+
+:root[data-theme=dark] .stageAnalysisSummary,
+:root[data-theme=dark] .stageAnalysisMetric span,
+:root[data-theme=dark] .stageAnalysisMetric small,
+:root[data-theme=dark] .stageAnalysisBar strong,
+:root[data-theme=dark] .stageAnalysisNotes p {
+    color: #95a3b2
+}
+
+:root[data-theme=dark] .stageAnalysisAssessment {
+    background: #202a36;
+    color: #aeb8c3 !important
+}
+
+:root[data-theme=dark] .stageAnalysisAssessment.good {
+    background: #173329;
+    color: #45c08a !important
+}
+
+:root[data-theme=dark] .stageAnalysisAssessment.warn {
+    background: #332717;
+    color: #f0a84b !important
+}
+
+:root[data-theme=dark] .stageAnalysisMetrics {
+    background: #263241
+}
+
+:root[data-theme=dark] .stageAnalysisMetric {
+    background: #151d27
+}
+
+:root[data-theme=dark] .stageAnalysisMetric.good strong {
+    color: #45c08a
+}
+
+:root[data-theme=dark] .stageAnalysisMetric.warn strong {
+    color: #f0a84b
+}
+
+:root[data-theme=dark] .stageAnalysisBarTrack {
+    background: #202a36
+}
+
+:root[data-theme=dark] .stageAnalysisNotes p {
+    border-color: #2b3847
+}
+
+:root[data-theme=dark] .mobileNav span,
+:root[data-theme=dark] .mobileNav select,
+:root[data-theme=dark] .topProjectSwitcher span,
+:root[data-theme=dark] .topProjectSwitcher select,
+:root[data-theme=dark] .annotationPairSelect,
+:root[data-theme=dark] .annotationPairButton,
+:root[data-theme=dark] .annotationPairSearch,
+:root[data-theme=dark] .exportGroup select,
+:root[data-theme=dark] .settingsGroup summary,
+:root[data-theme=dark] .field label,
+:root[data-theme=dark] .fieldLabelText,
+:root[data-theme=dark] .field.checkboxField label,
+:root[data-theme=dark] .notebookFieldMeta label,
+:root[data-theme=dark] .stageNotebookHeading strong,
+:root[data-theme=dark] .assetsHeader h2,
+:root[data-theme=dark] .aboutHero h2,
+:root[data-theme=dark] .workspacePageHeader h2,
+:root[data-theme=dark] .assetDropzone strong,
+:root[data-theme=dark] .imageListHeader strong,
+:root[data-theme=dark] .videoHeader strong,
+:root[data-theme=dark] .exportGroup strong,
+:root[data-theme=dark] .viewerHeader span,
+:root[data-theme=dark] .stats span,
+:root[data-theme=dark] .phaseItem strong,
+:root[data-theme=dark] .checkpointItem strong,
+:root[data-theme=dark] .progressRing span,
+:root[data-theme=dark] .diagnosticRow .pair,
+:root[data-theme=dark] .diagnosticRow .manualGt,
+:root[data-theme=dark] .pairInspectorHeader strong,
+:root[data-theme=dark] .runInspectorHeader label,
+:root[data-theme=dark] .runStageDetail strong,
+:root[data-theme=dark] .imageCheck,
+:root[data-theme=dark] .imageName,
+:root[data-theme=dark] .imagePreviewBar strong,
+:root[data-theme=dark] .imagePreviewUse,
+:root[data-theme=dark] .imageMaskTools label,
+:root[data-theme=dark] .field input,
+:root[data-theme=dark] .field select {
+    color: #e5ecf3
+}
+
+:root[data-theme=dark] .settingsGroup,
+:root[data-theme=dark] .videoSettings,
+:root[data-theme=dark] .workspacePageHeader,
+:root[data-theme=dark] .aboutHero,
+:root[data-theme=dark] .dockHeader,
+:root[data-theme=dark] .stats div,
+:root[data-theme=dark] .diagnosticRow {
+    border-color: #202a36
+}
+
+:root[data-theme=dark] .settingsWorkflowSwitch button {
+    color: #aeb8c3
+}
+
+:root[data-theme=dark] .settingsWorkflowSwitch button:hover:not(:disabled),
+:root[data-theme=dark] .settingsWorkflowSwitch button.active {
+    color: #ff9a4b;
+    box-shadow: none;
+    background: #202a36
+}
+
+:root[data-theme=dark] .stageNotebookCell {
+    border-color: #202a36
+}
+
+:root[data-theme=dark] .stageNotebookHeading span {
+    color: #ff9a4b
+}
+
+:root[data-theme=dark] .stageNotebookHeading small,
+:root[data-theme=dark] .stageNotebookPurpose,
+:root[data-theme=dark] .notebookFieldMeta small,
+:root[data-theme=dark] .notebookCheckboxControl,
+:root[data-theme=dark] .stageNotebookEvidence {
+    color: #95a3b2
+}
+
+:root[data-theme=dark] .stageNotebookStatus {
+    color: #aeb8c3;
+    background: #202a36
+}
+
+:root[data-theme=dark] .stageNotebookCell.selected .stageNotebookStatus {
+    color: #ff9a4b;
+    background: #2a1b12
+}
+
+:root[data-theme=dark] .stageNotebookCell.hasResult .stageNotebookStatus {
+    color: #45c08a;
+    background: #173329
+}
+
+:root[data-theme=dark] .runInspectorHeader select,
+:root[data-theme=dark] .runStageButton,
+:root[data-theme=dark] .runStageMetrics span {
+    color: #e5ecf3;
+    background: #202a36
+}
+
+:root[data-theme=dark] .runStageButton small,
+:root[data-theme=dark] .runStageDetail,
+:root[data-theme=dark] .runStageDetail small {
+    color: #95a3b2
+}
+
+:root[data-theme=dark] .runStageButton.cached,
+:root[data-theme=dark] .runStageButton.done {
+    background: #173329
+}
+
+:root[data-theme=dark] .runStageButton.running {
+    background: #2a1b12
+}
+
+:root[data-theme=dark] .runStageButton.error {
+    background: #351c19
+}
+
+:root[data-theme=dark] .diagnosticRow:hover,
+:root[data-theme=dark] .diagnosticRow.selected {
+    background: #202a36
+}
+
+:root[data-theme=dark] .field input,
+:root[data-theme=dark] .field select,
+:root[data-theme=dark] .notebookField>input,
+:root[data-theme=dark] .notebookField>select {
+    border-color: #2c3846
+}
+
+:root[data-theme=dark] .panel .fieldHelp {
+    color: #aeb8c3;
+    background: #202a36
+}
+
+:root[data-theme=dark] .panel .fieldHelp:hover:not(:disabled),
+:root[data-theme=dark] .panel .fieldHelp[aria-expanded=true] {
+    color: #ff9a4b;
+    background: #2a1b12
+}
+
+:root[data-theme=dark] .panel .fieldHint,
+:root[data-theme=dark] .panel .checkboxControl,
+:root[data-theme=dark] .runtimeHealthStatus {
+    color: #95a3b2
+}
+
+:root[data-theme=dark] .runtimeHealthPanel {
+    border-color: #202a36
+}
+
+:root[data-theme=dark] .runtimeHealthStatus.pass {
+    color: #45c08a
+}
+
+:root[data-theme=dark] .runtimeHealthStatus.warn {
+    color: #e0a72e
+}
+
+:root[data-theme=dark] .runtimeHealthStatus.fail {
+    color: #f06d5f
+}
+
+:root[data-theme=dark] .field input:focus,
+:root[data-theme=dark] .field select:focus,
+:root[data-theme=dark] .notebookField>input:focus,
+:root[data-theme=dark] .notebookField>select:focus {
+    background: #101822;
+    border-color: #ff8a34;
+    box-shadow: 0 0 0 3px #ff7a182e
+}
+
+:root[data-theme=dark] .settingsLocked .settingsGroup summary,
+:root[data-theme=dark] .settingsLocked .fieldHint {
+    color: #687586
+}
+
+:root[data-theme=dark] .panelMinimize,
+:root[data-theme=dark] .appFooter a:hover,
+:root[data-theme=dark] .aboutGrid a,
+:root[data-theme=dark] .dockHeader span,
+:root[data-theme=dark] .panelTitle span,
+:root[data-theme=dark] .aboutGrid h3 {
+    color: #ff8a34
+}
+
+:root[data-theme=dark] .settingsGroup summary:after {
+    border-color: #7f8d9d
+}
+
+:root[data-theme=dark] .assetDropzone {
+    background: linear-gradient(135deg, #ff7a181f, #0000 44%), #121a24;
+    border-color: #334254
+}
+
+:root[data-theme=dark] .assetDropzone:focus,
+:root[data-theme=dark] .assetDropzone.dragActive {
+    border-color: #ff7a18;
+    box-shadow: 0 0 0 4px #ff7a1829
+}
+
+:root[data-theme=dark] .assetDropzone.hasAssets {
+    background: linear-gradient(135deg, #24946f29, #0000 48%), #121a24
+}
+
+:root[data-theme=dark] .assetDropIcon {
+    background: #2a1b12
+}
+
+:root[data-theme=dark] .imageThumbButton {
+    background: #202a36
+}
+
+:root[data-theme=dark] .imagePreviewBar {
+    background: #151d27
+}
+
+:root[data-theme=dark] .imagePreviewBar small {
+    color: #95a3b2
+}
+
+:root[data-theme=dark] .imagePreviewArrow {
+    color: #e5ecf3;
+    background: #151d27e0;
+    box-shadow: 0 8px 22px #00000057
+}
+
+:root[data-theme=dark] .imageMaskBadge {
+    color: #ff9a4b;
+    background: #2a1b12
+}
+
+:root[data-theme=dark] .imageNamedAnnotationBadge {
+    color: #49c49a;
+    background: #102820
+}
+
+:root[data-theme=dark] .viewer {
+    background: #0b1017
+}
+
+:root[data-theme=dark] .gpuPill,
+:root[data-theme=dark] .hud span {
+    background: #121a24db;
+    box-shadow: 0 8px 20px #00000047;
+    color: #f0a05a !important
+}
+
+:root[data-theme=dark] .diagnosticRows:empty:before {
+    color: #6f7d8d
+}
+
+:root[data-theme=dark] .diagnosticRow.ok .status {
+    color: #39b98d
+}
+
+:root[data-theme=dark] .diagnosticRow.weak .status {
+    color: #d8a331
+}
+
+:root[data-theme=dark] .diagnosticRow.skipped .status,
+:root[data-theme=dark] .diagnosticRow.rejected .status {
+    color: #e2765e
+}
+
+:root[data-theme=dark] .progressRing {
+    background: radial-gradient(circle closest-side, #0f151d 72%, transparent 74%), conic-gradient(#ff7a18 0turn var(--progress, .08turn), #2a3440 var(--progress, .08turn) 1turn)
+}
+
+:root[data-theme=dark] .phaseItem>span {
+    background: #151d27;
+    border-color: #536171
+}
+
+:root[data-theme=dark] .phaseItem:hover:not(:disabled),
+:root[data-theme=dark] .phaseItem.selected {
+    background: #151d27
+}
+
+:root[data-theme=dark] .phaseItem.active,
+:root[data-theme=dark] .phaseItem.warn,
+:root[data-theme=dark] .checkpointItem.active,
+:root[data-theme=dark] .checkpointItem.stale {
+    background: #251a12
+}
+
+:root[data-theme=dark] .phaseItem.done>span {
+    background: #39b98d;
+    border-color: #39b98d
+}
+
+:root[data-theme=dark] .phaseItem.warn>span {
+    background: #d8a331;
+    border-color: #d8a331
+}
+
+:root[data-theme=dark] .checkpointBadge {
+    color: #aeb8c3;
+    background: #202a36
+}
+
+:root[data-theme=dark] .checkpointBadge.source {
+    color: #6f7d8d;
+    background: 0 0
+}
+
+:root[data-theme=dark] .checkpointBadge.active {
+    color: #fff;
+    background: #ff7a18
+}
+
+:root[data-theme=dark] .checkpointBadge.cached {
+    color: #56d7a9;
+    background: #173329
+}
+
+:root[data-theme=dark] .checkpointBadge.done {
+    color: #86b5ff;
+    background: #172b49
+}
+
+:root[data-theme=dark] .checkpointBadge.stale {
+    color: #f1c05d;
+    background: #3b2c10
+}
+
+:root[data-theme=dark] .checkpointItem.active .checkpointBadge {
+    color: #fff;
+    background: #ff7a18
+}
+
+:root[data-theme=dark] .checkpointItem.cached .checkpointBadge {
+    color: #56d7a9;
+    background: #173329
+}
+
+:root[data-theme=dark] .checkpointItem.done .checkpointBadge {
+    color: #86b5ff;
+    background: #172b49
+}
+
+:root[data-theme=dark] .checkpointItem.stale .checkpointBadge {
+    color: #f1c05d;
+    background: #3b2c10
+}
+
+:root[data-theme=dark] pre,
+:root[data-theme=dark] .imagePreviewSurface {
+    color: #d5dee8;
+    background: #080d13
+}
+
+:root[data-theme=dark] .themeToggleIcon:after {
+    border-radius: 10px 0 0 10px;
+    inset: 2px 7px 2px 0
+}
+
+@media (width<=1240px) {
+    .content {
+        grid-template-columns: 330px minmax(0, 1fr)
+    }
+
+    .runRail {
+        display: none
+    }
+
+    .content:not(.statusClosed) .runRail {
+        grid-column: 1/-1;
+        height: auto;
+        min-height: 0;
+        max-height: 260px;
+        display: flex
+    }
+
+    .topbar {
+        grid-template-columns: minmax(210px, 1fr) minmax(150px, auto) minmax(160px, 220px) minmax(190px, 1fr)
+    }
+
+    .topnav {
+        display: none
+    }
+
+    .mobileNav {
+        justify-self: center;
+        display: inline-flex
+    }
+
+    .topProjectSwitcher {
+        max-width: 220px
+    }
+}
+
+@media (width<=900px) {
+    :root {
+        font-size: 14px
+    }
+
+    .shell {
+        height: auto;
+        min-height: 100vh;
+        padding: 0
+    }
+
+    .workspace {
+        border: 0;
+        border-radius: 0;
+        height: auto;
+        min-height: 100vh
+    }
+
+    .topbar {
+        grid-template-columns: 1fr;
+        align-items: stretch;
+        gap: 8px;
+        min-height: 0;
+        padding: 10px
+    }
+
+    .brandMark {
+        width: 34px;
+        height: 38px
+    }
+
+    h1 {
+        font-size: 17px
+    }
+
+    p {
+        font-size: 11px
+    }
+
+    .mobileNav {
+        justify-self: stretch
+    }
+
+    .topProjectSwitcher {
+        justify-self: stretch;
+        max-width: none
+    }
+
+    .mobileNav select {
+        flex: 1;
+        width: 100%;
+        height: 32px;
+        font-size: 12px
+    }
+
+    .actions {
+        justify-content: stretch;
+        gap: 6px
+    }
+
+    .actions>* {
+        flex: 92px;
+        min-width: 0;
+        min-height: 32px;
+        padding: 0 9px;
+        font-size: 12px
+    }
+
+    .themeToggle {
+        flex-basis: 82px
+    }
+
+    .themeToggleIcon {
+        border-width: 1.5px;
+        width: 15px;
+        height: 15px
+    }
+
+    .content,
+    .content.statusClosed,
+    .content.settingsClosed,
+    .content.settingsClosed.statusClosed {
+        grid-template-columns: 1fr;
+        gap: 0;
+        padding: 0
+    }
+
+    .panel {
+        overscroll-behavior: contain;
+        width: 100%;
+        height: auto;
+        max-height: min(42vh, 390px);
+        padding: 10px;
+        overflow-y: auto
+    }
+
+    .content:not(.statusClosed) .runRail {
+        max-height: min(340px, 42vh)
+    }
+
+    .diagnosticsGrid {
+        grid-template-columns: minmax(0, 1fr)
+    }
+
+    .pairInspectorCanvas {
+        min-height: 240px
+    }
+
+    .panelTitle {
+        padding: 2px 0 8px
+    }
+
+    .panelTitle small {
+        font-size: 11px
+    }
+
+    .settingsGroup summary {
+        min-height: 32px;
+        font-size: 11px
+    }
+
+    .groupBody {
+        padding-bottom: 8px
+    }
+
+    .panel .field {
+        grid-template-columns: minmax(0, 1fr) minmax(92px, 38%);
+        gap: 4px 8px;
+        min-height: 34px;
+        padding: 3px 0
+    }
+
+    .notebookField {
+        grid-template-columns: minmax(0, 1fr) minmax(92px, 38%);
+        gap: 4px 8px;
+        min-height: 36px;
+        padding: 3px 0
+    }
+
+    .stageNotebookActions,
+    .stageNotebookInspect {
+        grid-template-columns: 1fr
+    }
+
+    .panel .fieldMeta label,
+    .panel .fieldLabelText,
+    .notebookFieldMeta label {
+        font-size: 11px
+    }
+
+    .panel .field>input,
+    .panel .field>select,
+    .notebookField>input,
+    .notebookField>select,
+    .panel .checkboxControl,
+    .notebookCheckboxControl {
+        min-width: 0;
+        height: 29px;
+        font-size: 11px
+    }
+
+    .panel .fieldHelp {
+        width: 17px;
+        min-width: 17px;
+        height: 17px;
+        min-height: 17px;
+        font-size: 10px
+    }
+
+    .panel .fieldHint {
+        font-size: 10.5px
+    }
+
+    .centerColumn {
+        grid-template-rows: minmax(340px, 56vh) auto;
+        gap: 0
+    }
+
+    .stageAnalysis {
+        gap: 10px;
+        inset: 74px 12px 12px
+    }
+
+    .stageAnalysisHeader {
+        grid-template-columns: minmax(0, 1fr);
+        gap: 8px
+    }
+
+    .stageAnalysisHeader strong {
+        font-size: 19px
+    }
+
+    .stageAnalysisMetrics {
+        grid-template-columns: repeat(2, minmax(0, 1fr))
+    }
+
+    .stageAnalysisMetric {
+        min-height: 74px;
+        padding: 10px
+    }
+
+    .stageAnalysisMetric strong {
+        font-size: 16px
+    }
+
+    .workspacePage {
+        min-height: 620px
+    }
+
+    .assetsHeader,
+    .videoHeader {
+        display: grid
+    }
+
+    .videoSettings .videoGrid,
+    .aboutGrid {
+        grid-template-columns: 1fr
+    }
+
+    .bottomDock {
+        min-height: min(420px, 46vh)
+    }
+
+    .bottomDock.minimized {
+        min-height: 42px
+    }
+
+    .dockHeader {
+        grid-template-columns: minmax(0, 1fr) auto;
+        align-content: center;
+        min-height: 40px;
+        padding: 0 10px
+    }
+
+    .dockHeader small {
+        display: none
+    }
+
+    .dockToggle {
+        min-height: 28px;
+        padding: 0 9px;
+        font-size: 11px
+    }
+}
+
+@media (width<=520px) {
+    .actions>* {
+        flex-basis: calc(50% - 4px)
+    }
+
+    .imagePreviewOverlay {
+        padding: 8px
+    }
+
+    .imagePreviewSurface {
+        width: calc(100vw - 16px);
+        height: calc(100vh - 16px)
+    }
+
+    .imagePreviewBar {
+        align-items: flex-start;
+        gap: 8px;
+        padding: 8px
+    }
+
+    .imagePreviewActions {
+        justify-content: flex-start;
+        gap: 6px
+    }
+
+    .imageMaskTools input {
+        width: 70px
+    }
+
+    .stageAnalysisMetrics {
+        grid-template-columns: 1fr
+    }
+
+    .themeToggleText {
+        min-width: 0
+    }
+
+    .panel {
+        max-height: min(38vh, 330px)
+    }
+
+    .setupPage,
+    .annotationsPage,
+    .diagnosticsPage,
+    .exportsPage,
+    .aboutPage {
+        padding: 14px
+    }
+
+    .annotationWorkbench {
+        grid-template-rows: auto minmax(420px, 1fr) auto;
+        grid-template-columns: 1fr
+    }
+
+    .namedAnnotationPanel {
+        grid-template-columns: 1fr
+    }
+
+    .namedAnnotationModal,
+    .annotationAdvisorModal {
+        padding: 12px
+    }
+
+    .namedAnnotationModalSurface,
+    .annotationAdvisorModalSurface {
+        max-height: calc(100svh - 24px)
+    }
+
+    .namedAnnotationModalHeader,
+    .annotationAdvisorModalHeader,
+    .workspacePageHeader,
+    .imageListHeader {
+        flex-wrap: wrap
+    }
+
+    .annotationAdvisorMetrics,
+    .annotationAdvisorColumns {
+        grid-template-columns: 1fr
+    }
+
+    .namedAnnotationSearchRow,
+    .namedAnnotationEditRow,
+    .namedAnnotationBrowseRow {
+        flex-wrap: wrap
+    }
+
+    .namedAnnotationSearchRow {
+        grid-template-columns: minmax(0, 1fr) auto
+    }
+
+    .namedAnnotationSearchRow label {
+        grid-column: 1/-1
+    }
+
+    .imagePreviewActions {
+        flex-wrap: wrap
+    }
+
+    .annotationPairSelectors {
+        grid-template-columns: 1fr
+    }
+
+    .assetsHeader h2,
+    .aboutHero h2,
+    .workspacePageHeader h2 {
+        font-size: 20px
+    }
+
+    .assetDropzone {
+        min-height: 190px;
+        padding: 20px 14px
+    }
+}

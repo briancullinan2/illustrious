@@ -3,6 +3,10 @@
 const api = {
     github_token: null
 }
+
+let localVersion = null;
+
+
 const ERROR_PREAMBLE = '\x1b[38;5;196m[ERROR]\x1b[0m ';       // Intense Crimson Red
 const GITHUB_PREAMBLE = '\x1b[38;5;27m[GITHUB]\x1b[0m ';      // Deep Brand Blue
 
@@ -15,6 +19,10 @@ async function importScriptFromVFS(assetUrl) {
 
     console.log(`💾 [SW-INIT] Attempting VFS database extraction for script: "${localName}"`);
 
+
+    if (!localVersion || !api.environmentRepository) {
+        await lookupLocalVersion()
+    }
     const fileRecord = await getRecord(DB_STORE_NAME, localName, api.environmentRepository);
 
     if (!fileRecord || !fileRecord.contents) {
@@ -37,9 +45,6 @@ async function initializeCoreScripts() {
         '/components/core/local.js',
         '/components/core/extensions.js',
         '/components/core/github.js',
-        '/components/map-editor/tern/browser.json',
-        '/components/map-editor/tern/emcascript.json',
-        '/components/map-editor/tern/threejs.json',
     ];
 
     for (const script of scriptsToLoad) {
@@ -403,8 +408,6 @@ let lastConnectivityCheck = 0;
 let isOffline = false;
 let connectivityLog = [];
 
-let localVersion = null;
-
 // Wrapping execution in a function context to track the state safely
 (async function inspectRegistrationState() {
     console.log('🔍 [SW-BOOT-CHECK] Inspecting active background service worker registration objects...');
@@ -520,7 +523,7 @@ async function lookupLocalVersion() {
     const lookups = databases.map(async (db) => {
         try {
             // Assuming getRecord takes a database identifier or repository reference as the 3rd argument
-            const versionFile = await getRecord(DB_STORE_NAME, '/base/settings.json', db.key || db);
+            const versionFile = await getRecord(DB_STORE_NAME, '/base/settings.json', db.key || db, db.value);
             return { versionFile, repo: db.key || db };
         } catch (e) {
             // Silently ignore individual database failures so one broken DB doesn't crash the loop
@@ -663,6 +666,10 @@ const uniqueAssets = [
     '/components/theme/boxicons.ttf',
     '/components/theme/boxicons.woff',
     '/components/theme/boxicons.woff2',
+    '/components/map-editor/tern/browser.json',
+    '/components/map-editor/tern/ecmascript.json',
+    '/components/map-editor/tern/threejs.json',
+
     ...new Set([
         ...Object.values(IMPORT_CSS).flatMap(o => o),
         ...Object.values(IMPORT_JS).flatMap(o => o)
