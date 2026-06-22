@@ -1135,6 +1135,8 @@
         return classes;
     }
 
+    THREE.resolveNunuClasses = resolveNunuClasses;
+
     // =========================================================================
     // MAIN THREE.JS Q3BSPLOADER IMPLEMENTATION
     // =========================================================================

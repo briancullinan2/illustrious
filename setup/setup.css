@@ -389,10 +389,13 @@ header h1 {
 /* ============================================================================
    Thematic Text Alignment & Notification Blocks
    ============================================================================ */
+label.field-label-caps {
+    display: block;
+}
+
 .field-label-caps {
     font-size: 11px;
     color: var(--text-dim);
-    display: block;
     margin-bottom: 6px;
     text-transform: uppercase;
     letter-spacing: 0.5px;
@@ -560,6 +563,48 @@ header h1 {
 #runlocal-service:checked~#runlocal-container {
     display: block;
 }
+
+#runlocal-builder .btn-danger {
+    background: rgba(0, 0, 0, 0.2);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 6px;
+    padding: 6px;
+    margin: 0;
+    font: inherit;
+    color: #ff4a5a;
+    /* Desaturated premium UI red */
+    cursor: pointer;
+    outline: none;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
+    transition: background-color 0.2s ease, color 0.2s ease, transform 0.1s ease, border-color 0.2s ease;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
+}
+
+/* Smooth Jellyfin-style interactive feedback states */
+#runlocal-builder .btn-danger:hover {
+    background: rgba(255, 74, 90, 0.15);
+    /* Translucent tinted background */
+    border-color: rgba(255, 74, 90, 0.4);
+    color: #ff6b79;
+    /* Vibrant lift on hover */
+}
+
+#runlocal-builder .btn-danger:focus-visible {
+    border-color: #00a4dc;
+    /* Jellyfin theme accent color indicator */
+    box-shadow: 0 0 0 2px rgba(0, 164, 220, 0.3);
+}
+
+#runlocal-builder .btn-danger:active {
+    transform: scale(0.94);
+    /* Tactile click response */
+}
+
 
 #step-1 .scroll-grid-box {
     max-height: none;

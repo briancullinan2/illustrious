@@ -14,6 +14,15 @@ const IMPORT_MODULES = {
         module: true
     },
 
+
+    nunu: {
+        panelId: 'nunu',
+        js: IMPORT_JS['nunu'],
+        css: IMPORT_CSS['nunu'],
+        onLoad: () => window.nunu.initialize()
+    },
+
+    
 };
 
 
@@ -41,7 +50,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         // 3. Mount workspace split layout panel preference
         const userWorkspaceChoice = SettingsManager.get('core', 'workspaceDefault');
 
-        //await DependencyLoader.loadModule(userWorkspaceChoice);
+        await DependencyLoader.loadModule(userWorkspaceChoice);
 
     } catch (error) {
         debugger

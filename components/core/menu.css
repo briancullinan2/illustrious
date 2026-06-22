@@ -1,0 +1,174 @@
+/* Host Application Bar Container Layout */
+.main_menu {
+    display: flex;
+    align-items: center;
+    position: absolute;
+    top: 15px;
+    right: 15px;
+    left: auto;
+    z-index: 200;
+    width: auto;
+    background: var(--bg-darker);
+    color: var(--accent);
+    border: 1px solid var(--border);
+    padding: 4px 18px;
+    border-radius: 20px;
+    font-family: monospace;
+    font-size: 12px;
+    font-weight: bold;
+    box-shadow: 0 4px 15px var(--bg-darkest);
+    box-sizing: border-box;
+    transition: background-color 0.2s, border-color 0.2s;
+}
+
+/* Horizontal Main Toolbar Row */
+.menu_bar {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    margin: 0;
+    padding: 0 8px;
+    list-style: none;
+    height: 100%;
+    gap: 4px;
+}
+
+.menu_bar>li {
+    position: relative;
+    display: inline-block;
+}
+
+/* Base Top-Level Anchor Links & Menu Items */
+.main_menu a[role="menuitem"] {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 6px 14px;
+    /*height: var(--global-height);*/
+    line-height: var(--global-height);
+    color: var(--text-dim);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    font-size: 13px;
+    font-weight: 500;
+    text-decoration: none;
+    white-space: nowrap;
+    border-radius: 4px;
+    transition: background-color 0.15s cubic-bezier(0.4, 0, 0.2, 1),
+        color 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+    box-sizing: border-box;
+}
+
+/* Main Bar Hover States */
+.menu_bar>li>a[role="menuitem"]:hover {
+    background-color: var(--accent-hover);
+    color: var(--text-dark);
+}
+
+/* Persistent Active State when Dropdown Column is Expanded */
+.main_menu a[aria-expanded="true"] {
+    background-color: var(--accent);
+    color: var(--text-dark);
+    box-shadow: 0 2px 8px var(--bg-darkest);
+}
+
+/* ==========================================================================
+   DROPDOWN & FLYOUT OVERLAYS (JELLYFIN BLUR CARD EFFECT)
+   ========================================================================== */
+.menu_dropdown {
+    position: absolute;
+    margin: 0;
+    padding: 6px 0;
+    list-style: none;
+    background-color: var(--bg-darkest);
+    backdrop-filter: blur(25px) saturate(160%);
+    -webkit-backdrop-filter: blur(25px) saturate(160%);
+    border: 1px solid var(--border-card);
+    border-radius: 6px;
+    box-shadow: 0 8px 32px var(--bg-darkest),
+        0 2px 4px var(--bg-darkest);
+    min-width: 190px;
+    z-index: 1010;
+    box-sizing: border-box;
+    opacity: 0;
+    transform: translateY(-4px);
+    transition: opacity 0.12s cubic-bezier(0, 0, 0.2, 1),
+        transform 0.12s cubic-bezier(0, 0, 0.2, 1);
+    pointer-events: none;
+}
+
+/* Visibility Control Layer overrides */
+.menu_dropdown.visible {
+    display: block;
+    opacity: 1;
+    transform: translateY(0);
+    pointer-events: auto;
+}
+
+.menu_dropdown.hidden {
+    display: none;
+}
+
+/* Embedded Inner Items Track Layouts */
+.menu_dropdown li {
+    position: relative;
+    padding: 0 4px;
+}
+
+.menu_dropdown a[role="menuitem"] {
+    padding: 0 12px;
+    margin: 1px 0;
+    height: calc(var(--global-height) + 0.2em);
+    line-height: calc(var(--global-height) + 0.2em);
+    border-radius: 4px;
+    color: var(--text-muted);
+}
+
+/* Inner Column Option List Row Hover Changes */
+.menu_dropdown li>a[role="menuitem"]:hover {
+    background-color: var(--accent-hover);
+    color: var(--text-dark);
+}
+
+/* Nested Parent Flyout Visual Indicators */
+.menu_dropdown a[aria-haspopup="true"]::after {
+    content: "➔";
+    font-size: 9px;
+    margin-left: 16px;
+    opacity: 0.5;
+    transition: transform 0.12s ease;
+}
+
+.menu_dropdown a[aria-haspopup="true"]:hover::after {
+    opacity: 1;
+    transform: translateX(2px);
+}
+
+/* ==========================================================================
+   SHORTCUTS, DIVIDERS & DECORATIONS
+   ========================================================================== */
+.menu_dropdown .shortcut {
+    font-size: 11px;
+    font-weight: 400;
+    color: var(--accent-muted);
+    margin-left: 24px;
+    padding-left: 8px;
+}
+
+/* Smooth out the color mapping if item row background overrides on hover */
+.menu_dropdown li>a[role="menuitem"]:hover .shortcut {
+    color: var(--text-dark);
+    opacity: 0.8;
+}
+
+/* Elegant Thin Horizontal Split Separation */
+.menu_dropdown li[role="presentation"] {
+    padding: 0;
+    margin: 6px 0;
+}
+
+.menu_dropdown hr {
+    border: none;
+    height: 1px;
+    background-color: var(--border-dark);
+    margin: 0;
+}

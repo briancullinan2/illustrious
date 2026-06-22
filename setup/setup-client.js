@@ -134,11 +134,19 @@ function updateServiceProviderDropdown(serviceId) {
     }
 }
 
+let credentialData
+
+function getCredentialPath(serviceId) {
+    if (credentialData)
+        return credentialData.credentialPath + serviceId.split('-')[0] + '-provider.json'
+    else
+        return '~\\.credentials\\' + serviceId.split('-')[0] + '-provider.json'
+}
 
 
 async function loadEnvironment() {
     const res = await fetch('/api/local-env?t=' + Date.now());
-    const credentialData = await res.json();
+    credentialData = await res.json();
     document.getElementById('auth-status').innerText = 'Profile Account: ' + credentialData.account;
 
     const listContainer = document.getElementById('project-list');
@@ -155,6 +163,11 @@ async function loadEnvironment() {
 
     if (credentialData.REGION) {
         document.getElementById('gcloud-region').value = credentialData.REGION
+    }
+
+    if (credentialData.credentialPath) {
+        const currentSelected = document.querySelector('[name="cloud-service"]:checked')
+        document.getElementById('credential-provider-path').value = getCredentialPath(currentSelected.id)
     }
 
     credentialData.projects.forEach(p => {
@@ -730,6 +743,7 @@ async function verifyHostingStatus(e) {
 
     const providerId = selectedCard?.getAttribute('for') || parentContainer?.id.replace('-container', '-service');
     const containerPrefix = providerId?.replace('-service', '');    // Prefix String: 'runpod'
+    document.getElementById('credential-provider-path').value = getCredentialPath(providerId)
     const serviceContainer = parentContainer || document.getElementById(`${containerPrefix}-container`);
 
     if (!serviceContainer) return;
@@ -785,6 +799,7 @@ async function verifyHostingStatus(e) {
         }
 
         if (actionButton) {
+            actionButton.disabled = false
             actionButton.textContent = "Configuration Synchronized ✓";
             actionButton.style.borderColor = "var(--accent)";
         }

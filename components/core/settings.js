@@ -2,7 +2,7 @@ const IMPORT_SETTINGS = {
     core: {
         workspaceDefault: {
             key: 'workspace_default',
-            default: 'websfm',
+            default: 'nunu',
             description: 'Specifies the default active panel or system layout view presented to users upon launching the application interface.'
         },
         environmentRepository: {
@@ -15,6 +15,13 @@ const IMPORT_SETTINGS = {
             key: 'environment_version',
             default: new Date(0),
             description: 'The last commit date for the environment repository set automatically.',
+        },
+        savedTheme: {
+            key: 'theme',
+            default: 'ace/theme/monokai',
+            elementId: 'theme',
+            description: 'The visual theme layout package used to style the interactive Ace code editor window background and syntax colors.',
+            set: setTheme
         },
     },
 
@@ -266,3 +273,25 @@ function saveSettings(content) {
 }
 
 
+
+function setTheme(theme) {
+    const themeName = theme.split('/').pop(); // Gets 'monokai' or 'dracula'
+
+    for (let cn of document.body.classList) {
+        if (cn.startsWith('theme-')) {
+            document.body.classList.remove(cn)
+        }
+    }
+
+    document.body.classList.add(`theme-${themeName.replace(/_/g, '-')}`);
+    // Actually tell Ace to change its internal theme too
+    if (typeof aceEditor !== 'undefined')
+        aceEditor.setTheme(theme);
+    savedTheme = theme
+    // wait for update on page so it can scan for colors out of css
+    if (window.syncThemeWithAce)
+        setTimeout(() => {
+            syncThemeWithAce()
+        }, 500);
+
+}

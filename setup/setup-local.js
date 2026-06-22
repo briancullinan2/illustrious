@@ -1,7 +1,7 @@
 
 const servicePresets = [
     {
-        isDefault: false,
+        isDefault: true,
         isPrevious: false,
         name: "Ollama (Local /generate)",
         url: "http://localhost:11434/api/generate",
@@ -11,7 +11,7 @@ const servicePresets = [
         parameters: [
             { key: "model", value: "{Model}", type: "string" },
             { key: "prompt", value: "{Message}", type: "string" },
-            { key: "stream", boolValue: false, type: "boolean" }
+            { key: "stream", boolValue: true, type: "boolean" }
         ]
     },
     {
@@ -29,7 +29,7 @@ const servicePresets = [
             { key: "max_tokens", value: "500", type: "number" },
             { key: "top_p", value: "1", type: "number" },
             { key: "presence_penalty", value: "0", type: "number" },
-            { key: "stream", boolValue: false, type: "boolean" }
+            { key: "stream", boolValue: true, type: "boolean" }
         ]
     },
     {
@@ -113,6 +113,73 @@ const servicePresets = [
             { key: "messages", value: '[{"role": "user", "content": "{Message}"}]', type: "string" },
             { key: "temperature", value: "0.8", type: "number" }
         ]
+    },
+    {
+        isDefault: false,
+        isPrevious: false,
+        name: "Google AI Studio (Gemini Text)",
+        url: "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent",
+        defaultModel: "gemini-2.5-flash",
+        apiKey: "",
+        responsePath: "candidates[0].content.parts[0].text",
+        parameters: [
+            { key: "contents", value: '[{"parts":[{"text":"{Message}"}]}]', type: "string" }
+        ]
+    },
+    {
+        isDefault: false,
+        isPrevious: false,
+        name: "Google AI Studio (Gemini Image)",
+        url: "https://generativelanguage.googleapis.com/v1beta/models/imagen-3.0-generate-002:generateImages",
+        defaultModel: "imagen-3.0-generate-002",
+        apiKey: "",
+        responsePath: "generatedImages[0].image.imageBytes", // Returns base64 encoded image string data
+        parameters: [
+            { key: "prompt", value: "{Message}", type: "string" },
+            { key: "numberOfImages", value: "1", type: "number" },
+            { key: "aspectRatio", value: "1:1", type: "string" }
+        ]
+    },
+    {
+        isDefault: false,
+        isPrevious: false,
+        name: "Cerebras (Ultra High-Speed)",
+        url: "https://api.cerebras.ai/v1/chat/completions",
+        defaultModel: "llama3.1-8b",
+        apiKey: "",
+        responsePath: "choices[0].message.content",
+        parameters: [
+            { key: "model", value: "{Model}", type: "string" },
+            { key: "messages", value: '[{"role": "user", "content": "{Message}"}]', type: "string" },
+            { key: "stream", boolValue: true, type: "boolean" }
+        ]
+    },
+    {
+        isDefault: false,
+        isPrevious: false,
+        name: "Together AI (Serverless Models)",
+        url: "https://api.together.xyz/v1/chat/completions",
+        defaultModel: "meta-llama/Llama-3-70b-chat-hf",
+        apiKey: "",
+        responsePath: "choices[0].message.content",
+        parameters: [
+            { key: "model", value: "{Model}", type: "string" },
+            { key: "messages", value: '[{"role": "user", "content": "{Message}"}]', type: "string" },
+            { key: "temperature", value: "0.7", type: "number" }
+        ]
+    },
+    {
+        isDefault: false,
+        isPrevious: false,
+        name: "Cohere (Command Engine)",
+        url: "https://api.cohere.com/v2/chat",
+        defaultModel: "command-r-plus",
+        apiKey: "",
+        responsePath: "message.content[0].text",
+        parameters: [
+            { key: "model", value: "{Model}", type: "string" },
+            { key: "messages", value: '[{"role": "user", "content": "{Message}"}]', type: "string" }
+        ]
     }
 ];
 
@@ -124,11 +191,7 @@ const ChatService = {
         return true;
     },
     async ListPresets() {
-        // Example mock presets payload matching backend data structures
-        return [
-            { name: "Ollama Llama3", url: "http://localhost:11434/api/generate", defaultModel: "llama3", apiKey: "", parameters: [{ key: "temperature", type: "number", value: "0.7" }], isDefault: true },
-            { name: "OpenAI Proxy", url: "https://api.openai.com/v1/chat/completions", defaultModel: "gpt-4o", apiKey: "sk-...", parameters: [{ key: "stream", type: "boolean", boolValue: false }], isPrevious: false }
-        ];
+        return servicePresets;
     },
     async TryChat(payload) {
         try {
@@ -219,6 +282,8 @@ function applyPreset(value) {
     if (preset) {
         serviceUrlInput.value = preset.url;
         modelNameInput.value = preset.defaultModel;
+        responsePathInput.value = preset.responsePath || "";
+        apiKeyInput.value = preset.apiKey || "";
 
         if (preset.apiKey) {
             apiKeyInput.placeholder = `Api Key (${preset.apiKey})`;
@@ -301,8 +366,8 @@ function renderParameterRows() {
         if (parameters.length > 1) {
             const deleteBtn = document.createElement("button");
             deleteBtn.type = "button";
-            deleteBtn.className = "btn btn-danger btn-sm";
-            deleteBtn.textContent = "X";
+            deleteBtn.className = "btn-danger bx bx-trash";
+            deleteBtn.textContent = "";
             deleteBtn.addEventListener("click", () => removeParameterRow(index));
             tdAction.appendChild(deleteBtn);
         }

@@ -139,7 +139,7 @@ app.post('/api/cluster/verify-and-save', async (req, res) => {
         const provider = CLOUD_PROVIDER_KEYS.find(p => p.id === providerId);
         if (!provider) {
             console.error(`🛑 [VERIFY REJECTED] Unknown platform target requested: ${providerId}`);
-            return res.status(400).json({ error: 'Unknown platform target.' });
+            return res.status(400).json({ error: 'Unknown platform target: ' + providerId });
         }
 
         // 2. Fetch existing credentials configuration if a file layout is managed for it

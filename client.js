@@ -472,36 +472,10 @@ function captureStageSnapshotBlob(stageElement) {
     });
 }
 
-function addSceneSlice() {
-    const prompt = document.getElementById('prompt-input').value;
-    const coordsRaw = document.getElementById('coords-input').value;
-    const stage = document.getElementById('canvas-stage');
-    const coords = coordsRaw.split(',').map(num => parseInt(num.trim(), 10));
-
-    if (coords.length !== 4 || coords.some(isNaN)) return;
-
-    const sliceElement = document.createElement('div');
-    sliceElement.style.position = 'absolute';
-    sliceElement.style.left = `${coords[0]}%`;
-    sliceElement.style.top = `${coords[1]}%`;
-    sliceElement.style.width = `${coords[2]}%`;
-    sliceElement.style.height = `${coords[3]}%`;
-    sliceElement.style.border = '2px dashed var(--accent)';
-    sliceElement.style.background = 'rgba(0, 255, 204, 0.03)';
-    sliceElement.style.display = 'flex';
-    sliceElement.style.alignItems = 'center';
-    sliceElement.style.justifyContent = 'center';
-    sliceElement.style.color = '#fff';
-    sliceElement.style.fontFamily = 'monospace';
-    sliceElement.style.fontSize = '11px';
-    sliceElement.innerText = prompt;
-
-    stage.appendChild(sliceElement);
-}
 
 const multicastButton = document.getElementById('multicast-scene')
 multicastButton.addEventListener('click', handleGenerate)
-document.getElementById('add-layer').addEventListener('click', addSceneSlice)
+document.getElementById('add-layer').addEventListener('click', generateCameraDome.bind(null, void 0))
 document.getElementById('claim-instance').addEventListener('click', triggerManualAllocationClaim)
 
 
@@ -727,6 +701,12 @@ document.addEventListener("DOMContentLoaded", () => {
 
     if (toggleCheckbox.checked) {
         bootWllamaWorker()
+    } else {
+        const treeStatus = document.getElementById('tree-status');
+        if (treeStatus) {
+            treeStatus.textContent = 'Disabled...';
+            treeStatus.className = 'tree-val text-muted';
+        }
     }
 });
 
@@ -776,4 +756,458 @@ async function handleGenerate() {
         }
     });
 }
+
+
+function parseTokens(statement) {
+    // Regex matches either words/formulas (nouns/links) or arrays of numbers/formulas (specs)
+    const tokenRegex = /\[([^\]]+)\]/g;
+    const items = [];
+    let match;
+
+    while ((match = tokenRegex.exec(statement)) !== null) {
+        const rawContent = match[1].trim();
+
+        // 1. Identify Specs: contains commas
+        if (rawContent.includes(',')) {
+            // Split by comma to get the individual metric strings/formulas
+            const specArray = rawContent.split(',').map(s => s.trim());
+            items.push({ type: 'specs', value: specArray });
+        }
+        // 2. Identify Links: starts with an @ sign or contains operators with @
+        else if (rawContent.includes('@')) {
+            items.push({ type: 'links', value: rawContent });
+        }
+        // 3. Identify Nouns: everything else (split spaces into an array)
+        else {
+            const nounArray = rawContent.split(/\s+/).filter(Boolean);
+            items.push({ type: 'nouns', value: nounArray });
+        }
+    }
+
+    return items;
+}
+
+
+
+async function parseSpatialCommands(inputStr, currentIdxValue = 0) {
+    const THREE = require('three');
+    const parsedSequence = parseTokens(inputStr);
+    const activeScene = window.nunu.getScene();
+
+    // Tracking context for the sequential iterator
+    let lastNouns = null;
+    let defaultSpec = ["0", "0", "0", "0", "0", "0", "0"];
+
+    for (let i = 0; i < parsedSequence.length; i++) {
+        const token = parsedSequence[i];
+
+        if (token.type === 'nouns') {
+            lastNouns = token.value; // Cache noun context for the following spec token
+        }
+
+        else if (token.type === 'specs') {
+            const specValues = token.value;
+            // Fallback to default [0,0,0,0,0,0,0] spatial layout if array metrics are corrupted
+            const activeSpec = (specValues && specValues.length >= 6) ? specValues : defaultSpec;
+
+            // Extract type identity string from cached nouns list or default to fallback block
+            const primaryNoun = (lastNouns && lastNouns.length > 0) ? lastNouns[0] : "cube";
+
+            let targetObject = null;
+
+            // --- Reference & Object Resolution Block ---
+            // Check if the current spatial spec or noun relies on contextual indexing
+            const hasIndexToken = activeSpec.some(val => val.includes('@idx')) || primaryNoun.includes('@idx');
+
+            if (hasIndexToken || (lastNouns && lastNouns.length > 0)) {
+                // Search Nunu's active scene workspace to see if this object already exists
+                const searchName = primaryNoun.replace('@idx', currentIdxValue);
+
+                activeScene.traverse(function (child) {
+                    if (child.name === searchName) {
+                        targetObject = child;
+                    }
+                });
+            }
+
+            if (!targetObject) {
+                // 1. Resolve Nunu's internal runtime class references
+                const nunuClasses = THREE.resolveNunuClasses();
+
+                let geometry, material;
+                let createdObject = null;
+                const normalizedType = primaryNoun.toLowerCase();
+
+                // 2. Build out or assign using the resolved classes context
+                if (normalizedType.includes('pointlight')) {
+                    createdObject = new THREE.PointLight(0xffffff, 1, 100);
+                } else if (normalizedType.includes('directionallight')) {
+                    createdObject = new THREE.DirectionalLight(0xffffff, 1);
+                } else if (normalizedType.includes('ambientlight')) {
+                    createdObject = new THREE.AmbientLight(0x404040);
+                } else if (normalizedType.includes('spotlight')) {
+                    createdObject = new THREE.SpotLight(0xffffff);
+                } else if (normalizedType.includes('audiolistener')) {
+                    createdObject = new THREE.AudioListener();
+                } else if (normalizedType.includes('gridhelper')) {
+                    createdObject = new THREE.GridHelper(10, 10);
+                } else if (normalizedType.includes('axeshelper')) {
+                    createdObject = new THREE.AxesHelper(5);
+                } else if (normalizedType.includes('arrowhelper')) {
+                    const dir = new THREE.Vector3(0, 1, 0);
+                    const origin = new THREE.Vector3(0, 0, 0);
+                    createdObject = new THREE.ArrowHelper(dir, origin, 1, 0xffff00);
+                }
+                // Fallback to custom Geometry + Resolved Nunu Mesh wrapper tracking
+                else {
+                    if (normalizedType.includes('cylinder')) {
+                        geometry = new THREE.CylinderGeometry(0.5, 0.5, 2, 16);
+                    } else if (normalizedType.includes('sphere')) {
+                        geometry = new THREE.SphereGeometry(0.5, 16, 16);
+                    } else if (normalizedType.includes('plane')) {
+                        geometry = new THREE.PlaneGeometry(1, 1);
+                    } else if (normalizedType.includes('circle')) {
+                        geometry = new THREE.CircleGeometry(0.5, 16);
+                    } else if (normalizedType.includes('torus')) {
+                        geometry = new THREE.TorusGeometry(0.5, 0.2, 8, 24);
+                    } else if (normalizedType.includes('cone')) {
+                        geometry = new THREE.ConeGeometry(0.5, 1, 16);
+                    } else {
+                        // Default "Companion Cube" geometry
+                        geometry = new THREE.BoxGeometry(1, 1, 1);
+                    }
+
+                    // Determine Material Context (Utilize extracted runtime constructor)
+                    if (normalizedType.includes('basic')) {
+                        material = new THREE.MeshBasicMaterial({ color: 0xAEB2F8 });
+                    } else if (normalizedType.includes('phong')) {
+                        material = new THREE.MeshPhongMaterial({ color: 0xAEB2F8 });
+                    } else {
+                        // Instantiate Nunu's exact internal Material flavor discovered from default wrappers
+                        material = new nunuClasses.Material({
+                            color: 0xAEB2F8, // --ace-blue 
+                            roughness: 0.4
+                        });
+                    }
+
+                    // CRITICAL VENDOR REGISTRATION HOOK:
+                    // Instead of calling generic global new THREE.Mesh, build via Nunu's proprietary wrapper class
+                    createdObject = new nunuClasses.Mesh(geometry, material);
+                }
+
+                // Assign final identities to our generated node element
+                targetObject = createdObject;
+                targetObject.name = primaryNoun.replace('@idx', currentIdxValue);
+
+                // Immediately register new object into Nunu's active runtime workspace tree
+                window.nunu.addObject(targetObject, activeScene);
+            }
+
+            // --- Spatial Transformation Block ---
+            // Safely compute positioning variables (evaluating formulas like 'fw*@idx')
+            const evaluateFormula = (expr) => {
+                let cleanExpr = expr.replace(/@idx/g, currentIdxValue);
+                // Simple placeholder variable evaluation context if 'fw' metric exists in scope
+                const fw = 2.0;
+                try {
+                    // Safely interpret explicit linear operational vectors
+                    return Function(`"use strict"; const fw = ${fw}; return (${cleanExpr})`)();
+                } catch (e) {
+                    return parseFloat(cleanExpr) || 0;
+                }
+            };
+
+            const posX = evaluateFormula(activeSpec[0]);
+            const posY = evaluateFormula(activeSpec[1]);
+            const posZ = evaluateFormula(activeSpec[2]);
+
+            targetObject.position.set(posX, posY, posZ);
+
+            // Optional: Map remaining specs positions [3, 4, 5, 6] to rotation/scale tracks
+            if (activeSpec.length >= 6) {
+                const rotX = evaluateFormula(activeSpec[3]);
+                const rotY = evaluateFormula(activeSpec[4]);
+                const rotZ = evaluateFormula(activeSpec[5]);
+                targetObject.rotation.set(rotX, rotY, rotZ);
+            }
+
+            // Request UI structural redraw context framework update
+            window.nunu.gui.updateInterface();
+        }
+    }
+}
+
+
+
+async function populateSelectedPanelsWithTextures(base64ImageArray) {
+    const THREE = require('three');
+    const nunuClasses = THREE.resolveNunuClasses();
+
+    // 1. Harvest Nunu's active multi-select array from the interface tree tracker
+    // Nunu typically tracks highlighted objects in an array named 'selectedObjects' or via its selection state
+    const selectedObjects = window.nunu.gui.panel.treeView.selectedObjects
+        || window.nunu.selectedObjects
+        || [];
+
+    // Filter the selection to ensure we are only manipulating visible mesh configurations
+    const targetPanels = selectedObjects.filter(obj => obj.isMesh);
+
+    if (targetPanels.length === 0) {
+        console.warn("No active mesh panels are highlighted in the Project Explorer. Multi-select your dome panels first!");
+        return;
+    }
+
+    console.log(`Processing image textures onto ${targetPanels.length} selected Nunu panels...`);
+
+    // 2. Iterate through the selections (up to 16 or the limit of the returned image array)
+    const iterationLimit = Math.min(targetPanels.length, base64ImageArray.length);
+
+    for (let i = 0; i < iterationLimit; i++) {
+        const currentPanel = targetPanels[i];
+        const rawBase64 = base64ImageArray[i];
+
+        // 3. Construct a standard HTML image payload frame to feed into the Texture Loader
+        const img = new Image();
+        img.src = rawBase64.startsWith('data:') ? rawBase64 : `data:image/jpeg;base64,${rawBase64}`;
+
+        // Instantiate using the reflection-harvested Texture constructor context
+        const texture = new nunuClasses.Texture(img);
+        texture.needsUpdate = true; // Tell the GPU pipeline to upload the fresh image pixel stream
+
+        // 4. Create an independent texture material instance matching the BSP style signature
+        const panelMaterial = new nunuClasses.Material({
+            name: `${currentPanel.name}_AI_Texture`,
+            side: THREE.DoubleSide,
+            map: texture,
+            transparent: false,
+            roughness: 0.6,
+            metalness: 0.1
+        });
+
+        // 5. Swap the asset structure on the live panel mesh object
+        currentPanel.material = panelMaterial;
+    }
+
+    // Force the editor viewport matrix and properties trees to synchronize
+    window.nunu.gui.updateInterface();
+    console.log("Successfully projected the 16-frame grid layout matrix onto highlighted panel selections.");
+}
+
+
+
+
+async function generateCameraDome(gridSize = 4) {
+    const THREE = require('three');
+    const nunuClasses = THREE.resolveNunuClasses(); // Harvest original wrappers safely
+    const activeScene = window.nunu.getScene();
+
+    let camera = activeScene.defaultCamera;
+    activeScene.traverse(function (child) {
+        if (child.isCamera && !camera) {
+            camera = child;
+        }
+    });
+
+    if (!camera) {
+        console.error("Could not find an active camera view.");
+        return;
+    }
+
+    const domeGroup = new THREE.Group();
+    domeGroup.name = `GeodesicDome_${gridSize}x${gridSize}`;
+    window.nunu.addObject(domeGroup, activeScene);
+
+    const radius = 15;
+    const hFov = (60 * Math.PI) / 180;
+    const vFov = (45 * Math.PI) / 180;
+
+    // --- Airtight Spherical Projection Fix ---
+    // Instead of raw squashed lat/lon coordinates, map using an un-warped equidistant cylindrical model
+    const mapToSphere = (vPct, hPct) => {
+        const lon = hPct * hFov;
+        const lat = vPct * vFov;
+
+        const x = radius * Math.sin(lon) * Math.cos(lat);
+        const y = radius * Math.sin(lat);
+        const z = -radius * Math.cos(lon) * Math.cos(lat);
+        return new THREE.Vector3(x, y, z);
+    };
+
+    // 1. Generate the vertex grid context
+    const vertexGrid = [];
+    for (let r = 0; r <= gridSize; r++) {
+        vertexGrid[r] = [];
+        const vPct = (r / gridSize) - 0.5;
+        for (let c = 0; c <= gridSize; c++) {
+            const hPct = (c / gridSize) - 0.5;
+            vertexGrid[r][c] = mapToSphere(vPct, hPct);
+        }
+    }
+
+    // 2. Build the independent watertight panel items
+    for (let row = 0; row < gridSize; row++) {
+        for (let col = 0; col < gridSize; col++) {
+            const pBotLeft = vertexGrid[row][col];
+            const pBotRight = vertexGrid[row][col + 1];
+            const pTopLeft = vertexGrid[row + 1][col];
+            const pTopRight = vertexGrid[row + 1][col + 1];
+
+            // Calculate precise shared geometric center point
+            const center = new THREE.Vector3()
+                .addVectors(pTopLeft, pTopRight)
+                .add(pBotLeft)
+                .add(pBotRight)
+                .multiplyScalar(0.25);
+
+            // Subtract center coordinates to build local offset arrays
+            const localTL = pTopLeft.clone().sub(center);
+            const localTR = pTopRight.clone().sub(center);
+            const localBL = pBotLeft.clone().sub(center);
+            const localBR = pBotRight.clone().sub(center);
+
+            const geometry = new THREE.BufferGeometry();
+
+            // Build the explicit triangle indices using CCW winding sequence
+            const vertices = new Float32Array([
+                localBL.x, localBL.y, localBL.z,
+                localBR.x, localBR.y, localBR.z,
+                localTL.x, localTL.y, localTL.z,
+
+                localBR.x, localBR.y, localBR.z,
+                localTR.x, localTR.y, localTR.z,
+                localTL.x, localTL.y, localTL.z
+            ]);
+
+            geometry.setAttribute('position', new THREE.BufferAttribute(vertices, 3));
+            geometry.computeVertexNormals();
+
+            const material = new nunuClasses.Material({
+                color: 0xAEB2F8, // --ace-blue 
+                roughness: 0.5,
+                metalness: 0.1,
+                side: THREE.DoubleSide
+            });
+
+            const panelMesh = new nunuClasses.Mesh(geometry, material);
+            panelMesh.name = `Panel_R${row}_C${col}`;
+
+            // Position panel node at center transform
+            panelMesh.position.copy(center);
+
+            // ❌ REMOVED: panelMesh.lookAt(0,0,0);
+            // DO NOT let independent panels compute individual lookAt vectors.
+            // Leaving rotation matching the parent group naturally eliminates the twist gap!
+
+            window.nunu.addObject(panelMesh, domeGroup);
+        }
+    }
+
+    // 3. Align parent matrix precisely onto active camera tracking transform
+    const camPos = new THREE.Vector3();
+    const camRot = new THREE.Quaternion();
+    camera.getWorldPosition(camPos);
+    camera.getWorldQuaternion(camRot);
+
+    domeGroup.position.copy(camPos);
+    domeGroup.quaternion.copy(camRot);
+
+    window.nunu.gui.updateInterface();
+    console.log(`Airtight geodesic panel array compiled successfully.`);
+}
+
+
+
+function injectSfMToNunu(sfmEntity, entityName = "SfM_PointCloud_Node") {
+    const nunuClasses = resolveNunuClasses();
+    const activeScene = window.nunu.getScene();
+
+    // 1. Ensure the entity carries a clean name descriptor for the Nunu Tree Hierarchy
+    sfmEntity.name = entityName;
+
+    // 2. Walk the incoming SfM entity tree to upgrade raw materials to Nunu's monitored types if needed
+    sfmEntity.traverse(function (child) {
+        if (child.isPoints) {
+            child.name = child.name || "Points_SubCloud";
+            // Keeps WebSfM's custom vertex coloring pipelines intact
+            child.material.vertexColors = true;
+        }
+        else if (child.isMesh) {
+            child.name = child.name || "Mesh_Surface";
+            // If it's a solid reconstructed mesh, upgrade to Nunu's tracked material structure
+            if (!(child.material instanceof nunuClasses.Material)) {
+                const oldMat = child.material;
+                child.material = new nunuClasses.Material({
+                    name: "SfM_Surface_Mat",
+                    color: oldMat.color,
+                    map: oldMat.map,
+                    side: THREE.DoubleSide
+                });
+            }
+        }
+    });
+
+    // 3. Register the root SfM container directly into Nunu's active runtime tree layout
+    window.nunu.addObject(sfmEntity, activeScene);
+
+    // 4. Force Nunu UI tree view and property layers to refresh immediately
+    window.nunu.gui.updateInterface();
+
+    console.log(`Successfully merged SfM structural entity [${entityName}] into Nunu workspace context.`);
+}
+
+
+
+function createFrameRater(targetFps, callback) {
+    const fpsInterval = 1000 / targetFps;
+
+    const startTime = performance.now();
+    let frameCount = 0;
+
+    const eventStack = [];
+    let isFlushing = false; // The single logic protector
+
+    // Permanent heartbeat interval running from startup
+    setInterval(() => {
+        // Only trigger if items are waiting AND we aren't currently inside a paint cycle
+        if (eventStack.length > 0 && !isFlushing) {
+
+            // Shallow copy and clear the stack immediately
+            const currentBatch = [...eventStack];
+            eventStack.length = 0;
+
+            requestAnimationFrame((paintTime) => {
+                isFlushing = true; // Lock out the interval thread during execution
+
+                frameCount++;
+                const t = paintTime - startTime;
+
+                try {
+                    if (typeof callback === 'function') {
+                        // Drain the batch execution. Isolate each callback so a
+                        // single throw can't drop the rest of the batch.
+                        for (let i = 0; i < currentBatch.length; i++) {
+                            try {
+                                callback(currentBatch[i], t, frameCount);
+                            } catch (e) {
+                                console.error('frame callback failed', e);
+                            }
+                        }
+                    }
+                } finally {
+                    // Always release the lock, even if a callback throws, so the
+                    // limiter can never freeze permanently.
+                    isFlushing = false;
+                }
+            });
+        }
+    }, fpsInterval);
+
+    return {
+        requestFrameUpdate(e) {
+            eventStack.push(e);
+        }
+    };
+}
+
+
 

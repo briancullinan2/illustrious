@@ -253,7 +253,7 @@
                 </form>
                 <div class="btn-row">
                     <div></div>
-                    <button class="primary" id="next-1" disabled>Select Google Project & Continue</button>
+                    <button class="primary" disabled id="next-1" disabled>Select Google Project & Continue</button>
                 </div>
             </div>
 
@@ -299,7 +299,7 @@
 
                 <div class="btn-row">
                     <div></div>
-                    <button class="primary" id="runpod-next">Save & Authenticate Pod Horizon</button>
+                    <button class="primary" disabled id="runpod-next">Save & Authenticate Pod Horizon</button>
                 </div>
             </div>
 
@@ -344,7 +344,7 @@
 
                 <div class="btn-row">
                     <div></div>
-                    <button class="primary" id="aws-next">Save & Authenticate AWS Cluster</button>
+                    <button class="primary" disabled id="aws-next">Save & Authenticate AWS Cluster</button>
                 </div>
             </div>
 
@@ -396,7 +396,7 @@
 
                 <div class="btn-row">
                     <div></div>
-                    <button class="primary" id="azure-next">Link Azure Cloud Framework</button>
+                    <button class="primary" disabled id="azure-next">Link Azure Cloud Framework</button>
                 </div>
             </div>
 
@@ -436,7 +436,7 @@
 
                 <div class="btn-row">
                     <div></div>
-                    <button class="primary" id="oracle-next">Register OCI Compute Engine</button>
+                    <button class="primary" disabled id="oracle-next">Register OCI Compute Engine</button>
                 </div>
             </div>
 
@@ -468,7 +468,7 @@
 
                 <div class="btn-row">
                     <div></div>
-                    <button class="primary" id="ibm-next">Validate IBM Cluster Array</button>
+                    <button class="primary" disabled id="ibm-next">Validate IBM Cluster Array</button>
                 </div>
             </div>
 
@@ -506,7 +506,7 @@
 
                 <div class="btn-row">
                     <div></div>
-                    <button class="primary" id="lambda-next">Lock Lambda Core Session</button>
+                    <button class="primary" disabled id="lambda-next">Lock Lambda Core Session</button>
                 </div>
             </div>
 
@@ -534,7 +534,7 @@
 
                 <div class="btn-row">
                     <div></div>
-                    <button class="primary" id="digitalocean-next">Connect Droplet Fabric</button>
+                    <button class="primary" disabled id="digitalocean-next">Connect Droplet Fabric</button>
                 </div>
             </div>
 
@@ -562,7 +562,7 @@
 
                 <div class="btn-row">
                     <div></div>
-                    <button class="primary" id="vultr-next">Establish Vultr Array Stream</button>
+                    <button class="primary" disabled id="vultr-next">Establish Vultr Array Stream</button>
                 </div>
             </div>
 
@@ -591,7 +591,7 @@
 
                 <div class="btn-row">
                     <div></div>
-                    <button class="primary" id="vast-next">Bind Decentralized Machine Nodes</button>
+                    <button class="primary" disabled id="vast-next">Bind Decentralized Machine Nodes</button>
                 </div>
             </div>
 
@@ -614,7 +614,7 @@
 
                 <div class="btn-row">
                     <div></div>
-                    <button class="primary" id="replicate-next">Initialize Replicate Tunnel</button>
+                    <button class="primary" disabled id="replicate-next">Initialize Replicate Tunnel</button>
                 </div>
             </div>
 
@@ -645,7 +645,7 @@
 
                 <div class="btn-row">
                     <div></div>
-                    <button class="primary" id="tencent-next">Bind Tencent Cell Mesh</button>
+                    <button class="primary" disabled id="tencent-next">Bind Tencent Cell Mesh</button>
                 </div>
             </div>
 
@@ -672,7 +672,7 @@
 
                 <div class="btn-row">
                     <div></div>
-                    <button class="primary" id="paperspace-next">Anchor Paperspace Horizon</button>
+                    <button class="primary" disabled id="paperspace-next">Anchor Paperspace Horizon</button>
                 </div>
             </div>
 
@@ -707,7 +707,7 @@
 
                 <div class="btn-row">
                     <div></div>
-                    <button class="primary" id="coreweave-next">Authorize CoreWeave K8s Grid</button>
+                    <button class="primary" disabled id="coreweave-next">Authorize CoreWeave K8s Grid</button>
                 </div>
             </div>
 
@@ -752,7 +752,7 @@
                 <h2 class="field-label-caps font-semibold margin-bottom-xs">Parameter Builder</h2>
                 <p class="text-muted margin-bottom-sm">Test the image generator and LLM with local HTTP requests.</p>
 
-                <form id="ai-parameter-builder">
+                <form id="runlocal-builder">
                     <label class="field-label-caps">Load Preset Blueprint:</label>
                     <select id="selectedPreset" class="margin-bottom-xs">
                         <option value="">-- Select a Service --</option>
@@ -793,7 +793,7 @@
 
                 <div class="btn-row margin-bottom-md">
                     <div></div>
-                    <button type="button" class="primary" id="sendRequestBtn">Send Request Context</button>
+                    <button type="button" class="primary" id="sendRequestBtn">Test Request Context</button>
                 </div>
 
                 <hr class="margin-bottom-md" />
@@ -808,9 +808,9 @@
 
 
             <div class="form-group-container">
-                <label for="gcloud-provider-path" class="field-label-text">
+                <label for="credential-provider-path" class="field-label-text">
                     Service Account Credentials Save Path</label>
-                <input type="text" id="gcloud-provider-path" name="gcloudProviderPath" class="input-text-field"
+                <input type="text" id="credential-provider-path" name="gcloudProviderPath" class="input-text-field"
                     placeholder="~/.credentials/gcloud-provider.json" value="~/.credentials/gcloud-provider.json" />
             </div>
 
@@ -891,7 +891,7 @@
             </ul>
 
             <div class="flex-gap-sm margin-bottom-md">
-                <button class="primary" id="install-func-btn">Deploy Selected</button>
+                <button class="primary" disabled id="install-func-btn">Deploy Selected</button>
                 <button class="secondary" id="install-all-btn">Deploy All Functions</button>
             </div>
 
@@ -902,7 +902,7 @@
 
             <div class="btn-row">
                 <button class="secondary" id="back-3">Back</button>
-                <button class="primary" id="next-3" disabled>Authenticate & Launch
+                <button class="primary" disabled id="next-3" disabled>Authenticate & Launch
                     Studio</button>
             </div>
         </div>
@@ -912,6 +912,7 @@
     </div>
 
     <script src="/setup/setup-client.js" defer></script>
+    <script src="/setup/setup-local.js" defer></script>
 </body>
 
 </html>

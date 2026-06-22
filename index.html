@@ -5,11 +5,12 @@
     <meta charset="UTF-8">
     <title>Illustrious Studio</title>
     <link rel="stylesheet" href="/main.css" />
+    <link rel="stylesheet" href="/components/theme/theme.css" />
 
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 </head>
 
-<body>
+<body class="theme-monokai">
 
     <div id="control-panel" class="active">
         <h2>
@@ -168,7 +169,7 @@
         <div class="local-model-section">
             <label class="local-model-label">
                 <!-- TODO: <input type="checkbox" checked id="local-model-toggle"> -->
-                <input type="checkbox" checked id="local-model-toggle">
+                <input type="checkbox" id="local-model-toggle">
                 <span>Run your own local model</span>
             </label>
             <div class="download-progress-container">
@@ -191,10 +192,12 @@
         <span class="canvas-stage-ready-text">🌌 [Spatial Render Stage Context Ready]</span>
     </div>-->
 
+    <nav aria-label="Main Menu" class="main_menu" id="main_menu"></nav>
+
+    <div id="nunu"></div>
 
 
-
-    <script src="/client.js" type="module"></script>
+    <script src="/client.js"></script>
     <script src="/components/core/extensions.js" type="text/javascript" defer></script>
     <script src="/components/core/events.js" type="text/javascript" defer></script>
     <script src="/components/core/modules.js" type="text/javascript" defer></script>

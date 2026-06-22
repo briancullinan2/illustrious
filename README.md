@@ -6,6 +6,8 @@ This repository contains the dynamic, fault-tolerant Google Cloud orchestration 
 
 Instead of burning cash on idle compute, this system implements **Zero-to-One Auto-Scaling**. It tracks hardware availability, dynamically hops across geographic zones to find cheap Spot capacity, seeds persistent model storage on-the-fly, and securely proxies frontend HTTPs traffic down to raw backend worker sockets.
 
+![alt text](<Screenshot 2026-06-22 133059.png>) 
+![alt text](<Screenshot 2026-06-22 133929.png>) 
 
 ![alt text](<Screenshot 2026-06-14 225931.png>) 
 ![alt text](<Screenshot 2026-06-14 230112.png>) 

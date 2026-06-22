@@ -21,7 +21,8 @@
 
 #nunu [draggable] {}
 
-#nunu.not-hidden {
+#nunu {
+    color: var(--ace-foreground);
     display: flex;
     flex-direction: column;
     max-width: 100%;
@@ -30,7 +31,6 @@
     overflow: hidden;
     touch-action: none;
     overscroll-behavior: none;
-    color: var(--ace-foreground);
 }
 
 #nunu>div:nth-child(1) {
@@ -143,6 +143,11 @@
     background-color: transparent !important;
     height: 100% !important;
 }
+
+#nunu>div:nth-child(1)>div>div:nth-child(2)>div:nth-child(3)>div:nth-child(2)>div>div:nth-child(3) {
+    right: 165px !important;
+}
+
 
 #nunu>div:nth-child(1)>div>div:nth-child(2)>div:nth-child(2) {
     order: 3;
@@ -321,6 +326,24 @@
     filter: invert(0.5) sepia(1) saturate(5) hue-rotate(calc(var(--ace-blue-hue) - 40deg)) brightness(0.8);
 }
 
+#nunu img[src*="arrow_down"] {
+    display: none !important;
+}
+
+#nunu div:has(>select) {
+    height: auto !important;
+    width: auto !important;
+}
+
+#nunu select {
+    appearance: none !important;
+    background-position: right 4px center;
+    height: auto !important;
+    padding-right: 25px;
+    padding-left: 5px;
+    width: auto !important;
+}
+
 #nunu div:has(>div:first-child>[draggable]>img[src*="close"])>div:first-child>div {
     position: relative !important;
     top: 0 !important;
@@ -342,4 +365,41 @@
     bottom: auto !important;
     right: auto !important;
     color: var(--ace-foreground) !important;
+}
+
+
+.jf-tooltip {
+    pointer-events: none !important;
+    /* ALLOWS MOUSE INTERACTION INSIDE THE TOOLTIP */
+
+    /* 2. Strip out the forced inline engine box styling */
+    background: rgba(53, 48, 48, 0.85) !important;
+    /* Grounded directly on var(--ace-gutter-bg) */
+    background-color: rgba(53, 48, 48, 0.85) !important;
+    border: 1px solid rgba(255, 255, 255, 0.08) !important;
+    /* Replaces the 3px solid look */
+    border-radius: 6px !important;
+
+    /* 3. High-fidelity Jellyfin typography and layout execution */
+    font-family: inherit;
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    white-space: nowrap;
+    color: var(--ace-foreground, #DDF0FF) !important;
+    padding: 8px 14px;
+
+    /* 4. Velvet backdrop effects and depth shadow matrix */
+    backdrop-filter: blur(14px) saturate(140%);
+    -webkit-backdrop-filter: blur(14px) saturate(140%);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5),
+        0 0 0 1px rgba(0, 0, 0, 0.15);
+
+    /* 5. Smooth micro-animation entry sequence triggers */
+    transition: opacity 0.15s cubic-bezier(0.2, 0, 0.2, 1),
+        transform 0.15s cubic-bezier(0.2, 0, 0.2, 1);
+
+    /* Inherit the structural z-index positioning directly */
+    z-index: 10000 !important;
 }

@@ -1,41 +1,59 @@
 @import url(/theme/boxicons.min.css);
 @import url(/theme/boxicons-brands.min.css);
 
-:root {
-    --bg: #101014;
-    --bg-darker: #0d0d11;
-    --bg-darkest: #050508;
-    --panel: #16161e;
-    --panel-hover: #22222c;
-    --panel-active: #2a2a36;
 
-    --accent: #00ffcc;
-    --accent-hover: #00ddb0;
-    --accent-muted: rgba(0, 255, 204, 0.1);
-    --accent-border: rgba(0, 255, 204, 0.15);
 
-    --border: #2e2e3f;
-    --border-dark: #1e1e26;
-    --border-card: #252525;
+body {
+    /* Core Layout Layout Layers */
+    --bg: var(--ace-bg);
+    --bg-darker: var(--ace-bg);
+    /* Sits on same base background tier */
+    --bg-darkest: var(--ace-bg);
+    --panel: var(--ace-gutter-bg);
+    --panel-hover: var(--ace-gutter-bg);
+    --panel-active: var(--ace-gutter-bg);
 
-    --text: #f0f0f5;
-    --text-dim: #a0a0b5;
-    --text-muted: #666;
-    --text-muted-light: #aaa;
-    --text-dark: #444;
+    /* Active Brand / Selection System */
+    --accent: var(--ace-blue);
+    --accent-hover: var(--ace-pink);
+    /* Shifts across the cool spectrum on hover */
+    --accent-muted: var(--ace-comment);
+    --accent-border: var(--ace-blue);
 
-    --red: #ff3355;
-    --red-hover: #ff5577;
-    --red-muted: rgba(255, 51, 85, 0.05);
-    --red-border: rgba(255, 51, 85, 0.26);
+    /* Structural Borders */
+    --border: var(--ace-gutter-bg);
+    --border-dark: var(--ace-gutter-bg);
+    --border-card: var(--ace-gutter-bg);
 
-    --yellow: #ffff00;
-    --yellow-orange: #ffaa00;
-    --terminal-green: #33ff33;
-    --link-blue: #00bcff;
+    /* Typography Hierarchy */
+    --text: var(--ace-foreground);
+    /* Highest contrast text tone in palette */
+    --text-dim: var(--ace-comment);
+    --text-muted: var(--ace-comment);
+    --text-muted-light: var(--ace-foreground);
+    --text-dark: var(--ace-bg);
 
+    /* Action Elements & State Badges */
+    --red: var(--ace-pink);
+    /* Mapped to the pink/indigo accent token */
+    --red-hover: var(--ace-blue);
+    --red-muted: var(--ace-pink);
+    --red-border: var(--ace-pink);
+
+    /* Auxiliary Utilities */
+    --yellow: var(--ace-purple);
+    /* Grounded warm amber/gold token */
+    --yellow-orange: var(--ace-purple);
+    --terminal-green: var(--ace-green);
+    --link-blue: var(--ace-comment);
+
+    /* Unchanged Geometry */
     --global-height: 1.6em;
 }
+
+
+
+
 
 /* ============================================================================
    Core Reset & Base Layout Bounds
@@ -46,6 +64,8 @@
     padding: 0;
 }
 
+
+html,
 body {
     background-color: var(--bg);
     color: var(--text);
@@ -54,7 +74,8 @@ body {
     justify-content: center;
     align-items: center;
     min-height: 100vh;
-    padding: 20px;
+    padding: 0;
+    margin: 0;
 }
 
 hr {
@@ -92,6 +113,7 @@ hr {
     /* Dedicated position layout transition properties */
     transition: left 0.35s cubic-bezier(0.4, 0.0, 0.2, 1);
     will-change: left;
+    z-index: 400;
 }
 
 /* ⬅️ Control Panel State System (Hidden off-screen left by default) */
@@ -137,12 +159,12 @@ hr {
 
 #scene-builder.collapsed {
     flex-grow: 0;
-    max-height: 0 !important;
+    max-height: 0;
     opacity: 0;
-    padding-top: 0 !important;
-    padding-bottom: 0 !important;
-    margin-top: 0 !important;
-    margin-bottom: 0 !important;
+    padding-top: 0;
+    padding-bottom: 0;
+    margin-top: 0;
+    margin-bottom: 0;
     pointer-events: none;
 }
 
@@ -391,8 +413,8 @@ select option {
 /* Cleans up default system selections in specific browser variants */
 select option:checked,
 select option:hover {
-    background-color: var(--panel-active) !important;
-    color: var(--accent) !important;
+    background-color: var(--panel-active);
+    color: var(--accent);
 }
 
 textarea {
@@ -444,7 +466,7 @@ a.secondary:disabled,
 #cloud-observer button:disabled {
     opacity: 0.3;
     cursor: not-allowed;
-    box-shadow: none !important;
+    box-shadow: none;
 }
 
 .primary {
@@ -469,14 +491,14 @@ a.secondary:disabled,
 
 /* Specific Element Button Tuning Rules */
 #add-layer {
-    background: var(--panel-hover);
+    background: var(--ace-bg);
     color: var(--text);
     border: 1px solid var(--border);
     margin-top: 12px;
 }
 
 #add-layer:hover {
-    background: var(--panel-active);
+    background: var(--accent-hover);
 }
 
 #multicast-scene {
@@ -489,7 +511,7 @@ a.secondary:disabled,
 }
 
 #multicast-scene:hover {
-    background: var(--accent-hover) !important;
+    background: var(--accent-hover);
     box-shadow: 0 0 15px rgba(0, 255, 204, 0.4);
 }
 
@@ -953,104 +975,104 @@ a.secondary:disabled,
 
 body.canvas-mode #control-panel,
 body.canvas-mode #cloud-observer {
-    transform: translateX(-100%) !important;
-    pointer-events: none !important;
+    transform: translateX(-100%);
+    pointer-events: none;
 }
 
 /* Floating Back Button shown only on Mobile in Canvas Mode */
 body.canvas-mode .floating-back-btn {
-    display: block !important;
-    position: absolute !important;
-    top: 15px !important;
-    left: 15px !important;
-    z-index: 200 !important;
-    width: auto !important;
-    background: rgba(22, 22, 30, 0.95) !important;
-    color: var(--accent) !important;
-    border: 1px solid var(--border) !important;
-    padding: 10px 18px !important;
-    border-radius: 20px !important;
-    font-family: monospace !important;
-    font-size: 12px !important;
-    font-weight: bold !important;
-    cursor: pointer !important;
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.6) !important;
-    transition: background-color 0.2s, border-color 0.2s !important;
+    display: block;
+    position: absolute;
+    top: 15px;
+    left: 15px;
+    z-index: 200;
+    width: auto;
+    background: var(--bg-darker);
+    color: var(--accent);
+    border: 1px solid var(--border);
+    padding: 10px 18px;
+    border-radius: 20px;
+    font-family: monospace;
+    font-size: 12px;
+    font-weight: bold;
+    cursor: pointer;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.6);
+    transition: background-color 0.2s, border-color 0.2s;
 }
 
 body.canvas-mode .floating-back-btn:hover {
-    background: var(--panel-hover) !important;
-    border-color: var(--accent) !important;
+    background: var(--panel-hover);
+    border-color: var(--accent);
 }
 
 @media (max-width: 768px) {
     body {
-        padding: 0 !important;
-        margin: 0 !important;
-        overflow: hidden !important;
-        min-height: 100vh !important;
-        min-height: 100dvh !important;
-        width: 100% !important;
-        display: block !important;
+        padding: 0;
+        margin: 0;
+        overflow: hidden;
+        min-height: 100vh;
+        min-height: 100dvh;
+        width: 100%;
+        display: block;
     }
 
     #control-panel,
     #cloud-observer {
-        width: 100% !important;
-        height: 100vh !important;
-        height: 100dvh !important;
-        position: fixed !important;
-        top: 0 !important;
-        left: 0 !important;
-        margin-top: 0 !important;
-        border-right: none !important;
-        border-radius: 0 !important;
-        z-index: 100 !important;
-        transition: transform 0.35s cubic-bezier(0.4, 0.0, 0.2, 1) !important;
-        overflow-y: auto !important;
-        display: flex !important;
-        flex-direction: column !important;
-        justify-content: flex-start !important;
-        gap: 15px !important;
+        width: 100%;
+        height: 100vh;
+        height: 100dvh;
+        position: fixed;
+        top: 0;
+        left: 0;
+        margin-top: 0;
+        border-right: none;
+        border-radius: 0;
+        z-index: 400;
+        transition: transform 0.35s cubic-bezier(0.4, 0.0, 0.2, 1);
+        overflow-y: auto;
+        display: flex;
+        flex-direction: column;
+        justify-content: flex-start;
+        gap: 15px;
     }
 
     /* Transform-based mobile drawer animations */
     #control-panel {
-        transform: translateX(-100%) !important;
+        transform: translateX(-100%);
     }
 
     #control-panel.active {
-        transform: translateX(0) !important;
+        transform: translateX(0);
     }
 
     #cloud-observer {
-        transform: translateX(-100%) !important;
+        transform: translateX(-100%);
     }
 
     #cloud-observer.active {
-        transform: translateX(0) !important;
+        transform: translateX(0);
     }
 
     /* Prevent textareas and inputs from causing scroll leaks */
     select,
     textarea,
     input[type="text"] {
-        padding: 10px !important;
-        font-size: 13px !important;
+        padding: 10px;
+        font-size: 13px;
     }
 
     #canvas-stage {
-        position: fixed !important;
-        top: 0 !important;
-        left: 0 !important;
-        width: 100% !important;
-        height: 100vh !important;
-        height: 100dvh !important;
-        z-index: 10 !important;
-        margin: 0 !important;
-        padding: 10px !important;
-        background: #09090b !important;
-        border: none !important;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100vh;
+        height: 100dvh;
+        z-index: 10;
+        margin: 0;
+        padding: 10px;
+        background: #09090b;
+        border: none;
     }
 
     .header-icon-btn {
@@ -1059,8 +1081,8 @@ body.canvas-mode .floating-back-btn:hover {
     }
 
     .header-icon-btn svg {
-        height: 32px !important;
-        width: 32px !important;
+        height: 32px;
+        width: 32px;
     }
 
 }
