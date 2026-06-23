@@ -363,6 +363,9 @@ To keep Java free and open-source, the community rallies around the **OpenJDK** 
 If you already have a modern Java version installed on your Windows machine (like the OpenJDK build packaged by Microsoft, Amazon Corretto, or an existing development environment), you can skip downloading anything else entirely. Just open PowerShell, type `java -version`, and as long as it returns **version 17, 21, or newer**, your local DNS interceptor script will boot right up.
 
 
+
+
+
 Your friend is talking about a popular engineering hack: building a **budget split ergonomic keyboard** by laying two separate, identical compact keyboards side-by-side.
 
 Instead of dropping $350+ on a high-end split mechanical keyboard (like an Ergodox, Moonlander, or Dygma Raise) to fix shoulder and wrist posture during long coding blocks, developers just buy two cheap 60% mechanical keyboards, angle them shoulder-width apart, and call it a day.
@@ -426,6 +429,29 @@ Once developers have low-level interceptors like Kanata running across dual keyb
 * **Navigation Layers:** You can turn the entire right keyboard into a dedicated Vim-style navigation block or arrow pad simply by holding down the Spacebar on the left keyboard.
 
 If you are trying it right now with dual Bluetooth keyboards on Windows, test the Shift key trick. If your layout is dropping capitals across the gap, dropping Kanata or KMonad into your startup routine will instantly bind them into a single, cohesive developer rig.
+
+
+
+
+
+You want to run **`kanata_windows_tty_winIoV2_x64.exe`** to start out.
+
+Here is the quick breakdown of what those naming conventions mean so you can pick the perfect one for your setup:
+
+### 1. Interception Method (`winIoV2` vs. `wintercept`)
+
+* **`winIoV2` (Choose this):** Uses the native Windows input API. It works out of the box without requiring you to install any extra third-party drivers.
+* **`wintercept`:** Requires you to manually install the external "Interception" driver asset onto your machine.
+
+### 2. Interface Style (`tty` vs. `gui`)
+
+* **`tty` (Best for starting out):** Launches inside a visible command prompt window. You want this right now because if you make a syntax error in your `config.kbd` file, the terminal will print the exact line number where the typo is before closing.
+* **`gui` (Best for later):** Runs completely in the background without opening a window. Once your config is perfect and you want Kanata to launch silently when Windows boots up, switch to this executable.
+
+### 3. Permissions (`cmd_allowed`)
+
+* Executables with `cmd_allowed` in the name allow Kanata to launch external Windows apps or system scripts directly via a keyboard macro. If you don't need your keyboard to physically open windows applications or run scripts, leave it off for a cleaner security profile.
+
 
 
 
@@ -724,5 +750,225 @@ Finally, the compiler bundles the output. Depending on how you configure your pr
 * **Isolated Packs:** Separated `_BP` (Behavior Pack) and `_RP` (Resource Pack) folders ready to map straight into your local Bedrock Dedicated Server workspace.
 
 By running this pipeline, you never have to worry about broken JSON syntax or mismatched UUID paths again; you write pure logic, and the compiler guarantees a valid build on the other side.
+
+
+
+
+
+To disable "DNS Client", run the following command in command prompt as admin to set the needed registry: 
+REG add "HKLM\SYSTEM\CurrentControlSet\services\Dnscache" /v Start /t REG_DWORD /d 4 /f
+
+If you want to revert this change later, run this which will enable it again: 
+REG add "HKLM\SYSTEM\CurrentControlSet\services\Dnscache" /v Start /t REG_DWORD /d 2 /f
+
+
+-= BedrockConnect =-
+Developed by Pugmatt
+
+Full video tutorial on how to set this up can be found on my channel: https://www.youtube.com/user/Pugmatt
+
+Requires Java 8 or higher to run the JAR.
+
+This setup requires a program called mod0Umleitung, which can be found here: https://modzero.github.io/mod0Umleitung/
+
+-------------------
+
+Execute run.bat. Once you choose the IP you want on the DNS records, the software will create a bc_dns.conf file in the parent directory.
+Start up mod0Umleitung, and load bc_dns.conf as a ruleset, which will load the needed DNS records.
+
+If you receive an error about "Only one usage of each socket address", you need to disable the Windows service "DNS Client", which is hogging port 53.
+
+To disable "DNS Client", run the following command in command prompt as admin to set the needed registry: 
+REG add "HKLM\SYSTEM\CurrentControlSet\services\Dnscache" /v Start /t REG_DWORD /d 4 /f
+
+If you want to revert this change later, run this which will enable it again: 
+REG add "HKLM\SYSTEM\CurrentControlSet\services\Dnscache" /v Start /t REG_DWORD /d 2 /f
+
+(Both of these commands will require a restart)
+
+You should then be able to set the DNS on your game console, and connect to the BedrockConnect serverlist through the Featured Server list.
+
+-------------------
+
+Although not required, if you like the software feel free to throw a few bucks to support what I do! http://paypal.me/Pugmatt
+
+
+
+You nailed it. Changing the default Minecraft server ports is exactly the right move.
+
+Because the PS5 hardcodes its connections to the official featured servers on port `19132`, **BedrockConnect must stay on 19132** to hijack that traffic and present its menu GUI on the TV.
+
+This means you can spin up as many separate Minecraft server instances on your PC as your hardware can handle, simply by assigning each its own unique port number (e.g., `19134`, `19135`, `19136`). Your kids will be able to see and choose between all of them right from the BedrockConnect custom menu.
+
+Here is the clean pipeline to set up a multi-server grid on your local machine.
+
+---
+
+## Step 1: Duplicate Your Server Environments
+
+Instead of trying to host multiple maps inside one running app, create separate directories for each world instance so their logs, configurations, and player files stay isolated.
+
+```text
+C:\MinecraftServer\
+├── Server_Creative\   <-- Running on Port 19134
+│   ├── bedrock_server.exe
+│   └── server.properties
+└── Server_Survival\   <-- Running on Port 19136
+    ├── bedrock_server.exe
+    └── server.properties
+
+```
+
+---
+
+## Step 2: Configure Unique Ports and Names
+
+Open the `server.properties` file inside each directory and increment the port settings so they never overlap.
+
+### For Server 1 (Creative Map):
+
+```ini
+server-name=Kids Creative Sandbox
+server-port=19134
+server-portv6=19135
+level-name=CreativeWorld
+
+```
+
+### For Server 2 (Survival Map):
+
+```ini
+server-name=Family Survival World
+server-port=19136
+server-portv6=19137
+level-name=SurvivalWorld
+
+```
+
+---
+
+## Step 3: Clear the Windows Firewall for the New Ports
+
+Because you are opening new networking gates, you need to tell Windows Advanced Firewall to permit inbound traffic on your new ports.
+
+Open PowerShell as an **Administrator** and execute this rule block:
+
+```powershell
+New-NetFirewallRule -DisplayName "Minecraft Creative Port" -Direction Inbound -LocalPort 19134 -Protocol UDP -Action Allow
+New-NetFirewallRule -DisplayName "Minecraft Survival Port" -Direction Inbound -LocalPort 19136 -Protocol UDP -Action Allow
+
+```
+
+---
+
+## Step 4: Run Everything Simultaneously
+
+1. Ensure your BedrockConnect proxy loop is running on your network (holding down port `19132`).
+2. Go into `Server_Creative\` and launch its `bedrock_server.exe`.
+3. Go into `Server_Survival\` and launch its `bedrock_server.exe`.
+
+### The End-User Experience for Your Kids
+
+When your kids open Minecraft on the PS5 and join a featured server, they will drop straight into your local BedrockConnect portal dashboard.
+
+From there, they can click **"Add Server"** twice to create two persistent bookmarks:
+
+* **Bookmark 1:** Name: `Creative Sandbox` | IP: `192.168.4.23` | Port: `19134`
+* **Bookmark 2:** Name: `Survival World` | IP: `192.168.4.23` | Port: `19136`
+
+They can jump back and forth between worlds at will, and you can freely run scripts, drop in your text-blueprint castle structures, or generate new map files on either server without kicking players offline from the other instance.
+
+No, you don't need to register your local servers with the official BedrockConnect project or anyone else.
+
+Because you are running the BedrockConnect DNS engine locally on your own computer (`192.168.4.23`), you have your own entirely private instance of the software.
+
+You have two ways to handle adding your multiple local servers, both of which keep everything 100% internal:
+
+### Option 1: The UI Method (Easiest)
+
+When your kids boot up the PS5, go to the servers tab, and open your local BedrockConnect menu, they can simply use the controller to click **"Add Server"** right on the TV screen. They type in your computer's IP and whatever custom port you configured (like `19134` or `19136`).
+
+The software automatically saves those bookmarks locally to the PS5's cache or your server's folder. They only have to type it in once.
+
+### Option 2: Pre-Load Them via `config.json` (Automated)
+
+If you don't want your kids to have to manually type in IPs and ports on a console controller, you can pre-load your servers directly into the BedrockConnect backend on your PC.
+
+Open your `C:\Program Files (x86)\BedrockConnect\config.json` file and locate the `"custom-servers"` array. You can hardcode your servers right there like this:
+
+```json
+{
+  "bds-address": "127.0.0.1",
+  "bds-port": 19133,
+  "custom-servers": [
+    {
+      "name": "Kids Creative Sandbox",
+      "address": "192.168.4.23",
+      "port": 19134
+    },
+    {
+      "name": "Family Survival World",
+      "address": "192.168.4.23",
+      "port": 19136
+    }
+  ],
+  "dns-upstream": "8.8.8.8",
+  "enable-built-in-dns": true,
+  "dns-port": 53
+}
+
+```
+
+If you use this method, restart your `run.bat` script. The next time the PS5 connects, your Creative and Survival servers will already be sitting beautifully on the TV menu waiting for them to click play!
+
+
+
+
+Ah, eagle eye! You caught a critical piece of the puzzle. What you just pasted there is an **XML configuration for a DNS server/interceptor (like a DNSMasq wrapper)**, whereas the previous `config.json` is BedrockConnect's internal application config.
+
+They are two halves of the same trick, but to answer your question directly: **Yes, it will load it automatically anyway, but *only* if BedrockConnect itself is running alongside this XML DNS tool.**
+
+Here is exactly how these two files work together to automate everything for your kids:
+
+---
+
+## The Two Halves of the Hijack
+
+### 1. The XML File (The Redirector)
+
+The XML configuration you found intercepts the actual domain names (like `mco.cubecraft.net`). When the PS5 tries to connect to Cubecraft, this file forces the network traffic to route to your computer's IP: `192.168.4.23`.
+
+### 2. The `config.json` File (The Menu Provider)
+
+Once the PS5 traffic arrives at your computer, it hits BedrockConnect. BedrockConnect reads its `config.json` file, looks at the `"custom-servers"` array, and builds the visual list on the TV screen.
+
+---
+
+## Will it load automatically?
+
+If you populate that XML config, you are bypassing BedrockConnect's built-in DNS service and using an external DNS manager (like a custom router feature or a local Pi-hole/DNSMasq setup) to handle the redirect.
+
+Because you are doing that, the PS5 will hit your computer automatically whenever they click a featured server. However, you still have two ways to handle the actual menu they see:
+
+### Scenario A: You use the `custom-servers` json array
+
+If you hardcode your local servers into the `config.json` block, your kids will click "Cubecraft", the XML will redirect them to your PC, and **they will immediately see "Kids Creative Sandbox" pop up on their screen automatically** without having to type a thing.
+
+### Scenario B: You leave the json array empty
+
+If you don't pre-load the json array, they will click "Cubecraft", the XML will still redirect them to your PC, but they will be greeted with a blank BedrockConnect menu where they have to use the controller to manually add your custom ports.
+
+### One quick fix on your JSON sample:
+
+In the sample text you pasted, you set the target port for your Creative Sandbox to `19133`:
+
+```json
+"port": 19133
+
+```
+
+Make sure that port matches whatever you specified as the `server-port=` inside that specific Minecraft instance's `server.properties` file (e.g., if you shifted your actual game server to `19134` to keep it separate from the proxy, change it to `19134` here too!).
+
+
 
 

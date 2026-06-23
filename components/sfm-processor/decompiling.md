@@ -5258,6 +5258,26 @@ components\sfm-processor\index.js:
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 ```javascript
 
 73 results - 1 file
@@ -7908,4 +7928,193 @@ _setField('relativeRansac', '500');     // Caps hypotheses at 500 max per pair i
 ```
 
 Hang tight for another minute or two—your banana tracking is about to successfully close its loop!
+
+
+
+
+Since this application runs entirely client-side using **WebGPU, IndexedDB, and Local Storage**, you can intercept the reconstructed SfM output precisely where it transitions from calculation to local storage/caching.
+
+In your `index.js`, the pipeline steps are driven by the UI sidebar phases (e.g., `phaseMapping`, `phaseBundle`). The underlying data model tracks a local project object containing **`poses`** (the camera matrices/extrinsics) and **`points`** (the sparse point cloud vertices).
+
+Here is exactly where to look in your local source files, what keywords to search for, and how to hook into the data to draw your elements.
+
+---
+
+### 1. Key Internal Functions & Models to Trace
+
+The minified functions at the end of your file reveal how the local SfM engine represents its model. Search for these specific signatures:
+
+* **`oN(e, t)` and `aN(e)**`: These are your metric calculation and centroid solvers. `e` represents the state or database object. Note these properties:
+* `e.poses`: An array of camera view states.
+* `e.poses.filter(e => e.registered)`: The subset of cameras that WebSFM successfully solved and registered.
+* `e.poses[i].center` or `e.poses[i].qvec`: The 3D translation center vector and the quaternion rotation vector ($q_{vec}$) of the camera pose.
+* `e.points`: The calculated sparse point cloud coordinates (`e.points.map(e => e.xyz)`).
+
+
+
+If you search for `registered` or `huberRms`, you will find the final block of code where the **Bundle Adjustment** phase finishes resolving.
+
+---
+
+### 2. The Local Storage Hook Strategy
+
+Since everything is decoupled and local, you don't need to write custom storage managers. You can simply look for where the UI handles the completion event or updates its canvas.
+
+Search your code for:
+
+```javascript
+// Look for where the point count text gets updated in the sidebar:
+"pointCount"
+
+```
+
+The line that updates the UI counter (`document.getElementById('pointCount').textContent = ...`) will be located inside the function that has direct access to the freshly calculated `points` and `poses` arrays.
+
+### 3. Injecting the Elements (Step-by-Step implementation)
+
+Once you trace that completion block, you can map over `e.poses` to draw the pyramid frustums, camera thumbnails, and connection lines using your local `this.scene`:
+
+```javascript
+// Put this inside the method that handles the end of 'phaseBundle' or 'phaseMapping'
+function visualizeSfMResult(sfmProjectData, threeScene) {
+  const poses = sfmProjectData.poses || [];
+  const points = sfmProjectData.points || [];
+
+  // 1. Draw the Camera Pyramids & Image planes
+  poses.forEach((pose) => {
+    if (!pose.registered) return; // Skip unregistered/failed cameras
+
+    const cameraGroup = new THREE.Group();
+
+    // Reconstruct rotation matrix / Quaternion from pose.qvec
+    if (pose.qvec) {
+      cameraGroup.quaternion.set(pose.qvec[1], pose.qvec[2], pose.qvec[3], pose.qvec[0]);
+    }
+    if (pose.center) {
+      cameraGroup.position.fromArray(pose.center);
+    }
+
+    // Add Wireframe Pyramid
+    const frustumWireframe = createCameraFrustum(); // Using the LineSegments helper
+    cameraGroup.add(frustumWireframe);
+
+    // Add local image thumbnail plane (if you store Blob URLs locally)
+    if (pose.localBlobUrl || pose.imgUrl) {
+      const imagePlane = createCameraImagePlane(pose.localBlobUrl || pose.imgUrl);
+      cameraGroup.add(imagePlane);
+    }
+
+    threeScene.add(cameraGroup);
+  });
+
+  // 2. Draw Visibility Trace Lines (Ray Bundles)
+  // If your points store track data pointing back to the camera indices:
+  points.forEach((point) => {
+    if (point.xyz && point.visibleCameraIndices) {
+      point.visibleCameraIndices.forEach((camIdx) => {
+        const cameraPose = poses[camIdx];
+        if (cameraPose && cameraPose.registered) {
+          drawTraceLine(threeScene, cameraPose.center, point.xyz);
+        }
+      });
+    }
+  });
+}
+
+```
+
+### Shortcuts to locate the spot:
+
+1. Open your code editor and search globally for `registered`.
+2. Locate the function that handles `e.poses.filter(...)`.
+3. Directly beneath where it validates the registered cameras, inject your visualization callback passing your Three.js scene wrapper. Because the render loop (`tick`) evaluates `this.needsRender`, any meshes or lines you drop straight into `this.scene` will immediately show up on screen offline.
+
+
+
+
+
+
+Based on the snippet you found around line **10972**, you hit exactly the right spot.
+
+Look closely at what that function returns right when it logs that `Mapper aborted` phase:
+
+```javascript
+return u?.({
+  type: `mapper-summary`,
+  // ...
+}),
+a(`Mapper: ${p.registeredCount}/${e.length} cameras registered...`),
+{
+  poses: p.poses,
+  pairGeometries: m,
+  poseGraphEdges: [],
+  diagnostics: p.diagnostics,
+  gaugeAnchorImageIds: p.gaugeAnchorImageIds
+}
+
+```
+
+Even though `p.registeredCount` is `0` (meaning global tracking failed), the relative position and rotation calculations between the images are already completed and packed right there inside **`m` (`pairGeometries`)** and **`p.diagnostics`**!
+
+Here is how you extract the angles out of that data before the pipeline gives up.
+
+---
+
+### 1. What is inside `pairGeometries` (`m`)?
+
+When the geometric verification tests run across pairs, it solves the **Essential Matrix ($E$)** or **Fundamental Matrix ($F$)** for each image combination that had enough shared descriptors.
+
+Inside `m`, you will find an array of relative pair configurations matching this structure:
+
+* **`e.leftIndex` / `e.rightIndex**`: The index handles for the two images being compared (e.g., Image 0 and Image 1).
+* **`e.R`**: The relative rotation matrix ($3\times3$) or quaternion array mapping the rotation from the left camera view to the right camera view.
+* **`e.t`**: The relative translation direction vector (`[x, y, z]`) between the two cameras.
+
+### 2. How to intercept and map them
+
+Since this function executes inside a web worker or processor block, you can tap into the return block of this function (around line **10973**) to inspect or visualize the pairs that *did* pass RANSAC locally, even if they couldn't be stitched into a unified world map.
+
+You can read the relative translations and rotations out of `pairGeometries` like this:
+
+```javascript
+// Intercepting inside or right after line 10973
+const pairs = m; // pairGeometries
+
+pairs.forEach(pair => {
+  // If the pair has valid inlier matches, it contains a solved relative angle
+  if (pair.inliers && pair.inliers.length > 0) {
+    const leftImg = pair.leftIndex;
+    const rightImg = pair.rightIndex;
+    
+    // Relative rotation matrix and translation vector
+    const relativeRotation = pair.R;    // Float32Array/Array
+    const relativeTranslation = pair.t; // [x, y, z]
+    
+    console.log(`Found solved relative angle between Image ${leftImg} and Image ${rightImg}:`, {
+      rotation: relativeRotation,
+      translation: relativeTranslation,
+      inlierCount: pair.inliers.length
+    });
+    
+    // Here you can use Three.js to construct a small local scene link
+    // e.g., placing the Right camera relative to the Left camera's origin
+  }
+});
+
+```
+
+### 3. Why did it say 0 cameras if pairs are matched?
+
+Your log explicitly states:
+
+```text
+Mapper aborted: no edge satisfied the initial-pair parallax / inlier threshold
+
+```
+
+This means your WebGPU RANSAC script successfully computed relative matches and angles for pairs (`Verified view graph components: 4 components...`), but when it tried to choose a "seed pair" to anchor the world map origin $(0,0,0)$, **none of the pairs had enough baseline parallax**.
+
+If the baseline angle between photos is too narrow (e.g., the camera was rotated in place without shifting its position physically left or right), the baseline triangulation math fails, causing the mapper to abort with 0 cameras. By pulling `pairGeometries` directly out of this step, you can visually verify if the solved relative translations (`pair.t`) are converging or dropping off entirely.
+
+
 
