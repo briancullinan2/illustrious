@@ -8118,3 +8118,268 @@ If the baseline angle between photos is too narrow (e.g., the camera was rotated
 
 
 
+To decouple this heavy math from your main execution context, you can set up a dedicated **Web Worker**. Using **Transferable Objects**, you can pass massive arrays of coordinates or descriptors (like `Float32Array` or `Float64Array`) by reference without cloning them, keeping message passing extremely fast.
+
+Here is the decoupled architecture to migrate `solveFivePointCharts` to a background worker.
+
+### 1. The Worker Script (`sfm-worker.js`)
+
+This script acts as the background environment. It imports your dependencies or hosts the Wasm runtime, listens for data batches, runs the math, and returns the solved relative rotations and translations.
+
+```javascript
+// sfm-worker.js
+
+// If the Wasm runtime is bundled or needs initialization, do it here
+let wasmInstance = null;
+
+self.onmessage = async function (event) {
+  const { type, pairId, leftFeatures, rightFeatures, config } = event.data;
+
+  if (type === "PROCESS_PAIR") {
+    try {
+      // Execute the 5-point RANSAC loop off the main thread
+      const result = runFivePointSolver(leftFeatures, rightFeatures, config);
+
+      // Return the results back to the main thread
+      // Transfer buffers back if you need to reuse the feature memory arrays
+      self.postMessage({
+        type: "PAIR_SOLVED",
+        pairId,
+        success: true,
+        R: result.R, // Relative Rotation Matrix / Array
+        t: result.t, // Relative Translation Vector
+        inliers: result.inliers
+      }, [leftFeatures.buffer, rightFeatures.buffer]);
+
+    } catch (error) {
+      self.postMessage({
+        type: "PAIR_SOLVED",
+        pairId,
+        success: false,
+        error: error.message
+      });
+    }
+  }
+};
+
+function runFivePointSolver(leftFeat, rightFeat, config) {
+  // This wraps your exact un-minified solveFivePointCharts logic
+  // e.g., binding to Module.HEAPF64 and calling $sfm_solve_fivepoint_chart_f64
+  
+  // Placeholder structure mimicking output
+  const solvedR = new Float64Array(9); 
+  const solvedT = new Float64Array(3);
+  const inliers = [];
+
+  // ... (Your core 5-point RANSAC execution loop goes here) ...
+
+  return { R: solvedR, t: solvedT, inliers };
+}
+
+```
+
+### 2. Main Thread Service Integration
+
+On your main application side, you instantiate the worker, send it pairs dynamically, and pass the results right into your rendering loop or local state manager.
+
+```javascript
+// main-thread-orchestrator.js
+
+class BackgroundSfmProcessor {
+  constructor() {
+    this.worker = new Worker(new URL('./sfm-worker.js', import.meta.url), { type: 'module' });
+    this.activePairs = new Map();
+    this.setupListeners();
+  }
+
+  setupListeners() {
+    this.worker.onmessage = (event) => {
+      const { type, pairId, success, R, t, inliers, error } = event.data;
+
+      if (type === "PAIR_SOLVED") {
+        const callback = this.activePairs.get(pairId);
+        if (callback) {
+          this.activePairs.delete(pairId);
+          if (success) {
+            callback(null, { R, t, inliers });
+          } else {
+            callback(new Error(error));
+          }
+        }
+      }
+    };
+  }
+
+  // Use Transferables to offload main-thread memory
+  processPairGeometry(pairId, leftImagePoints, rightImagePoints, config = {}) {
+    return new Promise((resolve, reject) => {
+      this.activePairs.set(pairId, (err, result) => {
+        if (err) return reject(err);
+        resolve(result);
+      });
+
+      // Ensure data types are typed arrays for transfer support
+      const leftBuffer = leftImagePoints instanceof Float64Array ? leftImagePoints : new Float64Array(leftImagePoints);
+      const rightBuffer = rightImagePoints instanceof Float64Array ? rightImagePoints : new Float64Array(rightImagePoints);
+
+      // The array of buffers in the second parameter specifies what memory to TRANSFER instead of COPY
+      this.worker.postMessage({
+        type: "PROCESS_PAIR",
+        pairId,
+        leftFeatures: leftBuffer,
+        rightFeatures: rightBuffer,
+        config
+      }, [leftBuffer.buffer, rightBuffer.buffer]);
+    });
+  }
+}
+
+// Usage Example inside your Ol / Dl loop hook
+const sfmProcessor = new BackgroundSfmProcessor();
+
+async function handleGeometryPhase(candidatePairs) {
+  for (const pair of candidatePairs) {
+    try {
+      const geometryResult = await sfmProcessor.processPairGeometry(
+        `${pair.leftIndex}_${pair.rightIndex}`,
+        pair.leftFeatures, 
+        pair.rightFeatures
+      );
+      
+      // Inject cleanly back into your local cache array
+      pair.R = geometryResult.R;
+      pair.t = geometryResult.t;
+      pair.inliers = geometryResult.inliers;
+      
+    } catch (e) {
+      console.error("Failed calculating relative pose for pair:", e);
+    }
+  }
+}
+
+```
+
+
+
+Yes, using a Data URI (Base64 string) is one of the most inefficient ways to transfer images to a Web Worker or service worker. Because Base64 is a text representation, it increases the payload size by about **33%**, forces the main thread to perform expensive string encoding, and requires the worker to decode it back into binary before WebGPU or Wasm can touch it.
+
+Since your environment runs completely locally, you can use modern browser APIs to pass images with **zero-copy overhead** or **binary-only transfers**.
+
+Here are the three best ways to do it, ranked from best to most practical for your Three.js/WebGPU engine.
+
+---
+
+### 1. The Ultimate Way: `ImageBitmap` (Zero-Copy Transferable)
+
+An `ImageBitmap` represents a low-level, graphics-card-ready bitmap image. It can be passed into a Web Worker as a **Transferable Object**.
+
+When you transfer an `ImageBitmap`, the browser doesn’t copy any pixel data. Instead, it instantly moves the memory pointer/handle from the main thread to the worker. The main thread loses access to it, and the worker gains it with zero latency.
+
+#### Main Thread:
+
+```javascript
+// 1. Grab your file from an input, local file handle, or IndexedDB Blob
+const response = await fetch(localBlobUrlOrFile);
+const blob = await response.blob();
+
+// 2. Create the low-level graphics bitmap
+const imageBitmap = await createImageBitmap(blob);
+
+// 3. Transfer it to the worker by adding it to the second transfer array parameter
+worker.postMessage({
+  type: "PROCESS_IMAGE",
+  imageId: "img_001",
+  bitmap: imageBitmap
+}, [imageBitmap]); 
+
+// imageBitmap is now hollow and inaccessible on the main thread.
+
+```
+
+#### Worker Thread (`sfm-worker.js`):
+
+```javascript
+self.onmessage = function(event) {
+  const { type, imageId, bitmap } = event.data;
+  
+  if (type === "PROCESS_IMAGE") {
+    // Inside the worker, you can upload the bitmap directly to a WebGPU texture!
+    // Or extract its raw pixel array to pass into WebAssembly:
+    const canvas = new OffscreenCanvas(bitmap.width, bitmap.height);
+    const ctx = canvas.getContext('2d');
+    ctx.drawImage(bitmap, 0, 0);
+    
+    const imageData = ctx.getImageData(0, 0, bitmap.width, bitmap.height);
+    const rawPixels = imageData.data; // Uint8ClampedArray (RGBA)
+    
+    // Now pass rawPixels.buffer directly into your Wasm heap
+    console.log(`Worker processed image ${imageId} at size ${bitmap.width}x${bitmap.height}`);
+    
+    // Always close bitmaps when done to free GPU/System memory
+    bitmap.close();
+  }
+};
+
+```
+
+---
+
+### 2. The Direct File Way: Passing raw `Blob` or `File` Objects
+
+Because `Blob` and `File` instances are just handles pointing to immutable raw data on disk or in the browser's cache, they are incredibly lightweight. You can send a `Blob` directly through `postMessage` without a transferable array. The browser handles the underlying file-pointer sharing natively.
+
+```javascript
+// Main Thread
+const fileInput = document.querySelector('input[type="file"]');
+const file = fileInput.files[0];
+
+// Simply send the file object directly. 
+// No base64 encoding, no string allocations.
+worker.postMessage({ type: "LOAD_FILE", file: file });
+
+```
+
+Inside the worker, you can read the file bytes asynchronously using a `FileReader` or a `Response` stream:
+
+```javascript
+// Worker Thread
+self.onmessage = async function(event) {
+  if (event.data.type === "LOAD_FILE") {
+    const file = event.data.file;
+    
+    // Stream directly into an ArrayBuffer
+    const arrayBuffer = await file.arrayBuffer();
+    const uint8Array = new Uint8Array(arrayBuffer);
+    
+    // Now you have the raw JPEG/PNG binary payload ready for your Wasm decoder
+  }
+};
+
+```
+
+---
+
+### 3. The Shared Memory Way: `SharedArrayBuffer`
+
+If you are modifying pixel values concurrently between the main thread and the worker without wanting any serialization overhead at all, you can use a `SharedArrayBuffer`.
+
+This maps a block of raw system memory that both contexts can read and write to at the exact same time.
+
+```javascript
+// Main Thread (Requires Cross-Origin Isolation headers enabled on your local server)
+const sharedBuffer = new SharedArrayBuffer(1024 * 1024 * 4); // 4MB buffer
+const pixelView = new Uint8Array(sharedBuffer);
+
+// Pass it once to the worker
+worker.postMessage({ type: "INIT_SHARED_MEM", buffer: sharedBuffer });
+
+// Any edits made to pixelView on the main thread are instantly visible to the worker
+
+```
+
+### Which one should you choose?
+
+* If your worker needs to extract raw pixel grids to execute feature extraction (like finding points before the 5-point math), use **`ImageBitmap`**. It optimizes your GPU pipeline because WebGPU can ingest an `ImageBitmap` directly.
+* If your worker uses a compiled C/C++ library (Wasm) that uncompresses its own JPEGs/PNGs, pass the **`Blob`/`File**` directly.
+
+

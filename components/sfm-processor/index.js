@@ -53,7 +53,6 @@ var T = 2200
   , O = 200
   , k = 3200;
 function A(e) {
-  debugger
   let t = {
     values: {
       ...e.current
@@ -10977,6 +10976,30 @@ async function Hd(e, t, n, r, i, a, o, s, c = [], l = new Map, u, d = []) {
     diagnostics: p.diagnostics,
     gaugeAnchorImageIds: p.gaugeAnchorImageIds
   }
+
+  debugger
+  const pairs = m; // pairGeometries
+
+  pairs.forEach(pair => {
+    // If the pair has valid inlier matches, it contains a solved relative angle
+    if (pair.inliers && pair.inliers.length > 0) {
+      const leftImg = pair.leftIndex;
+      const rightImg = pair.rightIndex;
+
+      // Relative rotation matrix and translation vector
+      const relativeRotation = pair.R;    // Float32Array/Array
+      const relativeTranslation = pair.t; // [x, y, z]
+
+      console.log(`Found solved relative angle between Image ${leftImg} and Image ${rightImg}:`, {
+        rotation: relativeRotation,
+        translation: relativeTranslation,
+        inlierCount: pair.inliers.length
+      });
+
+      // Here you can use Three.js to construct a small local scene link
+      // e.g., placing the Right camera relative to the Left camera's origin
+    }
+  });
 }
 async function Ud(e, t, n, r, i, a) {
   let o = e.map((e, t) => ({
@@ -20446,12 +20469,10 @@ function Lb(e) {
 }
 var Rb = `components/sfm-processor/geometry_kernels.simd.wasm`;
 function zb() {
-  debugger
   let e = globalThis.document?.baseURI;
   return e ? new URL(Rb, e).href : `/${Rb}`
 }
 async function Bb() {
-  debugger
   if (typeof fetch > `u`)
     return null;
   let e = await fetch(zb());
@@ -20982,7 +21003,6 @@ var Gb = 128
   }
   ;
 async function Jb() {
-  debugger
   if (typeof WebAssembly > `u`)
     return null;
   try {
@@ -21432,9 +21452,9 @@ var Hx = {
   bundle: `Bundle`,
   exports: `Exports`
 }
-  , Ux = document.querySelector(`#app`);
+  , Ux = document.querySelector(`#sfm-processor`);
 if (!Ux)
-  throw Error(`Missing #app`);
+  throw Error(`Missing #sfm-processor`);
 Ux.innerHTML = Wx();
 function Wx() {
   return `
@@ -25208,7 +25228,6 @@ function sk() {
   gE = gE.catch(() => void 0).then(() => pk())
 }
 function ck() {
-  debugger
   hE = hE.catch(() => void 0).then(() => mk())
 }
 function lk() {
@@ -25245,7 +25264,6 @@ async function pk() {
     await V.setActiveProjectId(e.projectId)
 }
 async function mk() {
-  debugger
   if (!(!V || !aC.checked)) {
     ak();
     try {
@@ -25998,7 +26016,6 @@ function Zk(e) {
   }))
 }
 async function Qk() {
-  debugger
   Bk() && (lk(),
     ck(),
     await _E.catch(() => void 0),
@@ -27532,7 +27549,6 @@ function Yj(e, t, n) {
   }
 }
 async function Xj() {
-  debugger
   if (U)
     return;
   let e = rO();
@@ -27689,7 +27705,6 @@ async function Xj() {
     let ie = h_(te, ne)
       , ae = d_(te, ne, re)
       , oe = aC.checked && V !== null;
-    debugger
     oe && await hE;
     let se = Wg(_.width, _.height, M.maxLongEdge)
       , ce = Wg(g.width, g.height, M.maxLongEdge)
@@ -28098,7 +28113,6 @@ function $j(e) {
     pD()
 }
 function eM() {
-  debugger
   U || (eC.textContent = iC.value === `step` ? `Run next` : `Reconstruct`)
 }
 function tM(e) {

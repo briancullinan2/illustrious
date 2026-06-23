@@ -537,6 +537,16 @@ a.secondary:disabled,
     margin: 0 5px;
 }
 
+.header-icon-btn {
+    height: 32px;
+    width: 32px;
+}
+
+.header-icon-btn svg {
+    height: 32px;
+    width: 32px;
+}
+
 .header-icon-btn:hover {
     color: var(--accent);
     filter: drop-shadow(0 0 6px rgba(0, 255, 204, 0.6));
@@ -1073,16 +1083,6 @@ body.canvas-mode .floating-back-btn:hover {
         padding: 10px;
         background: #09090b;
         border: none;
-    }
-
-    .header-icon-btn {
-        height: 32px;
-        width: 32px;
-    }
-
-    .header-icon-btn svg {
-        height: 32px;
-        width: 32px;
     }
 
 }
