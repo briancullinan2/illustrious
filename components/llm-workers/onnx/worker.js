@@ -68,7 +68,7 @@ async function compileInferenceSession(modelBuffer, dataBuffer = null, dataFileN
     self.postMessage({ type: 'COMPILING_MODEL' });
 
     const options = {
-        executionProviders: ['webgpu'],
+        executionProviders: ['webgpu', 'cpu'],
         graphOptimizationLevel: 'all',
         executionMode: 'parallel',
         enableMemPattern: true,
@@ -635,6 +635,128 @@ function serializeOutputTensors(executionResults) {
     return serializedOutputs;
 }
 
+
+async function initializeImageModel() {
+    console.log('[ONNX] Initializing web session context...');
+    try {
+        // Force WebGPU for high-performance extraction; auto-fallback to WebAssembly
+        this.session = await ort.InferenceSession.create(this.modelPath, {
+            executionProviders: ['webgpu', 'wasm'],
+            graphOptimizationLevel: 'all',
+            preferredOutputChannelType: 'float16'
+        });
+        console.log('[ONNX] Session successfully bound to active device profile.');
+    } catch (err) {
+        console.error('[ONNX] Initialization failed:', err);
+    }
+}
+
+/**
+   * Processes a target canvas, removing the background using the ONNX model.
+   * @param {HTMLCanvasElement} srcCanvas - The original canvas containing the source photo.
+   * @returns {Promise<HTMLCanvasElement>} A new canvas containing the isolated subject.
+   */
+async function processImage(srcCanvas) {
+    if (!this.session) throw new Error('Session not initialized. Call initialize() first.');
+
+    const w = srcCanvas.width;
+    const h = srcCanvas.height;
+
+    // 1. Pre-process: Resize to the fixed 320x320 grid required by U2-Net
+    const proxyCanvas = document.createElement('canvas');
+    proxyCanvas.width = 320;
+    proxyCanvas.height = 320;
+    const proxyCtx = proxyCanvas.getContext('2d');
+    proxyCtx.drawImage(srcCanvas, 0, 0, 320, 320);
+
+    const imgData = proxyCtx.getImageData(0, 0, 320, 320);
+    const pixels = imgData.data;
+
+    // 2. Reshape: Convert standard RGBA [R,G,B,A...] to planar Float32 [R...G...B...]
+    const floatBuffer = new Float32Array(1 * 3 * 320 * 320);
+    const rOffset = 0;
+    const gOffset = 320 * 320;
+    const bOffset = 320 * 320 * 2;
+
+    for (let i = 0; i < 320 * 320; i++) {
+        const pIdx = i * 4;
+        // Extract, normalize (0-1), and apply standard ImageNet mean/std dev scaling
+        floatBuffer[rOffset + i] = (pixels[pIdx] / 255.0 - 0.485) / 0.229;
+        floatBuffer[gOffset + i] = (pixels[pIdx + 1] / 255.0 - 0.456) / 0.224;
+        floatBuffer[bOffset + i] = (pixels[pIdx + 2] / 255.0 - 0.406) / 0.225;
+    }
+
+    // 3. Inference: Create the input tensor and pass it to the model
+    const inputTensor = new ort.Tensor('float32', floatBuffer, [1, 3, 320, 320]);
+
+    console.log('[ONNX] Running forward saliency prediction pass...');
+    const outputMap = await this.session.run({ 'input.1': inputTensor }); // Input node name matches model graph
+
+    // U2-Net typically outputs a dictionary of multi-scale masks; we grab the primary prediction node
+    const outputNodeName = this.session.outputNames[0];
+    const outputTensor = outputMap[outputNodeName];
+    const maskData = outputTensor.data; // Float32Array containing values from ~0.0 (BG) to ~1.0 (FG)
+
+    // 4. Post-process: Convert the output tensor data back to a 320x320 grayscale mask image
+    const maskCanvas = document.createElement('canvas');
+    maskCanvas.width = 320;
+    maskCanvas.height = 320;
+    const maskCtx = maskCanvas.getContext('2d');
+    const maskImgData = maskCtx.createImageData(320, 320);
+    const maskPixels = maskImgData.data;
+
+    for (let i = 0; i < 320 * 320; i++) {
+        // Clamp the activation value back to standard 0-255 bounds
+        const val = Math.min(Math.max(maskData[i] * 255, 0), 255);
+        const mIdx = i * 4;
+        maskPixels[mIdx] = val;     // R
+        maskPixels[mIdx + 1] = val; // G
+        maskPixels[mIdx + 2] = val; // B
+        maskPixels[mIdx + 3] = 255; // Alpha
+    }
+    maskCtx.putImageData(maskImgData, 0, 0);
+
+    // 5. Final Assembly: Scale the mask to the original image dimensions and mask the background
+    const outCanvas = document.createElement('canvas');
+    outCanvas.width = w;
+    outCanvas.height = h;
+    const outCtx = outCanvas.getContext('2d');
+
+    // Draw the high-resolution source image onto the output canvas
+    outCtx.drawImage(srcCanvas, 0, 0);
+
+    // Change the composite mode so the next layer dictates the transparency mask
+    outCtx.globalCompositeOperation = 'destination-in';
+
+    // Scale the 320x320 mask up smoothly using bilateral canvas scaling over the original image bounds
+    outCtx.drawImage(maskCanvas, 0, 0, w, h);
+
+    // Reset composite tracking back to default behavior
+    outCtx.globalCompositeOperation = 'source-over';
+
+    console.log('[ONNX] Transparent subject asset compiled successfully.');
+    return outCanvas;
+}
+
+
+// TODO: input sequence
+/*
+async function handleUserUpload(imgElement) {
+    const sourceCanvas = document.createElement('canvas');
+    sourceCanvas.width = imgElement.naturalWidth;
+    sourceCanvas.height = imgElement.naturalHeight;
+    sourceCanvas.getContext('2d').drawImage(imgElement, 0, 0);
+
+    const engine = new BrowserSaliencyEngine('models/u2net.onnx');
+    await engine.initialize();
+
+    // Run the background removal pass locally
+    const isolatedCanvas = await engine.processImage(sourceCanvas);
+
+    // Append the transparent result straight into your 3D view graph / WebGL loader pipeline
+    document.body.appendChild(isolatedCanvas);
+}
+*/
 
 
 self.postMessage({ type: 'WORKER_READY' });

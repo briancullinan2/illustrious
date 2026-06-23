@@ -51,6 +51,8 @@ document.addEventListener('DOMContentLoaded', async () => {
         const userWorkspaceChoice = SettingsManager.get('core', 'workspaceDefault');
 
         await DependencyLoader.loadModule(userWorkspaceChoice);
+        //await DependencyLoader.loadModule('nunu');
+        //await DependencyLoader.loadModule('websfm');
 
     } catch (error) {
         debugger

@@ -4,6 +4,7 @@ hf_cache/xet
 hf_cache/.agent_harnesses.json
 hf_cache/.locks
 hf_cache/*/**
+hf_cache/*
 loras/*/tokenizer.json
 loras/*/*.safetensors
 chat_logs/*.json

@@ -76,6 +76,14 @@ I am starting to formulate training data to apply a lora and grammar combination
 This comprehensive list maps natural language spatial concepts directly to your token-minimum layout blocks, accounting for your new distance multipliers (`4fw`, `4fh`), relative directions, and compound placement rules.
 These represent the dynamic dimensions, global overrides, syntax hooks, and primitive keys utilized by the layout engine.
 
+```
+parseSpatialCommands('[elephant][0,0,0,0,0,0,1] [red][0,0,0,0,0,0,1] [balloon][fw*@idx,fd*@idx,0,0,0,0,1]')
+```
+
+Its an implied `1fw*@idx` would be adding 1 full width of the previous, as opposed to `-/+@idx` or `@idx-fw` precise translations would be the same as subtracting a full width just like the scalar, but it also allows for exact values like @idx-100 would be the previous object `x - 100` units 
+
+
+
 | Variable | Definition | Contextual Behavior |
 | --- | --- | --- |
 | `fw` | Full Width | The complete lateral footprint along the X-axis. |

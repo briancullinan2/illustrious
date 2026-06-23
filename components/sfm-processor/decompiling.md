@@ -7334,6 +7334,67 @@ bin/opensfm reconstruct my_project
 
 
 
+
+
+When you want to convert an orbital capture or a raw **Gaussian Splat PLY** from a modern layout into a rigid geometry format like a **BSP (Binary Space Partitioning)** map (commonly used for physics calculation, voxel collision, or old-school brush map compiling), you have to go through a discrete structural conversion pipeline.
+
+Because Gaussian Splatting files are made of loose mathematical point clouds with anisotropic opacity variables rather than polygonal boundaries, a standard format transformer cannot read them directly. You have to bridge the semantic gap using a specific toolchain.
+
+---
+
+## The Conversion Pipeline
+
+The toolchain requires three clear processing phases: **Saliency Clean / Voxel Extraction**, **Polygonal Shell Generation**, and **BSP Compile**.
+
+### 1. Phase 1: Voxelization / Surface Extraction
+
+First, you must convert the fuzzy cloud of points into rigid solid spatial boundaries. You can use PlayCanvas’s first-party node toolchain **`@playcanvas/splat-transform`** to isolate the scene and output a localized voxel map matrix.
+
+Run this command over your processed asset:
+
+```bash
+splat-transform scene.ply --voxel-params 0.05,0.1 --voxel-carve 1.6,0.2 -K scene.collision.glb
+
+```
+
+* **What this does:** It reads the floating Gaussian point definitions, ignores transient background noise, and fits a tight, water-tight sparse octree around the core shape.
+* **The Output:** It flushes a clean **`.glb`** (glTF binary mesh) containing hard polygonal surface faces tracking the object boundary.
+
+### 2. Phase 2: Mesh Formatting to Brush/MAP Layout
+
+Compilers like `q3map2` or standard Map-to-BSP tools cannot read raw `.glb` or `.obj` meshes cleanly without them being parsed as solid convex brushes.
+
+1. Load your exported `.glb` surface mesh directly into **Blender**.
+2. Run a **Decimate Modifier** to reduce complex polygon topologies into planar shapes.
+3. Export the file as an **`.obj`** or **`.fbx`** file.
+4. Import the asset into a map design tool like **TrenchBroom**, **NetRadiant**, or **GtkRadiant**. Use a plugin tool (like `ObjToMap`) to automatically wrap the mesh faces inside matching structural `.map` convex brush definitions.
+
+### 3. Phase 3: The BSP Compiler Pass
+
+Once your shape is converted into standard solid `.map` format geometries, you pass the data file to your active compiler engine chain to build your target geometry tree.
+
+Execute the multi-stage compiler pass via your project console:
+
+```bash
+# 1. Compile the primary structural geometry tree
+q3map2 -meta -fs_basepath "C:/YourProject" scene.map
+
+# 2. Run the visibility determination pass (calculates leaf culling)
+q3map2 -vis -fs_basepath "C:/YourProject" scene.map
+
+# 3. Bake surface lightmaps directly into the completed BSP matrix
+q3map2 -light -fast -filter -fs_basepath "C:/YourProject" scene.map
+
+```
+
+### The Result
+
+The pipeline outputs a completely standalone, hardware-optimized **`.bsp`** binary asset file. The fuzzy, un-collidable point data you started with is now fully converted into an old-school, spatial partition tree ready to handle instant physics checks, raycasts, and collision loops.
+
+
+
+
+
 Because we configured `matching_type: "SEQUENCE"` with a `matching_sequence_distance: 3`, your i7 processor won't choke computing global matrices. It will build a highly accurate sparse representation in seconds, outputting a lightweight `.ply` file that you can immediately drag and drop straight into PlayCanvas or display directly in a browser canvas.
 
 
@@ -8381,5 +8442,322 @@ worker.postMessage({ type: "INIT_SHARED_MEM", buffer: sharedBuffer });
 
 * If your worker needs to extract raw pixel grids to execute feature extraction (like finding points before the 5-point math), use **`ImageBitmap`**. It optimizes your GPU pipeline because WebGPU can ingest an `ImageBitmap` directly.
 * If your worker uses a compiled C/C++ library (Wasm) that uncompresses its own JPEGs/PNGs, pass the **`Blob`/`File**` directly.
+
+
+
+
+
+Here is a complete, copy-and-paste userscript (Tampermonkey/Violentmonkey compatible).
+
+To ensure the adjustments stick even if the app uses a reactive tracking framework that watches input mutations, it handles both programmatic property updates and native DOM event dispatches (`change` and `input`).
+
+```javascript
+// ==UserScript==
+// @name         WebSFM Shitty GPU/CPU Optimizer
+// @namespace    http://tampermonkey.net/
+// @version      1.0
+// @description  Optimize SfM parameters on low-end hardware by lowering caps, downscaling aggressively, and tuning thresholds.
+// @author       Brian James Cullinan
+// @match        http://localhost:*/*
+// @match        http://127.0.0.1:*/*
+// @match        *://*/*sfm*
+// @run-at       document-idle
+// @grant        none
+// ==/UserScript==
+
+(function() {
+  'use strict';
+
+  // Core optimization constraints for low-end hardware
+  const OPTS = {
+    'quality': 'fast',                 // Force fast baseline parameters
+    'scaleMode': 'auto',               // Use auto downscaling levers
+    'features': '1200',                // Keep extraction loops tight (3200 -> 1200)
+    'threshold': '35',                 // Ignore weak corners to skip matching garbage
+    'gpuMode': 'conservative',         // Prevent WebGPU TDR context hangs / freezing
+    'pairStrategy': 'sequential',      // Switch from Retrieval top-K to minimal sequential window
+    'relativeRansac': '300',           // Drop heavy 5-point RANSAC iteration ceilings (1500 -> 300)
+    'maxPointsPerPair': '800',         // Cap volume sizing for triangulation sweeps
+    'geometryCandidateBudget': '1500'  // Absolute ceiling for epipolar scoring jobs
+  };
+
+  function optimizeInput(selector, value) {
+    const el = document.querySelector(selector);
+    if (!el) return;
+
+    // Remove disabled restriction if present to force adjustments
+    if (el.hasAttribute('disabled')) {
+      el.removeAttribute('disabled');
+    }
+
+    if (el.type === 'checkbox') {
+      const targetState = !!value;
+      if (el.checked !== targetState) {
+        el.checked = targetState;
+        el.dispatchEvent(new Event('change', { bubbles: true }));
+      }
+    } else {
+      if (el.value !== String(value)) {
+        el.value = value;
+        el.dispatchEvent(new Event('input', { bubbles: true }));
+        el.dispatchEvent(new Event('change', { bubbles: true }));
+      }
+    }
+  }
+
+  function applyOptimizations() {
+    console.log('[SfM-Optimizer] Injecting low-end hardware adjustments...');
+
+    // 1. Stage Notebook Target Controls
+    optimizeInput('#stageNotebook-quality', OPTS.quality);
+    optimizeInput('#stageNotebook-scaleMode', OPTS.scaleMode);
+    optimizeInput('#stageNotebook-features', OPTS.features);
+    optimizeInput('#stageNotebook-threshold', OPTS.threshold);
+    optimizeInput('#stageNotebook-gpuMode', OPTS.gpuMode);
+    optimizeInput('#stageNotebook-pairStrategy', OPTS.pairStrategy);
+    optimizeInput('#stageNotebook-relativeRansac', OPTS.relativeRansac);
+    optimizeInput('#stageNotebook-maxPointsPerPair', OPTS.maxPointsPerPair);
+    optimizeInput('#stageNotebook-geometryCandidateBudget', OPTS.geometryCandidateBudget);
+
+    // 2. Standard Settings Panel Target Controls
+    optimizeInput('#quality', OPTS.quality);
+    optimizeInput('#scaleMode', OPTS.scaleMode);
+    optimizeInput('#features', OPTS.features);
+    optimizeInput('#threshold', OPTS.threshold);
+    optimizeInput('#gpuMode', OPTS.gpuMode);
+    optimizeInput('#pairStrategy', OPTS.pairStrategy);
+    optimizeInput('#relativeRansac', OPTS.relativeRansac);
+    optimizeInput('#maxPointsPerPair', OPTS.maxPointsPerPair);
+    optimizeInput('#geometryCandidateBudget', OPTS.geometryCandidateBudget);
+  }
+
+  // Handle environments where settings elements populate asynchronously
+  const observer = new MutationObserver((mutationsList, obs) => {
+    if (document.getElementById('settingsPanel')) {
+      applyOptimizations();
+      // Keep observing in case configuration state shifts back on page transitions
+    }
+  });
+
+  observer.observe(document.body, { childList: true, subtree: true });
+
+  // Initial execution run
+  applyOptimizations();
+})();
+
+```
+
+
+
+Here is the stripped-down, completely rewritten script. It preserves your `OPTS` configuration map pattern, applies the new diagnostic values we just determined (Exhaustive strategy, lower inlier threshold, un-capped geometry budget, and the bootstrap fallback), and injects them cleanly straight into the DOM elements by matching their `id` properties directly with the keys.
+
+```javascript
+(function() {
+  'use strict';
+
+  // Optimization constraints for low-spec CPU parsing close-range object sequences
+  const OPTS = {
+    // Stage 1: Scene & Scales
+    'quality': 'fast',             // Maintain balanced over fast to keep descriptors healthy
+    'scenePreset': 'small-object',     // Tailor loops for rotating loop / macro captures
+    'scaleMode': 'auto',               // Use automatic edge caps to protect hardware memory
+    
+    // Stage 2: Feature Extraction
+    //'features': '3200',                // Re-raise feature count to avoid disjoint component maps
+    //'threshold': '20',                 // Keep sensitivity high enough to capture fine banana peel texture
+    'gpuMode': 'conservative',         // Prevent WebGPU TDR context freezes on low-end chipsets
+    
+    // Stage 3 & 4: Matching & View Graph Pair Planning
+    //'pairStrategy': 'exhaustive',       // Force cross-image validation loops for sparse image sets
+    
+    // Stage 5: Geometry Verification & Incremental Alignment Gates
+    'minMatches': '12',                // Lower epipolar constraint floor to allow tight angles to join
+    //'relativeRansac': '1500',          // Provide enough iterations for high-feature consensus matching
+    'maxPointsPerPair': '2200',        // Allow healthy point payload depth for bundle adjustment tracking
+    'geometryCandidateBudget': '0',    // 0 disables the candidate cap, processing all exhaustive edges
+    'allowWeakInitial': true,          // Force immediate bootstrap tracking if strict initial pair flags fail
+    'pnpMinInliers': '10',             // Drop registration threshold so cameras join easily via single point matches
+    //'pnpPixelThreshold': '6.0',        // Slightly relax pixel threshold to catch slightly zoomed or out-of-focus corners
+    //'triangulationReprojection': '8.0' // Open reprojection threshold up from 6.0px to admit noisier pixel fields
+    
+
+    // taking too long
+    //'pairStrategy': 'sequential',     // Drop exhaustive; match sequential tracking neighbors
+    'trackGap': '3',                  // Check 3 frames forward and backward in the loop window
+    'relativeRansac': '128',          // Cut RANSAC ceilings (1500 -> 128) for instant scoring
+    'pnpPixelThreshold': '4.0',       // Tighten camera alignment error gate for clean boundaries
+    'triangulationReprojection': '5.0', // Tighten point errors since background noise is gone
+
+    'restartFrom': 'features',
+    'relativePoseSolver': 'eight-point',
+
+
+    // ramping back up with eight-point
+    'pairStrategy': 'exhaustive',     
+    
+    // 2. Increase the extraction budget to capture fine texture variations
+    'features': '6000',               
+    
+    // 3. Drop the corner threshold to find features on subtle peel gradients
+    'threshold': '8',                 
+    
+    // 4. Slightly relax Lowe's ratio filter to capture matching points across scale changes
+    'matcherRatio': '0.92',
+
+
+    // second pass after anchor
+    //'pnpMinInliers': '8',
+    //'minMatches': '10',
+    //'restartFrom': 'verification',
+
+
+  };
+
+  function applyOptimizations() {
+    console.log('[SfM-Optimizer] Forcing small-object overrides across proxy controls...');
+
+    for (const [key, value] of Object.entries(OPTS)) {
+      // Query both standalone layout settings and prefix-proxied notebook variants
+      const targets = [
+        document.getElementById(key),
+        document.getElementById(`stageNotebook-${key}`)
+      ];
+
+      for (const el of targets) {
+        if (!el) continue;
+
+        // Unclamp locks imposed by previous preset selection
+        if (el.hasAttribute('disabled')) {
+          el.removeAttribute('disabled');
+        }
+
+        if (el.type === 'checkbox') {
+          const targetState = !!value;
+          if (el.checked !== targetState) {
+            el.checked = targetState;
+            // Sync programmatic attribute string representation for raw HTML review
+            targetState ? el.setAttribute('checked', '') : el.removeAttribute('checked');
+            el.dispatchEvent(new Event('change', { bubbles: true }));
+          }
+        } else {
+          const targetVal = String(value);
+          if (el.value !== targetVal) {
+            el.value = targetVal;
+            
+            // Mirror back down to value properties inside option lists for scannability
+            if (el.tagName === 'SELECT') {
+              for (const opt of el.options) {
+                if (opt.value === targetVal) {
+                  opt.setAttribute('selected', 'selected');
+                } else {
+                  opt.removeAttribute('selected');
+                }
+              }
+            } else {
+              el.setAttribute('value', targetVal);
+            }
+
+            el.dispatchEvent(new Event('input', { bubbles: true }));
+            el.dispatchEvent(new Event('change', { bubbles: true }));
+          }
+        }
+      }
+    }
+  }
+
+  // Direct script execution
+  applyOptimizations();
+})();
+
+```
+
+
+
+
+The reason it's taking forever is right there in the logs: your pipeline went from testing **78 pairs** to **119 pairs** with a target ceiling of **1,500 RANSAC samples per pair** (`relativeRansac` parameter).
+
+Your browser is grinding through up to **7.7 million planned Sampson test iterations** in WebAssembly. Because you stripped the background out using `rembg`, the feature extractor isn't picking up noisy carpet points anymore. We can drastically tighten up these constraints to make the geometric verification pass finish in seconds instead of minutes.
+
+### The Immediate Speed Fix
+
+Open your browser console and paste this script to scale down the sample ceiling and switch the pair strategy away from `exhaustive`. Since the images are sequenced in a clear orbital loop around the banana, using a **Sequential window** layout with a tight tracking gap means the engine only tests adjacent chronological frames (e.g., Image 1 matches 2, 3, 4) instead of wasting time checking opposite angles that have zero visual overlap.
+
+```javascript
+(function() {
+  'use strict';
+  const SPEED_OPTS = {
+    'pairStrategy': 'sequential',     // Drop exhaustive; match sequential tracking neighbors
+    'trackGap': '3',                  // Check 3 frames forward and backward in the loop window
+    'relativeRansac': '128',          // Cut RANSAC ceilings (1500 -> 128) for instant scoring
+    'pnpPixelThreshold': '4.0',       // Tighten camera alignment error gate for clean boundaries
+    'triangulationReprojection': '5.0'// Tighten point errors since background noise is gone
+  };
+
+  for (const [key, value] of Object.entries(SPEED_OPTS)) {
+    const el = document.getElementById(key) || document.getElementById(`stageNotebook-${key}`);
+    if (el) {
+      if (el.hasAttribute('disabled')) el.removeAttribute('disabled');
+      el.value = value;
+      el.dispatchEvent(new Event('input', { bubbles: true }));
+      el.dispatchEvent(new Event('change', { bubbles: true }));
+    }
+  }
+  console.log('[SfM-Optimizer] Speed optimization applied.');
+})();
+
+```
+
+---
+
+### Pipeline Parameter Cheat Sheet
+
+Here is the complete lookup matrix of your UI configuration engine to help you keep track of what each key handles.
+
+| Element ID | Display Label Name | Functional Group | Short Technical Description |
+| --- | --- | --- | --- |
+| `quality` | Quality mode | Run Configuration | Controls base descriptor densities and processing strictness ceilings. |
+| `scenePreset` | Scene type | Run Configuration | Sets initial geometric heuristic gates (e.g., object loops vs macro arrays). |
+| `autoTune` | Auto-tune from images | Run Configuration | Programmatically scales down processing boundaries based on raw input resolution. |
+| `runMode` | Run mode | Run Configuration | Toggles execution between a fully automated pass or a stage-by-stage cache halt. |
+| `persistArtifacts` | Persist step data | Run Configuration | Flags whether extracted data structures write back to local browser IndexedDB storage. |
+| `restartFrom` | Restart from | Run Configuration | Context dropdown checkpoint indicating which cached compilation layer to overwrite. |
+| `focalMode` | Focal prior | Inputs and Camera | Defines internal camera calibration assumptions (EXIF lookup, wide matrix, or manual). |
+| `focal` | Manual focal (native px) | Inputs and Camera | Hardcoded native-pixel calibration length input value overrides. |
+| `cameraMode` | Camera view | Inputs and Camera | Viewport state toggle switching between calculated camera center strings or fitted models. |
+| `flipUp` | Flip up axis | Inputs and Camera | Viewer camera orientation rotation transformation matrix toggle. |
+| `scaleMode` | Image scale | Image Scale / Features | Toggles image resizing matrix limits before feature generation. |
+| `customMaxLongEdge` | Custom max edge | Image Scale / Features | Pixel length maximum ceiling constraint configuration field. |
+| `features` | Max features / image | Image Scale / Features | Hard budget limit boundary on total feature extractors parsed per camera view. |
+| `threshold` | Corner threshold | Image Scale / Features | FAST response map floor value (lower values identify weaker image texture details). |
+| `featurePath` | Feature path | Image Scale / Features | Compute driver engine selector toggle (WebGPU hardware vs local Wasm grids). |
+| `pairStrategy` | Pair strategy | Matching | Top-level topology engine layout choice rule configuration. |
+| `retrievalTopK` | Retrieval top-K | Matching | Vocabulary visual neighbor nomination budget limits. |
+| `pairCandidateBudget` | Pair candidate cap | Matching | Total maximum pair matching count boundary limitations. |
+| `trackGap` | Track gap | Matching | Look-ahead slide indexing array limits for sequential processing windows. |
+| `minMatches` | Min inliers | Matching / Geometry | Absolute lower bound for structural consensus matches to form a graph edge. |
+| `mapper` | Mapper | Incremental Alignment | Toggles graph optimization framework rules (Graph tracking vs sequential A/B paths). |
+| `pnpMinInliers` | PnP min inliers | Incremental Alignment | Required feature count intersection to re-register localized cameras. |
+| `pnpPixelThreshold` | PnP threshold (px) | Incremental Alignment | Pose estimation projection error acceptance limit constraint boundaries. |
+| `gpuMode` | GPU mode | Advanced | Dispatches WebGPU thread allocation batches (Conservative helps prevent system TDR locks). |
+| `matcherHamming` | Matcher Hamming | Advanced | Direct BRIEF bit error delta validation match ceilings. |
+| `matcherRatio` | Matcher ratio | Advanced | Lowe's ratio filter check constraint boundary scale metrics. |
+| `adaptiveMatcherThresholds` | Adaptive matcher gates | Advanced | Dynamic self-tuning bit threshold feedback control optimization flags. |
+| `maxPointsPerPair` | Max points / pair | Advanced | Caps total matching point storage tracking capacities assigned per view layout. |
+| `relativeRansac` | Relative RANSAC | Advanced | Maximum internal 5-point hypothesis test sampling iterations. |
+| `geometryCandidateBudget` | Geometry pair cap | Advanced | Caps the maximum number of overall pair verification passes checked. |
+| `relativePoseSolver` | Relative solver | Advanced | Swaps relative transformation calculation formats (5-point hybrid vs classic 8-point matrix checks). |
+| `triangulationReprojection` | Triangulation px | Advanced | Pixel distance validation error bounds checking for point projections. |
+| `triangulationParallax` | Triangulation parallax | Advanced | Baseline intersection angle criteria evaluation floors. |
+| `localPointRefinement` | Local point refinement | Advanced | Runs single-track structural checks following each camera registration step. |
+| `localPoseRefinement` | Local pose refinement | Advanced | Performs small local bundle-adjustment optimization steps on added views. |
+| `refineIntrinsics` | Refine intrinsics | Advanced | Adjusts focal projection factors dynamically within the final global bundle adjustment pass. |
+| `bridgeMode` | Bridge search | Classic | Component cluster topology union search algorithm profiles. |
+| `bridgeCandidates` | Bridge candidates | Classic | Allocation pool metrics bounding cross-component edge checking. |
+| `bridgePairs` | Pairs / component edge | Classic | Density distribution margins matching component boundaries. |
+| `bridgeSignature` | Signature max | Classic | Global visual feature hash distance matching thresholds. |
+| `bridgeInliers` | Bridge min inliers | Classic | Minimum intersection requirement rules matching cross-component alignments. |
+| `guidedRadius` | Guided radius | Guided Extensions | Search patch window pixel dimensions assigned for multi-track trace expansion. |
+| `guidedDistance` | Guided descriptor | Guided Extensions | Descriptor threshold limit boundaries matching trace assignments. |
+
 
 

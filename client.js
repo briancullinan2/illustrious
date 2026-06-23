@@ -635,6 +635,7 @@ async function workerResponseInterface(e) {
             completeStatus.className = 'tree-val status-optimal-text';
         }
 
+        parseSpatialCommands(document.getElementById('tree-token-status').textContent)
         multicastButton.removeAttribute('disabled', 'disabled')
     } else if (type === 'WORKER_READY') {
         const toggle = document.getElementById('local-model-toggle');
@@ -788,41 +789,129 @@ function parseTokens(statement) {
 }
 
 
+function resolveRelativeObject(parsedSequence, absoluteNounCount, activeScene) {
+    if (absoluteNounCount <= 0) return null;
+
+    // Get the previous noun token by tracking absolute sequence position
+    const nounTokens = parsedSequence.filter(o => o.type === 'nouns');
+    const relativeToken = nounTokens[absoluteNounCount - 1];
+
+    if (!relativeToken || !relativeToken.value || relativeToken.value.length === 0) {
+        return null;
+    }
+
+    let relativeObject = null;
+    activeScene.traverse(function (child) {
+        if (relativeToken.value.includes(child.name)) {
+            relativeObject = child;
+        }
+    });
+    return relativeObject;
+}
+
+
+function createSpatialObject(primaryNoun, nunuClasses, THREE) {
+    let geometry, material;
+    let createdObject = null;
+    const normalizedType = primaryNoun.toLowerCase();
+
+    if (normalizedType.includes('pointlight')) {
+        return new THREE.PointLight(0xffffff, 1, 100);
+    } else if (normalizedType.includes('directionallight')) {
+        return new THREE.DirectionalLight(0xffffff, 1);
+    } else if (normalizedType.includes('ambientlight')) {
+        return new THREE.AmbientLight(0x404040);
+    } else if (normalizedType.includes('spotlight')) {
+        return new THREE.SpotLight(0xffffff);
+    } else if (normalizedType.includes('audiolistener')) {
+        return new THREE.AudioListener();
+    } else if (normalizedType.includes('gridhelper')) {
+        return new THREE.GridHelper(10, 10);
+    } else if (normalizedType.includes('axeshelper')) {
+        return new THREE.AxesHelper(5);
+    } else if (normalizedType.includes('arrowhelper')) {
+        const dir = new THREE.Vector3(0, 1, 0);
+        const origin = new THREE.Vector3(0, 0, 0);
+        return new THREE.ArrowHelper(dir, origin, 1, 0xffff00);
+    }
+
+    if (normalizedType.includes('cylinder')) {
+        geometry = new THREE.CylinderGeometry(0.5, 0.5, 2, 16);
+    } else if (normalizedType.includes('sphere')) {
+        geometry = new THREE.SphereGeometry(0.5, 16, 16);
+    } else if (normalizedType.includes('plane')) {
+        geometry = new THREE.PlaneGeometry(1, 1);
+    } else if (normalizedType.includes('circle')) {
+        geometry = new THREE.CircleGeometry(0.5, 16);
+    } else if (normalizedType.includes('torus')) {
+        geometry = new THREE.TorusGeometry(0.5, 0.2, 8, 24);
+    } else if (normalizedType.includes('cone')) {
+        geometry = new THREE.ConeGeometry(0.5, 1, 16);
+    } else {
+        geometry = new THREE.BoxGeometry(1, 1, 1);
+    }
+
+    if (normalizedType.includes('basic')) {
+        material = new THREE.MeshBasicMaterial({ color: 0xAEB2F8 });
+    } else if (normalizedType.includes('phong')) {
+        material = new THREE.MeshPhongMaterial({ color: 0xAEB2F8 });
+    } else {
+        material = new nunuClasses.Material({
+            color: 0xAEB2F8,
+            roughness: 0.4
+        });
+    }
+
+    return new nunuClasses.Mesh(geometry, material);
+}
+
+
+function evaluateSpatialFormula(expr, currentIdxValue) {
+    let cleanExpr = expr.replace(/@idx/g, currentIdxValue);
+    // Added both fw and fd metrics to prevent fallback failures
+    const fw = 2.0;
+    const fd = 1.5;
+    try {
+        return Function(`"use strict"; const fw = ${fw}; const fd = ${fd}; return (${cleanExpr})`)();
+    } catch (e) {
+        return parseFloat(cleanExpr) || 0;
+    }
+}
+
 
 async function parseSpatialCommands(inputStr, currentIdxValue = 0) {
     const THREE = require('three');
     const parsedSequence = parseTokens(inputStr);
     const activeScene = window.nunu.getScene();
 
-    // Tracking context for the sequential iterator
     let lastNouns = null;
     let defaultSpec = ["0", "0", "0", "0", "0", "0", "0"];
+    let nounTokenCount = 0; // Tracks the total observed sequential noun tokens
 
     for (let i = 0; i < parsedSequence.length; i++) {
         const token = parsedSequence[i];
 
         if (token.type === 'nouns') {
-            lastNouns = token.value; // Cache noun context for the following spec token
+            lastNouns = token.value;
+            nounTokenCount++;
         }
 
         else if (token.type === 'specs') {
             const specValues = token.value;
-            // Fallback to default [0,0,0,0,0,0,0] spatial layout if array metrics are corrupted
             const activeSpec = (specValues && specValues.length >= 6) ? specValues : defaultSpec;
-
-            // Extract type identity string from cached nouns list or default to fallback block
-            const primaryNoun = (lastNouns && lastNouns.length > 0) ? lastNouns[0] : "cube";
+            const primaryNoun = (lastNouns && lastNouns.length > 0) ? lastNouns[lastNouns.length - 1] : "cube";
 
             let targetObject = null;
+            let relativeObject = null;
 
-            // --- Reference & Object Resolution Block ---
-            // Check if the current spatial spec or noun relies on contextual indexing
+            // Resolve context index targets relative to current token sequence positions
             const hasIndexToken = activeSpec.some(val => val.includes('@idx')) || primaryNoun.includes('@idx');
+            if (hasIndexToken) {
+                relativeObject = resolveRelativeObject(parsedSequence, nounTokenCount - 1, activeScene);
+            }
 
-            if (hasIndexToken || (lastNouns && lastNouns.length > 0)) {
-                // Search Nunu's active scene workspace to see if this object already exists
+            if (lastNouns && lastNouns.length > 0) {
                 const searchName = primaryNoun.replace('@idx', currentIdxValue);
-
                 activeScene.traverse(function (child) {
                     if (child.name === searchName) {
                         targetObject = child;
@@ -831,110 +920,165 @@ async function parseSpatialCommands(inputStr, currentIdxValue = 0) {
             }
 
             if (!targetObject) {
-                // 1. Resolve Nunu's internal runtime class references
                 const nunuClasses = THREE.resolveNunuClasses();
-
-                let geometry, material;
-                let createdObject = null;
-                const normalizedType = primaryNoun.toLowerCase();
-
-                // 2. Build out or assign using the resolved classes context
-                if (normalizedType.includes('pointlight')) {
-                    createdObject = new THREE.PointLight(0xffffff, 1, 100);
-                } else if (normalizedType.includes('directionallight')) {
-                    createdObject = new THREE.DirectionalLight(0xffffff, 1);
-                } else if (normalizedType.includes('ambientlight')) {
-                    createdObject = new THREE.AmbientLight(0x404040);
-                } else if (normalizedType.includes('spotlight')) {
-                    createdObject = new THREE.SpotLight(0xffffff);
-                } else if (normalizedType.includes('audiolistener')) {
-                    createdObject = new THREE.AudioListener();
-                } else if (normalizedType.includes('gridhelper')) {
-                    createdObject = new THREE.GridHelper(10, 10);
-                } else if (normalizedType.includes('axeshelper')) {
-                    createdObject = new THREE.AxesHelper(5);
-                } else if (normalizedType.includes('arrowhelper')) {
-                    const dir = new THREE.Vector3(0, 1, 0);
-                    const origin = new THREE.Vector3(0, 0, 0);
-                    createdObject = new THREE.ArrowHelper(dir, origin, 1, 0xffff00);
-                }
-                // Fallback to custom Geometry + Resolved Nunu Mesh wrapper tracking
-                else {
-                    if (normalizedType.includes('cylinder')) {
-                        geometry = new THREE.CylinderGeometry(0.5, 0.5, 2, 16);
-                    } else if (normalizedType.includes('sphere')) {
-                        geometry = new THREE.SphereGeometry(0.5, 16, 16);
-                    } else if (normalizedType.includes('plane')) {
-                        geometry = new THREE.PlaneGeometry(1, 1);
-                    } else if (normalizedType.includes('circle')) {
-                        geometry = new THREE.CircleGeometry(0.5, 16);
-                    } else if (normalizedType.includes('torus')) {
-                        geometry = new THREE.TorusGeometry(0.5, 0.2, 8, 24);
-                    } else if (normalizedType.includes('cone')) {
-                        geometry = new THREE.ConeGeometry(0.5, 1, 16);
-                    } else {
-                        // Default "Companion Cube" geometry
-                        geometry = new THREE.BoxGeometry(1, 1, 1);
-                    }
-
-                    // Determine Material Context (Utilize extracted runtime constructor)
-                    if (normalizedType.includes('basic')) {
-                        material = new THREE.MeshBasicMaterial({ color: 0xAEB2F8 });
-                    } else if (normalizedType.includes('phong')) {
-                        material = new THREE.MeshPhongMaterial({ color: 0xAEB2F8 });
-                    } else {
-                        // Instantiate Nunu's exact internal Material flavor discovered from default wrappers
-                        material = new nunuClasses.Material({
-                            color: 0xAEB2F8, // --ace-blue 
-                            roughness: 0.4
-                        });
-                    }
-
-                    // CRITICAL VENDOR REGISTRATION HOOK:
-                    // Instead of calling generic global new THREE.Mesh, build via Nunu's proprietary wrapper class
-                    createdObject = new nunuClasses.Mesh(geometry, material);
-                }
-
-                // Assign final identities to our generated node element
-                targetObject = createdObject;
+                targetObject = createSpatialObject(primaryNoun, nunuClasses, THREE);
                 targetObject.name = primaryNoun.replace('@idx', currentIdxValue);
 
-                // Immediately register new object into Nunu's active runtime workspace tree
                 window.nunu.addObject(targetObject, activeScene);
+
+                applyTransformations(targetObject, activeSpec, currentIdxValue, relativeObject);
+                currentIdxValue++;
+            } else {
+                applyTransformations(targetObject, activeSpec, currentIdxValue, relativeObject);
             }
 
-            // --- Spatial Transformation Block ---
-            // Safely compute positioning variables (evaluating formulas like 'fw*@idx')
-            const evaluateFormula = (expr) => {
-                let cleanExpr = expr.replace(/@idx/g, currentIdxValue);
-                // Simple placeholder variable evaluation context if 'fw' metric exists in scope
-                const fw = 2.0;
-                try {
-                    // Safely interpret explicit linear operational vectors
-                    return Function(`"use strict"; const fw = ${fw}; return (${cleanExpr})`)();
-                } catch (e) {
-                    return parseFloat(cleanExpr) || 0;
-                }
-            };
-
-            const posX = evaluateFormula(activeSpec[0]);
-            const posY = evaluateFormula(activeSpec[1]);
-            const posZ = evaluateFormula(activeSpec[2]);
-
-            targetObject.position.set(posX, posY, posZ);
-
-            // Optional: Map remaining specs positions [3, 4, 5, 6] to rotation/scale tracks
-            if (activeSpec.length >= 6) {
-                const rotX = evaluateFormula(activeSpec[3]);
-                const rotY = evaluateFormula(activeSpec[4]);
-                const rotZ = evaluateFormula(activeSpec[5]);
-                targetObject.rotation.set(rotX, rotY, rotZ);
-            }
-
-            // Request UI structural redraw context framework update
             window.nunu.gui.updateInterface();
         }
     }
+}
+
+
+
+//parseSpatialCommands('[elephant][0,0,0,0,0,0,1] [red][0,0,0,0,0,0,1] [balloon][fw*@idx,fd*@idx,0,0,0,0,1]')
+
+function applyTransformations(targetObject, activeSpec, indexContext, relativeObject) {
+    // Evaluate positions passing the corresponding spatial axis tag
+    const posX = evaluateSpatialFormula(activeSpec[0], indexContext, relativeObject, 'x');
+    const posY = evaluateSpatialFormula(activeSpec[1], indexContext, relativeObject, 'y');
+    const posZ = evaluateSpatialFormula(activeSpec[2], indexContext, relativeObject, 'z');
+
+    targetObject.position.set(posX, posY, posZ);
+
+    // Evaluate rotations (mapping fallback anchors to rotation axes if needed)
+    if (activeSpec.length >= 6) {
+        const rotX = evaluateSpatialFormula(activeSpec[3], indexContext, relativeObject, 'x');
+        const rotY = evaluateSpatialFormula(activeSpec[4], indexContext, relativeObject, 'y');
+        const rotZ = evaluateSpatialFormula(activeSpec[5], indexContext, relativeObject, 'z');
+
+        targetObject.rotation.set(rotX, rotY, rotZ);
+    }
+}
+
+
+
+function evaluateSpatialFormula(expr, indexContext, relativeObject, axis) {
+    let baseCoordinate = 0;
+    if (relativeObject && relativeObject.position) {
+        baseCoordinate = relativeObject.position[axis] || 0;
+    }
+
+    let fw = 1.0;
+    let fd = 1.0;
+    let currentAxisDimension = 1.0;
+
+    if (relativeObject) {
+        const THREE = require('three');
+        relativeObject.updateMatrixWorld(true);
+        if (relativeObject.geometry) {
+            relativeObject.geometry.computeBoundingBox();
+        }
+
+        const box = new THREE.Box3().setFromObject(relativeObject);
+        const size = new THREE.Vector3();
+        box.getSize(size);
+
+        fw = size.x !== 0 ? size.x : 1.0;
+        fd = size.z !== 0 ? size.z : 1.0;
+
+        if (axis === 'x') currentAxisDimension = fw;
+        else if (axis === 'z') currentAxisDimension = fd;
+        else currentAxisDimension = (size.y !== 0) ? size.y : 1.0;
+    }
+
+    let cleanExpr = expr.trim();
+
+    // Contextual implicit check: If the formula starts with variable shorthand notation,
+    // stack the previous base coordinate accumulation calculation to the front.
+    if (cleanExpr.startsWith('fw') || cleanExpr.startsWith('fd') || cleanExpr.startsWith('@idx')) {
+        cleanExpr = `@0 + ${cleanExpr}`;
+    }
+
+    // Centralized safe string substitution mapping
+    cleanExpr = cleanExpr.replace(/\s+/g, '')
+        .replace(/@0/g, baseCoordinate)
+        .replace(/fw/g, fw)
+        .replace(/fd/g, fd)
+        .replace(/@idx/g, currentAxisDimension);
+
+    return parseSimpleExpression(cleanExpr);
+}
+
+
+function parseSimpleExpression(pureMathExpr) {
+    // 1. Precise Lexical Tokenizer (Handles numbers, operators, and parentheses)
+    const rawTokens = pureMathExpr.match(/(\d*\.?\d+)|([\+\-\*\/\(\)])/g);
+    if (!rawTokens) return parseFloat(pureMathExpr) || 0;
+
+    // 2. Convert Infix to Postfix via Shunting-yard algorithm
+    const postfixQueue = [];
+    const operatorStack = [];
+
+    const precedence = {
+        '+': 1,
+        '-': 1,
+        '*': 2,
+        '/': 2
+    };
+
+    for (let i = 0; i < rawTokens.length; i++) {
+        const token = rawTokens[i];
+
+        if (!isNaN(parseFloat(token))) {
+            // Token is a number, push straight to output queue
+            postfixQueue.push(parseFloat(token));
+        } else if (token === '(') {
+            operatorStack.push(token);
+        } else if (token === ')') {
+            // Pop operators off the stack to output queue until reaching matching '('
+            while (operatorStack.length > 0 && operatorStack[operatorStack.length - 1] !== '(') {
+                postfixQueue.push(operatorStack.pop());
+            }
+            operatorStack.pop(); // Discard the opening parenthesis
+        } else {
+            // Token is an operator (+, -, *, /)
+            while (
+                operatorStack.length > 0 &&
+                operatorStack[operatorStack.length - 1] !== '(' &&
+                precedence[operatorStack[operatorStack.length - 1]] >= precedence[token]
+            ) {
+                postfixQueue.push(operatorStack.pop());
+            }
+            operatorStack.push(token);
+        }
+    }
+
+    // Flush remaining operators from stack to queue
+    while (operatorStack.length > 0) {
+        postfixQueue.push(operatorStack.pop());
+    }
+
+    // 3. Evaluate Postfix Expression Queue
+    const evaluationStack = [];
+
+    for (let i = 0; i < postfixQueue.length; i++) {
+        const token = postfixQueue[i];
+
+        if (typeof token === 'number') {
+            evaluationStack.push(token);
+        } else {
+            const right = evaluationStack.pop() || 0;
+            const left = evaluationStack.pop() || 0;
+
+            switch (token) {
+                case '+': evaluationStack.push(left + right); break;
+                case '-': evaluationStack.push(left - right); break;
+                case '*': evaluationStack.push(left * right); break;
+                case '/': evaluationStack.push(left / (right || 1)); break; // Prevent divide by zero
+            }
+        }
+    }
+
+    return evaluationStack[0] || 0;
 }
 
 
