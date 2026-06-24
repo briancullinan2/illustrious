@@ -1,5 +1,5 @@
-@import url(/theme/boxicons.min.css);
-@import url(/theme/boxicons-brands.min.css);
+@import url(/components/theme/boxicons.min.css);
+@import url(/components/theme/boxicons-brands.min.css);
 
 :root {
     --bg: #101014;
