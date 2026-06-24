@@ -101,7 +101,13 @@ async function initializeSearchEngine() {
     const asyncDb = new duckdb.AsyncDuckDB(logger, worker);
 
     await asyncDb.instantiate(bundle.mainModule, bundle.pthreadWorker);
-
+    await asyncDb.open({
+        filesystem: {
+            allowFullHTTPReads: false,    // Kill any full download attempts
+            reliableHeadRequests: true,  // Tells DuckDB to rely on a strict 206 validation path
+            forceFullHTTPReads: false     // Explicitly turn off fallback all-or-nothing reads
+        }
+    });
     conn = await asyncDb.connect();
 
     await conn.query(`

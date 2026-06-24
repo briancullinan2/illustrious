@@ -35339,6 +35339,7 @@ var duckdb = (() => {
                         f.responseType = "arraybuffer";
                       }
                       if (rangeHeader) {
+                        debugger
                         f.setRequestHeader("Range", rangeHeader);
                       }
 
@@ -35450,6 +35451,7 @@ var duckdb = (() => {
                         S
                     }
                     if (m.status == 200 && h !== null && d !== null && +h == +d) {
+                      debugger;
                       console.warn("fall back to full HTTP read for: ".concat(_.dataUrl));
                       let S = o._malloc(m.response.byteLength)
                         , A = new Uint8Array(m.response, 0, m.response.byteLength);
@@ -35466,6 +35468,7 @@ var duckdb = (() => {
                       return o.HEAPF64[(P >> 3) + 2] = +T,
                         P
                     }
+                    debugger
                     console.warn("falling back to full HTTP read for: ".concat(_.dataUrl))
                   }
                   // 5. Final fallback complete GET request variant hook
