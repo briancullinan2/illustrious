@@ -584,10 +584,11 @@ async function searchResponseInterface(e) {
         });
     } else if (type === 'SEARCH_READY') {
 
-
+        console.log(e.data)
     } else if (type === 'SEARCH_RESULTS') {
 
 
+        console.log(e.data)
     }
 }
 

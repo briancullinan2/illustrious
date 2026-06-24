@@ -366,7 +366,6 @@ var D = (c => (c.CANCEL_PENDING_QUERY = "CANCEL_PENDING_QUERY",
         }
     }
     ;
-debugger;
 import *as d from "./apache-arrow.mjs";
 function _(s) {
     switch (s.typeId) {
@@ -1350,7 +1349,7 @@ var B = () => (async s => {
 )(new Uint8Array([0, 97, 115, 109, 1, 0, 0, 0, 1, 4, 1, 96, 0, 0, 3, 2, 1, 0, 5, 4, 1, 3, 1, 1, 10, 11, 1, 9, 0, 65, 0, 254, 16, 2, 0, 26, 11]));
 var m = {
     name: "@duckdb/duckdb-wasm",
-    version: "1.33.1-dev57.0",
+    version: "1.32.0",
     description: "DuckDB powered by WebAssembly",
     license: "MIT",
     repository: {
@@ -1359,20 +1358,19 @@ var m = {
     },
     keywords: ["sql", "duckdb", "relational", "database", "data", "query", "wasm", "analytics", "olap", "arrow", "parquet", "json", "csv"],
     dependencies: {
-        "apache-arrow": "^17.0.0",
-        qs: "^6.14.1"
+        "apache-arrow": "^17.0.0"
     },
     devDependencies: {
         "@types/emscripten": "^1.39.10",
-        "@types/jasmine": "^5.1.13",
+        "@types/jasmine": "^5.1.4",
         "@typescript-eslint/eslint-plugin": "^6.21.0",
         "@typescript-eslint/parser": "^6.21.0",
         esbuild: "^0.20.2",
         eslint: "^8.57.0",
         "eslint-plugin-jasmine": "^4.1.3",
-        "eslint-plugin-react": "^7.37.5",
+        "eslint-plugin-react": "^7.34.0",
         "fast-glob": "^3.3.2",
-        jasmine: "^5.13.0",
+        jasmine: "^5.1.0",
         "jasmine-core": "^5.1.2",
         "jasmine-spec-reporter": "^7.0.0",
         "js-sha256": "^0.11.1",
@@ -1390,7 +1388,7 @@ var m = {
         puppeteer: "^22.8.0",
         rimraf: "^5.0.5",
         s3rver: "^3.7.1",
-        typedoc: "^0.28.15",
+        typedoc: "^0.25.13",
         typescript: "^5.3.3",
         "wasm-feature-detect": "^1.6.1",
         "web-worker": "^1.2.0"

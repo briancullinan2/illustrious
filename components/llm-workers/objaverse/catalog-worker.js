@@ -2,6 +2,9 @@
 
 
 //https://extensions.duckdb.org/v1.5.4/wasm_threads/parquet.duckdb_extension.wasm
+//http://localhost:4000/components/llm-workers/objaverse/v1.4.3/wasm_threads/parquet.duckdb_extension.wasm
+//https://extensions.duckdb.org/v1.4.3/wasm_threads/parquet.duckdb_extension.wasm
+//https://extensions.duckdb.org/v1.4.3/wasm_eh/parquet.duckdb_extension.wasm
 
 globalThis.document = {
     baseURI: 'http://localhost:4000/'
@@ -75,9 +78,12 @@ async function initializeSearchEngine() {
 
     const MANUAL_BUNDLES = {
         coi: {
-            mainModule: `${globalThis.document.baseURI}components/llm-workers/objaverse/duckdb-coi.wasm`,
-            mainWorker: `${globalThis.document.baseURI}components/llm-workers/objaverse/duckdb-browser-coi.worker.js`,
-            pthreadWorker: `${globalThis.document.baseURI}components/llm-workers/objaverse/duckdb-browser-coi.pthread.worker.js`,
+            //mainModule: `${globalThis.document.baseURI}components/llm-workers/objaverse/duckdb-coi.wasm`,
+            //mainWorker: `${globalThis.document.baseURI}components/llm-workers/objaverse/duckdb-browser-coi.worker.js`,
+            //pthreadWorker: `${globalThis.document.baseURI}components/llm-workers/objaverse/duckdb-browser-coi.pthread.worker.js`,
+            mainModule: `${globalThis.document.baseURI}components/llm-workers/objaverse/duckdb-eh.wasm`,
+            mainWorker: `${globalThis.document.baseURI}components/llm-workers/objaverse/duckdb-browser-eh.worker.js`,
+            pthreadWorker: `${globalThis.document.baseURI}components/llm-workers/objaverse/duckdb-browser-eh.pthread.worker.js`,
         }
     };
 
@@ -98,11 +104,12 @@ async function initializeSearchEngine() {
 
     conn = await asyncDb.connect();
 
-    //debugger
-    //await conn.query(`
-    //    SET custom_extension_repository = '${globalThis.document.baseURI}components/llm-workers/objaverse/';
-    //    PRAGMA load_parquet;
-    //`);
+    await conn.query(`
+        SET extension_directory = '/';
+        SET custom_extension_repository = '${globalThis.document.baseURI}components/llm-workers/objaverse';
+        FORCE INSTALL parquet FROM '${globalThis.document.baseURI}components/llm-workers/objaverse';
+        LOAD parquet;
+    `);
     console.log("DuckDB initialized natively inside the existing search worker layer.");
 }
 
@@ -182,7 +189,8 @@ self.onmessage = async (e) => {
                 globalThis.parquetFile = parquetFiles[0]
             }
             const matches = await findModelByKeywords(payload);
-            console.log("Surgically pulled from 10GB GCS bucket file without downloading it entirely:", matches);
+            console.log("Surgically pulled from 10GB GCS bucket file without downloading it entirely:");
+            console.log(matches)
 
             self.postMessage({ type: 'SEARCH_RESULTS', payload: matches });
         }
