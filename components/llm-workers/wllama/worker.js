@@ -114,6 +114,30 @@ self.onmessage = async (e) => {
         }
 
 
+        let mmprojBlob = null;
+        if (payload.mmprojUrl) {
+            try {
+                const mmprojPath = getGGUFModel(payload.mmprojUrl);
+                let mmprojArrayBuffer = (await getRecord(DB_STORE_NAME, mmprojPath, GGUF_DATABASE))?.contents;
+                if (!mmprojArrayBuffer) {
+                    mmprojArrayBuffer = await fetchWithFallbackChain(payload.mmprojUrl, 'GGUF');
+                    putRecord(DB_STORE_NAME, {
+                        path: mmprojPath,
+                        timestamp: new Date(),
+                        mode: FS_FILE,
+                        contents: new Uint8Array(mmprojArrayBuffer),
+                        parent: mmprojPath.substring(0, mmprojPath.lastIndexOf('/')) || '/'
+                    }, GGUF_DATABASE);
+                }
+                mmprojBlob = new Blob([mmprojArrayBuffer], { type: 'application/octet-stream' });
+                console.warn('Vision Projector Layer Loaded: ' + mmprojPath);
+            } catch (err) {
+                console.error("Failed to load vision projector layer asset:", err);
+            }
+        }
+
+
+
         try {
 
             const ggufModelPath = getGGUFModel(payload.modelUrl); // define this helper if needed
@@ -155,7 +179,14 @@ self.onmessage = async (e) => {
                 );
             }
 
-            await wllama.loadModel([modelBlob], {
+            const filesToLoad = [modelBlob];
+            if (mmprojBlob) {
+                filesToLoad.push(mmprojBlob);
+            }
+
+
+
+            await wllama.loadModel(filesToLoad, {
                 n_ctx: 2048,
                 n_threads: 4,
                 jinja: true,                    // ← Enable Jinja parsing
