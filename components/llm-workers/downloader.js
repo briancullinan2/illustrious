@@ -153,13 +153,14 @@ function getFallbackUrls(rawFilePath) {
     //https://huggingface.co/Goekdeniz-Guelmez/Josiefied-Qwen2.5-0.5B-Instruct-abliterated-v1-gguf/resolve/main/josiefied-qwen2.5-0.5b-instruct-abliterated-v1.Q4_K_M.gguf?download=true
     //https://huggingface.co/Goekdeniz-Guelmez/Josiefied-Qwen2.5-0.5B-Instruct-abliterated-v1-gguf/raw/main/josiefied-qwen2.5-0.5b-instruct-abliterated-v1.Q4_K_M.gguf
     //https://huggingface.co/Goekdeniz-Guelmez/Josiefied-Qwen2.5-0.5B-Instruct-abliterated-v1-gguf/resolve/main/josiefied-qwen2.5-0.5b-instruct-abliterated-v1.Q4_K_M.gguf.gguf
+    
     const tries = [
         `https://illustrious.quake.games/models/${cleanPath}`,
         `https://illustrious.quake.games/hf_cache/${cleanPath.replace(/^([^/]+)\/([^/]+)\/(.+)$/, "models--$1--$2/$3")}`,
         `http://localhost:4000/models/${cleanPath}`,
         `http://localhost:4000/hf_cache/${cleanPath.replace(/^([^/]+)\/([^/]+)\/(.+)$/, "models--$1--$2/$3")}`,
-        globalThis.document.baseURI + `/models/${cleanPath}`,
-        globalThis.document.baseURI + `/${cleanPath.replace(/^([^/]+)\/([^/]+)\/(.+)$/, "models--$1--$2/$3")}`,
+        `${globalThis.document.baseURI}/models/${cleanPath}`,
+        `${globalThis.document.baseURI}/${cleanPath.replace(/^([^/]+)\/([^/]+)\/(.+)$/, "models--$1--$2/$3")}`,
     ];
 
 
@@ -180,7 +181,7 @@ function getFallbackUrls(rawFilePath) {
             `https://huggingface.co/megamindbrian/${unquantizedPath}/resolve/main/${fileName}`,
             `https://huggingface.co/megamindbrian/${unquantizedPath}/resolve/main/${fileName}.gguf`,
             `https://huggingface.co/megamindbrian/${unquantizedPath}/resolve/main/${unquantizedPath}.Q4_K_M.gguf`,
-            `https://huggingface.co/megamindbrian/${unquantizedPath}/resolve/main/${unquantizedPath}-q8_0.gguf`
+            `https://huggingface.co/megamindbrian/${unquantizedPath}/resolve/main/${unquantizedPath}-q8_0.gguf`,
         ]);
     }
 
@@ -188,7 +189,7 @@ function getFallbackUrls(rawFilePath) {
     tries.push(...[
         `https://huggingface.co/${subFolder}/raw/main/${fileName}`,
         `https://huggingface.co/${subFolder}/${fileName}`,
-        `https://huggingface.co/${cleanPath}`
+        `https://huggingface.co/${cleanPath}`,
 
     ])
 
