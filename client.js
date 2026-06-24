@@ -6,7 +6,7 @@ const DEFAULT_LORA = 'Goekdeniz-Guelmez/Josiefied-Qwen2.5-0.5B-Instruct-ablitera
 const DEFAULT_JINJA = '/loras/spatial_engine/chat_template.jinja'
 const DEFAULT_GBNF = '/loras/spatial_engine/grammar.gbnf'
 
-const DEFAULT_PARQUET = 'https://storage.googleapis.com/your-objaverse-bucket/objaverse_metadata.parquet';
+const DEFAULT_PARQUET = 'https://storage.googleapis.com/quake-games/models/github.parquet';
 const SEARCH_WORKER = '/components/llm-workers/objaverse/catalog-worker.js';
 
 
@@ -551,18 +551,41 @@ async function bootWllamaWorker() {
 
 
 
+let currentTimeout
+let previousSearch
+async function doNunuSearch() {
+    const searchBox = document.querySelector('#nunu input[placeholder="Search"]')
+    if (currentTimeout) {
+        previousSearch = searchBox.value
+        return
+    }
+    currentTimeout = setTimeout(() => {
+        currentTimeout = null
+        searchWorker.postMessage({
+            type: 'SEARCH_QUERY',
+            baseURI: window.location.origin + '/',
+            parquetFiles: [DEFAULT_PARQUET],
+            payload: previousSearch
+        });
+    }, 1000)
+}
+
+
 async function searchResponseInterface(e) {
     const { type, payload } = e.data;
 
-    if (type === 'LOAD_SEARCH') {
+    if (type === 'WORKER_READY') {
         searchWorker.postMessage({
-            type: 'LOAD_MODEL',
-            baseURI: window.location.origin,
+            type: 'LOAD_SEARCH',
+            baseURI: window.location.origin + '/',
             parquetFiles: [DEFAULT_PARQUET],
             payload: {
             }
         });
     } else if (type === 'SEARCH_READY') {
+
+
+    } else if (type === 'SEARCH_RESULTS') {
 
 
     }
@@ -683,7 +706,7 @@ async function workerResponseInterface(e) {
         if (toggle?.checked) {
             worker.postMessage({
                 type: 'LOAD_MODEL',
-                baseURI: window.location.origin,
+                baseURI: window.location.origin + '/',
                 payload: {
                     modelUrl: DEFAULT_MODEL,
                     loraUrl: DEFAULT_LORA,

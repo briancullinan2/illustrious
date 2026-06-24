@@ -132,7 +132,12 @@ def list_assets(keyword: str, args):
                              'search_tags', 'clean_ext']:
             if optional_col in row and pd.notna(row[optional_col]):
                 print(f"    • {optional_col}: {row[optional_col]}")
-                
+        
+        for col_name in row.index:
+            if col_name not in optional_col and pd.notna(row[col_name]):
+                print(f"    • {col_name}: {row[col_name]}")
+
+
         # Unpack the raw JSON metadata field to capture deep keywords/tags
         raw_metadata = row.get('metadata', None)
         if pd.notna(raw_metadata) and raw_metadata != "":

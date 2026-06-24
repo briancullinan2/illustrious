@@ -153,7 +153,7 @@ function ge(s) {
 function Se(s) {
     return s === 256
 }
-import *as u from "./apache-arrow.mjs";
+import *as u from "apache-arrow";
 var E = class {
     constructor(e, r) {
         this._bindings = e,
@@ -366,8 +366,7 @@ var D = (c => (c.CANCEL_PENDING_QUERY = "CANCEL_PENDING_QUERY",
         }
     }
     ;
-debugger;
-import *as d from "./apache-arrow.mjs";
+import *as d from "apache-arrow";
 function _(s) {
     switch (s.typeId) {
         case d.Type.Binary:

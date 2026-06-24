@@ -19,10 +19,23 @@ const IMPORT_MODULES = {
         panelId: 'nunu',
         js: IMPORT_JS['nunu'],
         css: IMPORT_CSS['nunu'],
-        onLoad: () => window.nunu.initialize()
+        onLoad: () => {
+            if (!document.querySelector('#nunu input[placeholder="Search"]')) {
+                window.nunu.initialize()
+                let loadDetectorInterval
+
+                loadDetectorInterval = setInterval(() => {
+                    const searchBox = document.querySelector('#nunu input[placeholder="Search"]')
+                    if (searchBox) {
+                        clearInterval(loadDetectorInterval)
+                        searchBox.addEventListener('keypress', doNunuSearch)
+                    }
+                }, 1000)
+            }
+        }
     },
 
-    
+
 };
 
 
