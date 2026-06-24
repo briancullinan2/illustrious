@@ -1074,68 +1074,6 @@
     // Expose registry utility publicly on the loader instance if access is needed by editors
     THREE.q3ShaderRegistry = q3shader.registry;
 
-    // =========================================================================
-    // NUNUSTUDIO CLASS RESOLUTION
-    // -------------------------------------------------------------------------
-    // nunuStudio (bundle.js) ships its own bundled copy of three.js that is a
-    // *different* module instance than the one require('three') returns here.
-    // Objects built with require('three') therefore fail the editor's
-    // `instanceof` checks, so the selection helper (yellow BoxHelper) is never
-    // created and the Inspector cannot resolve a panel for them.
-    //
-    // To integrate, geometry/material/texture/mesh must be built from the
-    // editor's copy. We harvest those constructors from the live editor: the
-    // default resources (defaultGeometry/Material/Texture) and an existing
-    // scene object give us the exact classes the editor uses. Plain numeric
-    // constants (wrap modes, sides, formats) are identical across copies, so
-    // the local THREE values are reused for those.
-    // =========================================================================
-    function resolveNunuClasses() {
-        const classes = {
-            Mesh: THREE.Mesh,
-            Object3D: THREE.Object3D,
-            BufferGeometry: THREE.BufferGeometry,
-            Float32BufferAttribute: THREE.Float32BufferAttribute,
-            Material: THREE.MeshStandardMaterial,
-            Texture: THREE.Texture
-        };
-
-        const K = (typeof window !== "undefined") ? window.nunu : null;
-        if (!K) return classes;
-
-        if (K.defaultGeometry) {
-            classes.BufferGeometry = K.defaultGeometry.constructor;
-            const posAttr = K.defaultGeometry.attributes && K.defaultGeometry.attributes.position;
-            if (posAttr) classes.Float32BufferAttribute = posAttr.constructor;
-        }
-        if (K.defaultMaterial) classes.Material = K.defaultMaterial.constructor;
-        if (K.defaultTexture) classes.Texture = K.defaultTexture.constructor;
-
-        // Harvest the editor's Mesh wrapper from an existing scene object.
-        let scene = null;
-        try { scene = K.getScene ? K.getScene() : null; } catch (e) { scene = null; }
-        const root = K.program || scene;
-        if (root && typeof root.traverse === "function") {
-            let mesh = null;
-            root.traverse(function (o) { if (!mesh && o.isMesh) mesh = o.constructor; });
-            if (mesh) classes.Mesh = mesh;
-        }
-
-        // Resolve the editor's Object3D by walking a live instance's prototype
-        // chain to the level that owns `isObject3D`.
-        const anchor = scene || root;
-        if (anchor) {
-            let proto = Object.getPrototypeOf(anchor);
-            while (proto && !Object.prototype.hasOwnProperty.call(proto, "isObject3D")) {
-                proto = Object.getPrototypeOf(proto);
-            }
-            if (proto && proto.constructor) classes.Object3D = proto.constructor;
-        }
-
-        return classes;
-    }
-
-    THREE.resolveNunuClasses = resolveNunuClasses;
 
     // =========================================================================
     // MAIN THREE.JS Q3BSPLOADER IMPLEMENTATION
@@ -1294,7 +1232,7 @@
             // create satisfy nunuStudio's instanceof checks (selection helper +
             // Inspector). Falls back to the local THREE classes when the editor
             // is not present (e.g. headless/standalone usage).
-            const nunu = resolveNunuClasses();
+            const nunu = THREE.resolveNunuClasses();
             const NunuMesh = nunu.Mesh;
 
             let geometry = new nunu.BufferGeometry();
@@ -1422,166 +1360,167 @@
     // worker context never reaches them).
     // -------------------------------------------------------------------------
 
-window.capturedScenes = [];
-window.addEventListener('observe', function (e) {
-    if (e.detail && (e.detail.type === "Scene" || e.detail.isScene)) {
-        window.capturedScenes.push(e.detail);
-        window.scene = e.detail;
-        console.log("🎯 Caught active scene target context! Accessible via window.scene");
-    }
-}, true);
+    window.capturedScenes = [];
+    window.addEventListener('observe', function (e) {
+        if (e.detail && (e.detail.type === "Scene" || e.detail.isScene)) {
+            window.capturedScenes.push(e.detail);
+            window.scene = e.detail;
+            console.log("🎯 Caught active scene target context! Accessible via window.scene");
+        }
+    }, true);
 
 
 
-const q3bsp_base_folder = 'https://quake.games/demoq3/pak0.pk3dir';
-const mapShaders = [
-    'scripts/base.shader', 'scripts/base_button.shader', 'scripts/base_floor.shader',
-    'scripts/base_light.shader', 'scripts/base_object.shader', 'scripts/base_support.shader',
-    'scripts/base_trim.shader', 'scripts/base_wall.shader', 'scripts/common.shader',
-    'scripts/ctf.shader', 'scripts/eerie.shader', 'scripts/gfx.shader',
-    'scripts/gothic_block.shader', 'scripts/gothic_floor.shader', 'scripts/gothic_light.shader',
-    'scripts/gothic_trim.shader', 'scripts/gothic_wall.shader', 'scripts/hell.shader',
-    'scripts/liquid.shader', 'scripts/menu.shader', 'scripts/models.shader',
-    'scripts/organics.shader', 'scripts/sfx.shader', 'scripts/shrine.shader',
-    'scripts/skin.shader', 'scripts/sky.shader', 'scripts/test.shader'
-].map(s => q3bsp_base_folder + '/' + s);
+    const q3bsp_base_folder = 'https://quake.games/demoq3/pak0.pk3dir';
+    const mapShaders = [
+        'scripts/base.shader', 'scripts/base_button.shader', 'scripts/base_floor.shader',
+        'scripts/base_light.shader', 'scripts/base_object.shader', 'scripts/base_support.shader',
+        'scripts/base_trim.shader', 'scripts/base_wall.shader', 'scripts/common.shader',
+        'scripts/ctf.shader', 'scripts/eerie.shader', 'scripts/gfx.shader',
+        'scripts/gothic_block.shader', 'scripts/gothic_floor.shader', 'scripts/gothic_light.shader',
+        'scripts/gothic_trim.shader', 'scripts/gothic_wall.shader', 'scripts/hell.shader',
+        'scripts/liquid.shader', 'scripts/menu.shader', 'scripts/models.shader',
+        'scripts/organics.shader', 'scripts/sfx.shader', 'scripts/shrine.shader',
+        'scripts/skin.shader', 'scripts/sky.shader', 'scripts/test.shader'
+    ].map(s => q3bsp_base_folder + '/' + s);
 
 
-async function importBSP(mapFile, content) {
-    const THREE = require('three');
-    let bspLoader = new THREE.Q3BSPLoader();
-    let activeScene = window.nunu.getScene();
+    async function importBSP(mapFile, content) {
+        const THREE = require('three');
+        let bspLoader = new THREE.Q3BSPLoader();
+        let activeScene = window.nunu.getScene();
 
-    window.isLoadingBSP = true
-    const mapName = q3bsp_base_folder + (mapFile.startsWith('/') ? '' : '/') + mapFile;
+        window.isLoadingBSP = true
+        const mapName = q3bsp_base_folder + (mapFile.startsWith('/') ? '' : '/') + mapFile;
 
-    await q3shader.loadList(mapShaders, () => { });
+        await q3shader.loadList(mapShaders, () => { });
 
-    bspLoader.load(content || mapName, function (bspGroup) {
-        bspGroup.name = mapFile.split('/').pop();
-        bspGroup.type = "Group";
-        bspGroup.folded = false;
-        bspGroup.locked = false;
+        bspLoader.load(content || mapName, function (bspGroup) {
+            bspGroup.name = mapFile.split('/').pop();
+            bspGroup.type = "Group";
+            bspGroup.folded = false;
+            bspGroup.locked = false;
 
-        const surfaceChildren = [];
-        bspGroup.traverse(function (child) {
-            if (child.isMesh && child !== bspGroup) {
-                surfaceChildren.push(child);
+            const surfaceChildren = [];
+            bspGroup.traverse(function (child) {
+                if (child.isMesh && child !== bspGroup) {
+                    surfaceChildren.push(child);
+                }
+            });
+
+            // Decouple original flat arrays so action transactions maintain context
+            bspGroup.children = [];
+
+            // 1. Immediately register the parent container so it appears in the Project Explorer tree
+            window.nunu.addObject(bspGroup, activeScene);
+
+            // 2. Set up the time-sliced queue configuration
+            let index = 0;
+            const FRAME_BUDGET_MS = 12; // Yield back to the browser if a batch takes longer than 12ms (leaves ~4ms for browser rendering layout)
+
+            function processBatch() {
+                const startTime = performance.now();
+
+                // Run until we exhaust the surface list OR exceed our maximum safe frame budget
+                while (index < surfaceChildren.length) {
+                    const surfaceMesh = surfaceChildren[index];
+
+                    // Add the individual map piece directly into its parent group context
+                    window.nunu.addObject(surfaceMesh, bspGroup);
+                    index++;
+
+                    // Break execution block if we're hitting frame budgeting thresholds
+                    // TODO: always 1 at a time
+                    //if (performance.now() - startTime > FRAME_BUDGET_MS) 
+                    {
+                        // Update interface incrementally so the user can watch the map load block by block
+                        window.nunu.gui.updateInterface();
+
+                        // Request the next animation tick frame to resume loading without locking up the UI
+                        requestAnimationFrame(processBatch);
+                        return;
+                    }
+                }
+
+                // 3. Post-processing cleanup loop runs once all nodes have successfully streamed in
+                if (bspGroup.children.length > 0) {
+                    window.nunu.selectObject(bspGroup.children[0]);
+                } else {
+                    window.nunu.selectObject(bspGroup);
+                }
+
+                window.nunu.gui.updateInterface();
+                console.log(`Successfully streamed ${surfaceChildren.length} BSP surfaces incrementally.`);
+                window.isLoadingBSP = false
             }
+
+            // Kick off the non-blocking loop
+            requestAnimationFrame(processBatch);
         });
-
-        // Decouple original flat arrays so action transactions maintain context
-        bspGroup.children = [];
-
-        // 1. Immediately register the parent container so it appears in the Project Explorer tree
-        window.nunu.addObject(bspGroup, activeScene);
-
-        // 2. Set up the time-sliced queue configuration
-        let index = 0;
-        const FRAME_BUDGET_MS = 12; // Yield back to the browser if a batch takes longer than 12ms (leaves ~4ms for browser rendering layout)
-
-        function processBatch() {
-            const startTime = performance.now();
-
-            // Run until we exhaust the surface list OR exceed our maximum safe frame budget
-            while (index < surfaceChildren.length) {
-                const surfaceMesh = surfaceChildren[index];
-
-                // Add the individual map piece directly into its parent group context
-                window.nunu.addObject(surfaceMesh, bspGroup);
-                index++;
-
-                // Break execution block if we're hitting frame budgeting thresholds
-                //if (performance.now() - startTime > FRAME_BUDGET_MS) 
-                {
-                    // Update interface incrementally so the user can watch the map load block by block
-                    window.nunu.gui.updateInterface();
-
-                    // Request the next animation tick frame to resume loading without locking up the UI
-                    requestAnimationFrame(processBatch);
-                    return;
-                }
-            }
-
-            // 3. Post-processing cleanup loop runs once all nodes have successfully streamed in
-            if (bspGroup.children.length > 0) {
-                window.nunu.selectObject(bspGroup.children[0]);
-            } else {
-                window.nunu.selectObject(bspGroup);
-            }
-
-            window.nunu.gui.updateInterface();
-            console.log(`Successfully streamed ${surfaceChildren.length} BSP surfaces incrementally.`);
-            window.isLoadingBSP = false
-        }
-
-        // Kick off the non-blocking loop
-        requestAnimationFrame(processBatch);
-    });
-}
-
-window.importBSP = importBSP;
-
-// Run this initialization right inside the wrapper closure frame:
-(function (THREE) {
-    // Intercept standard TextureLoader initialization routines
-    const OriginalTextureLoader = THREE.TextureLoader;
-
-
-    // --- GLOBAL PROTOTYPE FALLBACK INJECTIONS FOR NUNUSTUDIO WORKSPACE ---
-    if (typeof THREE.Object3D.prototype.isEmpty !== 'function') {
-        THREE.Object3D.prototype.isEmpty = function () {
-            if (this.isMesh) return true;
-            return this.children ? this.children.length === 0 : true;
-        };
     }
 
-    if (typeof THREE.Object3D.prototype.resize !== 'function') {
-        THREE.Object3D.prototype.resize = function (x, y) {
-            if (this.children && this.children.length > 0) {
-                for (let i = 0; i < this.children.length; i++) {
-                    if (typeof this.children[i].resize === 'function') {
-                        this.children[i].resize(x, y);
+    window.importBSP = importBSP;
+
+    // Run this initialization right inside the wrapper closure frame:
+    (function (THREE) {
+        // Intercept standard TextureLoader initialization routines
+        const OriginalTextureLoader = THREE.TextureLoader;
+
+
+        // --- GLOBAL PROTOTYPE FALLBACK INJECTIONS FOR NUNUSTUDIO WORKSPACE ---
+        if (typeof THREE.Object3D.prototype.isEmpty !== 'function') {
+            THREE.Object3D.prototype.isEmpty = function () {
+                if (this.isMesh) return true;
+                return this.children ? this.children.length === 0 : true;
+            };
+        }
+
+        if (typeof THREE.Object3D.prototype.resize !== 'function') {
+            THREE.Object3D.prototype.resize = function (x, y) {
+                if (this.children && this.children.length > 0) {
+                    for (let i = 0; i < this.children.length; i++) {
+                        if (typeof this.children[i].resize === 'function') {
+                            this.children[i].resize(x, y);
+                        }
                     }
                 }
+            };
+        }
+
+        THREE.TextureLoader = class ExtendedTextureLoader extends OriginalTextureLoader {
+            load(url, onLoad, onProgress, onError) {
+                let scope = this;
+                let basePath = url.replace(/\.[^/.]+$/, "");
+                let extensions = ['.tga', '.jpg', '.png', '.tga', '.jpg', '.png'];
+
+                // Re-map the asset target downward through standard fallback paths
+                function tryNextExtension(index) {
+                    if (index >= extensions.length) {
+                        if (typeof onError === 'function') onError(new Error("All texture formats failed to load."));
+                        return;
+                    }
+
+                    let testUrl = basePath + extensions[index];
+                    if (index >= 3)
+                        testUrl = testUrl.toLocaleLowerCase()
+
+                    // Call standard super.load but catch errors to fall back to the next file signature
+                    OriginalTextureLoader.prototype.load.call(scope, testUrl,
+                        function (texture) {
+                            if (typeof onLoad === 'function') onLoad(texture);
+                        },
+                        onProgress,
+                        function () {
+                            // Drop to next extension pass if file asset returns empty/broken response profiles
+                            tryNextExtension(index + 1);
+                        }
+                    );
+                }
+
+                // Fire off the resolution chain starting at step 0 (.tga)
+                tryNextExtension(0);
             }
         };
-    }
-
-    THREE.TextureLoader = class ExtendedTextureLoader extends OriginalTextureLoader {
-        load(url, onLoad, onProgress, onError) {
-            let scope = this;
-            let basePath = url.replace(/\.[^/.]+$/, "");
-            let extensions = ['.tga', '.jpg', '.png', '.tga', '.jpg', '.png'];
-
-            // Re-map the asset target downward through standard fallback paths
-            function tryNextExtension(index) {
-                if (index >= extensions.length) {
-                    if (typeof onError === 'function') onError(new Error("All texture formats failed to load."));
-                    return;
-                }
-
-                let testUrl = basePath + extensions[index];
-                if (index >= 3)
-                    testUrl = testUrl.toLocaleLowerCase()
-
-                // Call standard super.load but catch errors to fall back to the next file signature
-                OriginalTextureLoader.prototype.load.call(scope, testUrl,
-                    function (texture) {
-                        if (typeof onLoad === 'function') onLoad(texture);
-                    },
-                    onProgress,
-                    function () {
-                        // Drop to next extension pass if file asset returns empty/broken response profiles
-                        tryNextExtension(index + 1);
-                    }
-                );
-            }
-
-            // Fire off the resolution chain starting at step 0 (.tga)
-            tryNextExtension(0);
-        }
-    };
-})(window.require('three'));
+    })(window.require('three'));
 
 })();

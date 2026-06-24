@@ -41,6 +41,7 @@ const IMPORT_JS = {
         '/components/map-editor/jshint.js',
         '/components/map-editor/draco_encoder.js',
         '/components/map-editor/bundle.js',
+        '/components/map-editor/addons.js',
         '/components/map-editor/Q3BSPLoader.js'
     ]
 };
