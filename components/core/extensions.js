@@ -21,7 +21,10 @@ const IMPORT_CSS = {
 const IMPORT_JS = {
     // Application Bootstrap / UI Orchestration
     core: [
+        '/components/core/cluster.js',
+        '/components/core/utilities.js',
         '/components/core/settings.js',
+        '/components/core/workers.js',
         '/components/core/menu.js',
         '/components/core/github.js',
         '/components/core/local.js',
@@ -42,7 +45,8 @@ const IMPORT_JS = {
         '/components/map-editor/draco_encoder.js',
         '/components/map-editor/bundle.js',
         '/components/map-editor/addons.js',
-        '/components/map-editor/Q3BSPLoader.js'
+        '/components/map-editor/Q3BSPLoader.js',
+        '/components/map-editor/SpatialLoader.js'
     ]
 };
 

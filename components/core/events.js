@@ -48,11 +48,11 @@ async function onLoadCore() {
 
 document.addEventListener('DOMContentLoaded', async () => {
     try {
-        // 1. Instantly resolve core application layouts, zips, and global filesystems
         await DependencyLoader.loadModule('core');
 
         SettingsManager.hydrateAll();
 
+        await initializeFrontend()
         await manageServiceWorker()
 
         //const currentTheme = IMPORT_SETTINGS.editor.savedTheme.get

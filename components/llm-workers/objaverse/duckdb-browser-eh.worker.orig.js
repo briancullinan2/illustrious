@@ -35318,56 +35318,16 @@ var duckdb = (() => {
             case 4:
             case 5:
               {
-                function sendXhrWithRetry(method, url, s3Config, dataProtocol, isArrayBuffer, rangeHeader = null) {
-                  let attempts = 0;
-                  const maxRetries = 3;
-
-                  while (attempts < maxRetries) {
-                    attempts++;
-                    try {
-                      let f = new XMLHttpRequest();
-
-                      // Open the synchronous request
-                      if (dataProtocol == 5) {
-                        f.open(method, xt(s3Config, url), false);
-                        Tt(f, s3Config, url, method);
-                      } else {
-                        f.open(method, url, false);
-                      }
-
-                      if (isArrayBuffer) {
-                        f.responseType = "arraybuffer";
-                      }
-                      if (rangeHeader) {
-                        f.setRequestHeader("Range", rangeHeader);
-                      }
-
-                      // Since synchronous .timeout is banned, we let it process natively or catch network faults
-                      f.send(null);
-
-                      // Check for transient server issues (5xx) or dropped requests (status 0) to trigger retry
-                      if (f.status === 0 || (f.status >= 500 && f.status <= 599)) {
-                        throw new Error("Transient network status " + f.status);
-                      }
-
-                      return f; // Success, return the completed instance
-                    } catch (err) {
-                      console.warn(`XHR Attempt ${attempts} failed for ${url}: ${err.message}`);
-                      if (attempts >= maxRetries) {
-                        throw err; // Out of attempts, let the outer architecture fail safely
-                      }
-                    }
-                  }
-                }
                 if (t & 1 && t & 2)
                   throw new Error("Opening file ".concat(_.fileName, " failed: cannot open file with both read and write flags set"));
                 if (t & 32)
                   throw new Error("Opening file ".concat(_.fileName, " failed: appending to HTTP/S3 files is not supported"));
                 if (t & 2) {
-                  // 1. First HEAD request variant hook
-                  let f = sendXhrWithRetry("HEAD", _.dataUrl, _.s3Config, _.dataProtocol, false);
-
-                  if (f.status != 200 && f.status != 404)
+                  let f = new XMLHttpRequest;
+                  if (_.dataProtocol == 5 ? (f.open("HEAD", xt(_.s3Config, _.dataUrl), !1),
+                    Tt(f, _.s3Config, _.dataUrl, "HEAD")) : f.open("HEAD", _.dataUrl, !1),
+                    f.send(null),
+                    f.status != 200 && f.status != 404)
                     throw new Error("Opening file ".concat(_.fileName, " failed: Unexpected return status from server (").concat(f.status, ")"));
                   if (f.status == 404 && !(t & 8 || t & 16))
                     throw new Error("Opening file ".concat(_.fileName, " failed: Cannot write to non-existent file without FILE_FLAGS_FILE_CREATE or FILE_FLAGS_FILE_CREATE_NEW flag."));
@@ -35385,9 +35345,12 @@ var duckdb = (() => {
                   , p = null;
                 if (!_.forceFullHttpReads && (_.reliableHeadRequests || !_.allowFullHttpReads))
                   try {
-                    // 2. Second HEAD request variant hook
-                    let f = sendXhrWithRetry("HEAD", _.dataUrl, _.s3Config, _.dataProtocol, false, "bytes=0-");
-                    d = null;
+                    let f = new XMLHttpRequest;
+                    _.dataProtocol == 5 ? (f.open("HEAD", xt(_.s3Config, _.dataUrl), !1),
+                      Tt(f, _.s3Config, _.dataUrl, "HEAD")) : f.open("HEAD", _.dataUrl, !1),
+                      f.setRequestHeader("Range", "bytes=0-"),
+                      f.send(null),
+                      d = null;
                     try {
                       d = f.getResponseHeader("Content-Length")
                     } catch (m) {
@@ -35412,8 +35375,12 @@ var duckdb = (() => {
                   }
                 if (_.allowFullHttpReads) {
                   if (!_.forceFullHttpReads) {
-                    // 3. GET byte slice request variant hook
-                    let m = sendXhrWithRetry("GET", _.dataUrl, _.s3Config, _.dataProtocol, true, "bytes=0-0");
+                    let m = new XMLHttpRequest;
+                    _.dataProtocol == 5 ? (m.open("GET", xt(_.s3Config, _.dataUrl), !1),
+                      Tt(m, _.s3Config, _.dataUrl, "GET")) : m.open("GET", _.dataUrl, !1),
+                      m.responseType = "arraybuffer",
+                      m.setRequestHeader("Range", "bytes=0-0"),
+                      m.send(null);
                     let g = null;
                     try {
                       g = m.getResponseHeader("Content-Length")
@@ -35426,9 +35393,12 @@ var duckdb = (() => {
                     if (v !== void 0)
                       y = v;
                     else if (!_.reliableHeadRequests) {
-                      // 4. Fallback HEAD request variant hook
-                      let S = sendXhrWithRetry("HEAD", _.dataUrl, _.s3Config, _.dataProtocol, false, "bytes=0-");
-                      d = null;
+                      let S = new XMLHttpRequest;
+                      _.dataProtocol == 5 ? (S.open("HEAD", xt(_.s3Config, _.dataUrl), !1),
+                        Tt(S, _.s3Config, _.dataUrl, "HEAD")) : S.open("HEAD", _.dataUrl, !1),
+                        S.setRequestHeader("Range", "bytes=0-"),
+                        S.send(null),
+                        d = null;
                       try {
                         d = S.getResponseHeader("Content-Length")
                       } catch (A) {
@@ -35468,9 +35438,12 @@ var duckdb = (() => {
                     }
                     console.warn("falling back to full HTTP read for: ".concat(_.dataUrl))
                   }
-                  // 5. Final fallback complete GET request variant hook
-                  let f = sendXhrWithRetry("GET", _.dataUrl, _.s3Config, _.dataProtocol, true);
-                  if (f.status == 200) {
+                  let f = new XMLHttpRequest;
+                  if (_.dataProtocol == 5 ? (f.open("GET", xt(_.s3Config, _.dataUrl), !1),
+                    Tt(f, _.s3Config, _.dataUrl, "GET")) : f.open("GET", _.dataUrl, !1),
+                    f.responseType = "arraybuffer",
+                    f.send(null),
+                    f.status == 200) {
                     let m = o._malloc(f.response.byteLength)
                       , g = new Uint8Array(f.response, 0, f.response.byteLength);
                     o.HEAPU8.set(g, m);
@@ -35874,4 +35847,4 @@ js-sha256/src/sha256.js:
    * @license MIT
    *)
 */
-//# sourceMappingURL=/components/llm-workers/objaverse/duckdb-browser-eh.worker.js.map
+//# sourceMappingURL=duckdb-browser-eh.worker.js.map

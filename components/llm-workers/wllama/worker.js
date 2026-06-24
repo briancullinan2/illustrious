@@ -83,6 +83,176 @@ const FS_DIR = (ST_DIR << 12) + FS_DEFAULT;
 let wllama;
 
 
+async function initModel(payload) {
+
+    let loraArrayBuffer
+    try {
+
+        const loraModelPath = getGGUFModel(payload.loraUrl)
+        loraArrayBuffer = (await getRecord(DB_STORE_NAME, loraModelPath, GGUF_DATABASE))?.contents;
+        if (!loraArrayBuffer) {
+            loraArrayBuffer = await fetchWithFallbackChain(payload.loraUrl, 'GGUF');
+            putRecord(DB_STORE_NAME, {
+                path: loraModelPath,
+                timestamp: new Date(),
+                mode: FS_FILE,
+                contents: new Uint8Array(loraArrayBuffer),
+                parent: loraModelPath.substring(0, loraModelPath.lastIndexOf('/')) || '/'
+            }, GGUF_DATABASE)
+        }
+
+        console.warn('Lora Detected: ' + loraModelPath)
+    } catch (e) {
+        console.error(e)
+    }
+
+
+    let mmprojBlob = null;
+    if (payload.mmprojUrl) {
+        try {
+            const mmprojPath = getGGUFModel(payload.mmprojUrl);
+            let mmprojArrayBuffer = (await getRecord(DB_STORE_NAME, mmprojPath, GGUF_DATABASE))?.contents;
+            if (!mmprojArrayBuffer) {
+                mmprojArrayBuffer = await fetchWithFallbackChain(payload.mmprojUrl, 'GGUF');
+                putRecord(DB_STORE_NAME, {
+                    path: mmprojPath,
+                    timestamp: new Date(),
+                    mode: FS_FILE,
+                    contents: new Uint8Array(mmprojArrayBuffer),
+                    parent: mmprojPath.substring(0, mmprojPath.lastIndexOf('/')) || '/'
+                }, GGUF_DATABASE);
+            }
+            mmprojBlob = new Blob([mmprojArrayBuffer], { type: 'application/octet-stream' });
+            console.warn('Vision Projector Layer Loaded: ' + mmprojPath);
+        } catch (err) {
+            console.error("Failed to load vision projector layer asset:", err);
+        }
+    }
+
+
+
+    try {
+
+        const ggufModelPath = getGGUFModel(payload.modelUrl); // define this helper if needed
+        let myCachedArrayBuffer = (await getRecord(DB_STORE_NAME, ggufModelPath, GGUF_DATABASE))?.contents;
+        if (!myCachedArrayBuffer) {
+            myCachedArrayBuffer = await fetchWithFallbackChain(payload.modelUrl, 'GGUF');
+            putRecord(DB_STORE_NAME, {
+                path: ggufModelPath,
+                timestamp: new Date(),
+                mode: FS_FILE,
+                contents: new Uint8Array(myCachedArrayBuffer),
+                parent: ggufModelPath.substring(0, ggufModelPath.lastIndexOf('/')) || '/'
+            }, GGUF_DATABASE)
+        }
+
+        const modelBlob = new Blob([myCachedArrayBuffer], { type: 'application/octet-stream' });
+
+        const loraBlob = loraArrayBuffer ? new Blob([loraArrayBuffer], { type: 'application/octet-stream' }) : void 0;
+
+
+        if (!wllama) {
+            wllama = new Wllama(
+                {
+                    // Tell the main path compiler where the base WASM asset is located
+                    default: wllamaWasm,
+                },
+                {
+                    // 👉 CRITICAL FIX: Stop Wllama from trying to auto-discover paths using `document`
+                    suppressInitialDownload: true,
+
+                    // Explicitly provide the pre-resolved asset strings for its internal threads
+                    workerResources: {
+                        // Wllama uses its own code file to spawn its backend math sub-workers
+                        wllamaWorkerUrl: '/components/llm-workers/wllama/index.min.js',
+                        wasmSingleUrl: wllamaWasm,
+                        wasmMultiUrl: wllamaWasm,
+                    }
+                }
+            );
+        }
+
+        const filesToLoad = [modelBlob];
+        if (mmprojBlob) {
+            filesToLoad.push(mmprojBlob);
+        }
+
+
+
+        await wllama.loadModel(filesToLoad, {
+            n_ctx: 2048,
+            n_threads: 4,
+            jinja: true,                    // ← Enable Jinja parsing
+            chat_template: payload.chatTemplate || undefined,  // custom override
+            lora: loraBlob ? [{ data: loraBlob, scale: 1.4 }] : undefined,
+        });
+
+        self.postMessage({ type: 'MODEL_READY' });
+    } catch (err) {
+        console.error(err);
+        self.postMessage({ type: 'ERROR', payload: { message: err.message + '\n' + (err.stack || err.stacktrace) } });
+    }
+}
+
+
+
+async function runInference(payload) {
+    if (!wllama) {
+        self.postMessage({ type: 'ERROR', payload: { message: 'Model not loaded' } });
+        return;
+    }
+
+    try {
+        const promptText = payload.input_text || payload.prompt || "";
+        const messages = [
+            { role: 'system', content: payload.systemPrompt || '' },
+            { role: 'user', content: promptText }
+        ];
+
+        if (payload.chatTemplate) {
+            console.log("✏️ [DEBUG] Overriding default model template with custom payload template.");
+            wllama.chatTemplate = payload.chatTemplate;
+        } else if (wllama.model?.metadata?.['tokenizer.chat_template']) {
+            console.log("✏️ [DEBUG] Defaulting to internal GGUF file metadata template configuration.");
+            wllama.chatTemplate = wllama.model.metadata['tokenizer.chat_template'];
+        }
+
+        const formattedPrompt = applySimpleChatTemplate(messages, payload.chatTemplate);
+        const completion = await wllama.createCompletion({
+            prompt: formattedPrompt,
+
+            //const completion = await wllama.createChatCompletion({
+            //    messages: messages,
+            max_tokens: parseInt(payload.maxTokens) || 1000,
+            temperature: 0.1,
+            stream: true,
+            jinja: true,                    // ← Important
+            // chat_template: payload.chatTemplate || undefined,  // override if needed (string)
+            // chat_template_kwargs: { add_generation_prompt: true }, // if your template needs extra vars
+            grammar: payload.gbnfGrammar || undefined,   // should work alongside jinja
+            stop: ["<|im_end|>", "<|endoftext|>", "<|eot_id|>", "assistant:", "user:"],
+
+            onData: (chunk) => {   // or however the stream callback works in your version
+                const tokenText = chunk.choices?.[0]?.delta?.content || chunk.choices?.[0]?.text || "";
+                if (tokenText) {
+                    self.postMessage({
+                        type: 'TOKEN_STREAM',
+                        payload: { delta: tokenText }
+                    });
+                }
+            }
+        });
+
+        self.postMessage({ type: 'GENERATION_COMPLETE' });
+    } catch (err) {
+        console.error(err);
+        self.postMessage({ type: 'ERROR', payload: { message: err.message + '\n' + (err.stack || '') } });
+    }
+}
+
+
+
+
 self.onmessage = async (e) => {
     const { type, payload, baseURI } = e.data;
 
@@ -91,170 +261,53 @@ self.onmessage = async (e) => {
         globalThis.document.baseURI = baseURI
         await initWLLaMa()
         await installDatabaseIfNeeded(GGUF_DATABASE);
-
-        let loraArrayBuffer
-        try {
-
-            const loraModelPath = getGGUFModel(payload.loraUrl)
-            loraArrayBuffer = (await getRecord(DB_STORE_NAME, loraModelPath, GGUF_DATABASE))?.contents;
-            if (!loraArrayBuffer) {
-                loraArrayBuffer = await fetchWithFallbackChain(payload.loraUrl, 'GGUF');
-                putRecord(DB_STORE_NAME, {
-                    path: loraModelPath,
-                    timestamp: new Date(),
-                    mode: FS_FILE,
-                    contents: new Uint8Array(loraArrayBuffer),
-                    parent: loraModelPath.substring(0, loraModelPath.lastIndexOf('/')) || '/'
-                }, GGUF_DATABASE)
-            }
-
-            console.warn('Lora Detected: ' + loraModelPath)
-        } catch (e) {
-            console.error(e)
-        }
-
-
-        let mmprojBlob = null;
-        if (payload.mmprojUrl) {
-            try {
-                const mmprojPath = getGGUFModel(payload.mmprojUrl);
-                let mmprojArrayBuffer = (await getRecord(DB_STORE_NAME, mmprojPath, GGUF_DATABASE))?.contents;
-                if (!mmprojArrayBuffer) {
-                    mmprojArrayBuffer = await fetchWithFallbackChain(payload.mmprojUrl, 'GGUF');
-                    putRecord(DB_STORE_NAME, {
-                        path: mmprojPath,
-                        timestamp: new Date(),
-                        mode: FS_FILE,
-                        contents: new Uint8Array(mmprojArrayBuffer),
-                        parent: mmprojPath.substring(0, mmprojPath.lastIndexOf('/')) || '/'
-                    }, GGUF_DATABASE);
-                }
-                mmprojBlob = new Blob([mmprojArrayBuffer], { type: 'application/octet-stream' });
-                console.warn('Vision Projector Layer Loaded: ' + mmprojPath);
-            } catch (err) {
-                console.error("Failed to load vision projector layer asset:", err);
-            }
-        }
-
-
-
-        try {
-
-            const ggufModelPath = getGGUFModel(payload.modelUrl); // define this helper if needed
-            let myCachedArrayBuffer = (await getRecord(DB_STORE_NAME, ggufModelPath, GGUF_DATABASE))?.contents;
-            if (!myCachedArrayBuffer) {
-                myCachedArrayBuffer = await fetchWithFallbackChain(payload.modelUrl, 'GGUF');
-                putRecord(DB_STORE_NAME, {
-                    path: ggufModelPath,
-                    timestamp: new Date(),
-                    mode: FS_FILE,
-                    contents: new Uint8Array(myCachedArrayBuffer),
-                    parent: ggufModelPath.substring(0, ggufModelPath.lastIndexOf('/')) || '/'
-                }, GGUF_DATABASE)
-            }
-
-            const modelBlob = new Blob([myCachedArrayBuffer], { type: 'application/octet-stream' });
-
-            const loraBlob = loraArrayBuffer ? new Blob([loraArrayBuffer], { type: 'application/octet-stream' }) : void 0;
-
-
-            if (!wllama) {
-                wllama = new Wllama(
-                    {
-                        // Tell the main path compiler where the base WASM asset is located
-                        default: wllamaWasm,
-                    },
-                    {
-                        // 👉 CRITICAL FIX: Stop Wllama from trying to auto-discover paths using `document`
-                        suppressInitialDownload: true,
-
-                        // Explicitly provide the pre-resolved asset strings for its internal threads
-                        workerResources: {
-                            // Wllama uses its own code file to spawn its backend math sub-workers
-                            wllamaWorkerUrl: '/components/llm-workers/wllama/index.min.js',
-                            wasmSingleUrl: wllamaWasm,
-                            wasmMultiUrl: wllamaWasm,
-                        }
-                    }
-                );
-            }
-
-            const filesToLoad = [modelBlob];
-            if (mmprojBlob) {
-                filesToLoad.push(mmprojBlob);
-            }
-
-
-
-            await wllama.loadModel(filesToLoad, {
-                n_ctx: 2048,
-                n_threads: 4,
-                jinja: true,                    // ← Enable Jinja parsing
-                chat_template: payload.chatTemplate || undefined,  // custom override
-                lora: loraBlob ? [{ data: loraBlob, scale: 1.4 }] : undefined,
-            });
-
-            self.postMessage({ type: 'MODEL_READY' });
-        } catch (err) {
-            console.error(err);
-            self.postMessage({ type: 'ERROR', payload: { message: err.message + '\n' + (err.stack || err.stacktrace) } });
-        }
+        await initModel(payload)
     }
 
     if (type === 'RUN_INFERENCE') {
-        if (!wllama) {
-            self.postMessage({ type: 'ERROR', payload: { message: 'Model not loaded' } });
-            return;
-        }
-
-        try {
-            const promptText = payload.input_text || payload.prompt || "";
-            const messages = [
-                { role: 'system', content: payload.systemPrompt || '' },
-                { role: 'user', content: promptText }
-            ];
-
-            if (payload.chatTemplate) {
-                console.log("✏️ [DEBUG] Overriding default model template with custom payload template.");
-                wllama.chatTemplate = payload.chatTemplate;
-            } else if (wllama.model?.metadata?.['tokenizer.chat_template']) {
-                console.log("✏️ [DEBUG] Defaulting to internal GGUF file metadata template configuration.");
-                wllama.chatTemplate = wllama.model.metadata['tokenizer.chat_template'];
-            }
-
-            const formattedPrompt = applySimpleChatTemplate(messages, payload.chatTemplate);
-            const completion = await wllama.createCompletion({
-                prompt: formattedPrompt,
-
-                //const completion = await wllama.createChatCompletion({
-                //    messages: messages,
-                max_tokens: parseInt(payload.maxTokens) || 1000,
-                temperature: 0.1,
-                stream: true,
-                jinja: true,                    // ← Important
-                // chat_template: payload.chatTemplate || undefined,  // override if needed (string)
-                // chat_template_kwargs: { add_generation_prompt: true }, // if your template needs extra vars
-                grammar: payload.gbnfGrammar || undefined,   // should work alongside jinja
-                stop: ["<|im_end|>", "<|endoftext|>", "<|eot_id|>", "assistant:", "user:"],
-
-                onData: (chunk) => {   // or however the stream callback works in your version
-                    const tokenText = chunk.choices?.[0]?.delta?.content || chunk.choices?.[0]?.text || "";
-                    if (tokenText) {
-                        self.postMessage({
-                            type: 'TOKEN_STREAM',
-                            payload: { delta: tokenText }
-                        });
-                    }
-                }
-            });
-
-            self.postMessage({ type: 'GENERATION_COMPLETE' });
-        } catch (err) {
-            console.error(err);
-            self.postMessage({ type: 'ERROR', payload: { message: err.message + '\n' + (err.stack || '') } });
-        }
+        await runInference(payload)
     }
+
+
+    // Add this branch alongside your 'LOAD_MODEL' and 'RUN_INFERENCE' conditionals
+    else if (type === 'UNLOAD_MODEL') {
+        try {
+            await terminateModel()
+            self.postMessage({ type: 'UNLOAD_COMPLETE' });
+        } catch (err) {
+            console.error("Error encountered during forced worker cleanup sequence:", err);
+            self.postMessage({ type: 'ERROR', payload: { message: 'Cleanup failed: ' + err.message } });
+        }
+        return; // Fast exit
+    }
+
+
 };
+
+
+
+
+async function terminateModel() {
+    if (wllama) {
+        console.warn('⚠️ Shutting down active Wllama instance and sub-workers...');
+
+        // 1. Internal Wllama teardown routine to kill backend threads and free memory
+        if (typeof wllama.exit === 'function') {
+            await wllama.exit();
+        }
+
+        // 2. Break references for garbage collection
+        wllama = null;
+    }
+
+    // 3. Clear transient local buffers if needed
+    Wllama = null;
+
+
+}
+
+
+
 
 
 function applySimpleChatTemplate(messages, customTemplate = null) {

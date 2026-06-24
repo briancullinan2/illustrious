@@ -23,6 +23,13 @@ const IMPORT_SETTINGS = {
             description: 'The visual theme layout package used to style the interactive Ace code editor window background and syntax colors.',
             set: setTheme
         },
+        runLocally: {
+            key: 'run_local',
+            default: false,
+            elementId: 'local-model-toggle',
+            description: 'Run a local LLM and processing models directly from your web browser, no cloud access needed, no payments.',
+            //set: setTheme
+        },
     },
 
     websfm: {
@@ -69,7 +76,6 @@ const SettingsManager = {
 
     // 2. Applies the translated state to elements or core configurations
     applyValue(config, value) {
-
         config.currentValue = window[config.windowName] = value
         if (typeof config.set === 'function') {
             config.set(value);
@@ -77,7 +83,7 @@ const SettingsManager = {
             const el = document.getElementById(config.elementId);
             if (el) {
                 if (config.type === 'boolean' || el.type === 'checkbox') {
-                    el.checked = !!value;
+                    el.checked = !!(value && value.toString().toLowerCase() !== 'false');
                 } else if (el.tagName.toUpperCase() === 'SELECT') {
                     if (el.querySelector(`[value*="${value}"]`)) {
                         el.value = value
@@ -90,6 +96,7 @@ const SettingsManager = {
                 }
             }
         }
+        localStorage.setItem(config.key, value)
     },
 
     exportPayload() {
