@@ -6,6 +6,10 @@ const DEFAULT_LORA = 'Goekdeniz-Guelmez/Josiefied-Qwen2.5-0.5B-Instruct-ablitera
 const DEFAULT_JINJA = '/loras/spatial_engine/chat_template.jinja'
 const DEFAULT_GBNF = '/loras/spatial_engine/grammar.gbnf'
 
+const DEFAULT_PARQUET = 'https://storage.googleapis.com/your-objaverse-bucket/objaverse_metadata.parquet';
+const SEARCH_WORKER = '/components/llm-workers/objaverse/catalog-worker.js';
+
+
 const WLLAMA_WORKER = '/components/llm-workers/wllama/worker.js';   // direct path
 const ONNX_WORKER = '/components/llm-workers/onnx/worker.js';   // direct path
 const DEFAULT_WORKER = DEFAULT_MODEL.toLowerCase().includes('gguf')
@@ -545,6 +549,26 @@ async function bootWllamaWorker() {
 
 }
 
+
+
+async function searchResponseInterface(e) {
+    const { type, payload } = e.data;
+
+    if (type === 'LOAD_SEARCH') {
+        searchWorker.postMessage({
+            type: 'LOAD_MODEL',
+            baseURI: window.location.origin,
+            parquetFiles: [DEFAULT_PARQUET],
+            payload: {
+            }
+        });
+    } else if (type === 'SEARCH_READY') {
+
+
+    }
+}
+
+
 let jinjaText
 let grammerText
 
@@ -672,6 +696,10 @@ async function workerResponseInterface(e) {
 }
 
 
+let searchWorker
+
+
+
 document.addEventListener("DOMContentLoaded", () => {
     console.log("🚀 Illustrious Client Canvas Layer Mounted.");
     initializeClusterStatus();
@@ -709,6 +737,12 @@ document.addEventListener("DOMContentLoaded", () => {
             treeStatus.className = 'tree-val text-muted';
         }
     }
+
+
+    searchWorker = new Worker(SEARCH_WORKER, { type: 'module' });
+
+    searchWorker.onerror = (err) => console.error("Worker error:", err);
+    searchWorker.onmessage = searchResponseInterface;
 });
 
 
