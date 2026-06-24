@@ -176,7 +176,7 @@ function getFallbackUrls(rawFilePath) {
             `https://huggingface.co/${subFolder}/resolve/main/${fileName}`,
             `https://huggingface.co/${subFolder}/resolve/main/${fileName}.gguf`,
             `https://huggingface.co/${subFolder}/resolve/main/${unquantizedPath}.Q4_K_M.gguf`,
-            `https://huggingface.co/${subFolder}/resolve/main/${unquantizedPath}-q8_0.gguf`
+            `https://huggingface.co/${subFolder}/resolve/main/${unquantizedPath}-q8_0.gguf`,
             `https://huggingface.co/megamindbrian/${unquantizedPath}/resolve/main/${fileName}`,
             `https://huggingface.co/megamindbrian/${unquantizedPath}/resolve/main/${fileName}.gguf`,
             `https://huggingface.co/megamindbrian/${unquantizedPath}/resolve/main/${unquantizedPath}.Q4_K_M.gguf`,
