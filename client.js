@@ -994,6 +994,7 @@ function evaluateSpatialFormula(expr, indexContext, relativeObject, axis) {
 
     // Contextual implicit check: If the formula starts with variable shorthand notation,
     // stack the previous base coordinate accumulation calculation to the front.
+    // TODO: handle all edge cases and ordering, THIS WON'T ALWAYS BE TRUE!
     if (cleanExpr.startsWith('fw') || cleanExpr.startsWith('fd') || cleanExpr.startsWith('@idx')) {
         cleanExpr = `@0 + ${cleanExpr}`;
     }

@@ -3,7 +3,7 @@ import glob
 import cv2
 import numpy as np
 import torch
-from segment_anything import sam_model_registry, SamPredictor
+#from segment_anything import sam_model_registry, SamPredictor
 from PIL import Image
 from rembg import remove, new_session
 
