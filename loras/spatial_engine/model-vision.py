@@ -16,9 +16,25 @@ import numpy as np
 from PIL import Image
 from transformers import AutoProcessor, AutoModel, AutoModelForImageTextToText
 
+from huggingface_hub import hf_hub_download
+from llama_cpp import Llama
+from llama_cpp.llama_chat_format import MoondreamChatHandler  # Handles the vision projection layer
+from llama_cpp.llama_chat_format import Llava15ChatHandler   # or Llava16ChatHandler
+from llama_cpp.llama_chat_format import MTMDChatHandler
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from draco_glb import load_glb_scene
+
+
+# --- Global Engine State ---
+processor = None
+model = None
+
+# Variables for the specific files needed
+GGUF_REPO_PATH = "ggml-org/SmolVLM2-2.2B-Instruct-GGUF"
+GGUF_MODEL_PATH = "SmolVLM2-2.2B-Instruct-Q4_K_M.gguf"
+GGUF_MMPROJ_PATH = "mmproj-SmolVLM2-2.2B-Instruct-Q8_0.gguf"
+GGUF_ORIGINAL_PATH = "HuggingFaceTB/SmolVLM2-2.2B-Instruct"
 
 model_id = "HuggingFaceTB/SmolVLM-Instruct"
 HF_CACHE_DIR = "hf_cache"
@@ -303,6 +319,84 @@ def analyze_image_locally(image_path: str):
     return answer
 
 
+def analyze_image_gguf(image_path: str):
+    global model
+
+    if not os.path.exists(image_path):
+        print(f"Error: Image missing: {image_path}", file=sys.stderr)
+        sys.exit(1)
+
+    if model is None:
+        print("Loading SmolVLM GGUF on CPU (optimized for i7)...")
+        num_cores = os.cpu_count() or 4
+        optimal_threads = max(1, num_cores // 2)
+
+        # Download model + mmproj
+        local_model_path = hf_hub_download(
+            repo_id=GGUF_REPO_PATH,
+            filename=GGUF_MODEL_PATH,
+            cache_dir=HF_CACHE_DIR,
+            token=HF_TOKEN
+        )
+
+        local_mmproj_path = hf_hub_download(
+            repo_id=GGUF_REPO_PATH,
+            filename=GGUF_MMPROJ_PATH,
+            cache_dir=HF_CACHE_DIR,
+            token=HF_TOKEN
+        )
+
+        # Use the correct chat handler for SmolVLM / Moondream-style models
+        chat_handler = MTMDChatHandler(
+            clip_model_path=local_mmproj_path,
+            verbose=False
+        )
+
+        model = Llama(
+            model_path=local_model_path,
+            chat_handler=chat_handler,
+            n_ctx=2048,
+            n_threads=optimal_threads,
+            n_gpu_layers=0,        # CPU only
+            verbose=False,
+        )
+
+    # Better prompt for SmolVLM + force image inclusion
+    messages = [
+        {
+            "role": "user",
+            "content": [
+                {"type": "text", "text": "Categorize the image with descriptive adjectives and nouns. Respond quickly with only the whitespace delimited list of words."},
+                #{"type": "image", "image": os.path.abspath(image_path)},
+                {"type": "image_url", "image_url": {"url": f"file://{os.path.abspath(image_path)}"}}
+            ]
+        }
+    ]
+
+    print("Running GGUF VLM inference...")
+    response = model.create_chat_completion(
+        messages=messages,
+        max_tokens=100,
+        temperature=0.1,      # Slight temp helps small models
+        top_p=0.9,
+    )
+
+    raw_content = response["choices"][0]["message"]["content"]
+    answer = raw_content.strip() if raw_content else "No output."
+
+    print("\n--- LOCAL VISION ANALYSIS ---")
+    print(answer)
+    
+    try:
+        model.close()
+    except Exception:
+        pass
+        
+    return answer
+
+
+
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Cross-Platform 3D Asset Validation Engine")
     group = parser.add_mutually_exclusive_group(required=True)
@@ -324,4 +418,4 @@ if __name__ == "__main__":
             sys.exit(1)
 
     if target_image and args.analyze:
-        analyze_image_locally(target_image)
+        analyze_image_gguf(target_image)
