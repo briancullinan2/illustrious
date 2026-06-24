@@ -53,8 +53,8 @@ I am starting to formulate training data to apply a lora and grammar combination
 ```
 
 
-* **`X` (`hw`):** Moves it left/right.
-* **`Y` (`-hd`):** Moves it forward/backward.
+* **`X` (`hw`):** Moves it forward/backward.
+* **`Y` (`-hd`):** Moves it left/right.
 * **`Z` (`hh`):** Moves it up/down.
 
 
@@ -77,7 +77,7 @@ This comprehensive list maps natural language spatial concepts directly to your 
 These represent the dynamic dimensions, global overrides, syntax hooks, and primitive keys utilized by the layout engine.
 
 ```
-parseSpatialCommands('[elephant][0,0,0,0,0,0,1] [red][0,0,0,0,0,0,1] [balloon][fw*@idx,fd*@idx,0,0,0,0,1]')
+parseSpatialCommands('[red balloon][0,0,0,0,0,0,1][elephant][0,fd*@idx,0,0,0,0,1]')
 ```
 
 Its an implied `1fw*@idx` would be adding 1 full width of the previous, as opposed to `-/+@idx` or `@idx-fw` precise translations would be the same as subtracting a full width just like the scalar, but it also allows for exact values like @idx-100 would be the previous object `x - 100` units 

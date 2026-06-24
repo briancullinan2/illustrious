@@ -46,5 +46,41 @@
       {"role": "user", "content": "A slender skinny cone projecting far ahead along the forward vector."},
       {"role": "assistant", "content": "[cone][0,4fd,0,0,0,0,[0.3,0.3,1]]"}
     ]
+  },
+  {
+    "messages": [
+      {"role": "user", "content": "An elephant standing directly on top of a red balloon."},
+      {"role": "assistant", "content": "[red balloon][0,0,0,0,0,0,1][elephant][0,0,fh,0,0,0,1]"}
+    ]
+  },
+  {
+    "messages": [
+      {"role": "user", "content": "A red balloon squeezed directly underneath an elephant's foot."},
+      {"role": "assistant", "content": "[elephant][0,0,0,0,0,0,1][red balloon][0,0,-fh,0,0,0,1]"}
+    ]
+  },
+  {
+    "messages": [
+      {"role": "user", "content": "An elephant standing on top of a red balloon, shifted half its depth forward so the front of the elephant is centered halfway over the balloon."},
+      {"role": "assistant", "content": "[red balloon][0,0,0,0,0,0,1][elephant][0,hd,fh,0,0,0,1]"}
+    ]
+  },
+  {
+    "messages": [
+      {"role": "user", "content": "A red balloon tucked directly underneath an elephant, shifted half its depth backward."},
+      {"role": "assistant", "content": "[elephant][0,0,0,0,0,0,1][red balloon][0,-hd,-fh,0,0,0,1]"}
+    ]
+  },
+  {
+    "messages": [
+      {"role": "user", "content": "A wooden sword piercing a round shield from behind."},
+      {"role": "assistant", "content": "[shield][0,0,0,0,0,0,1][sword][0,-hd,0,0,0,0,1]"}
+    ]
+  },
+  {
+    "messages": [
+      {"role": "user", "content": "A round shield being pierced by a wooden sword from the front."},
+      {"role": "assistant", "content": "[sword][0,0,0,0,0,0,1][shield][0,hd,0,0,0,0,1]"}
+    ]
   }
 ]

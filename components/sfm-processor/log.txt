@@ -26,47 +26,47 @@ INFO:opensfm.features_processing:Finished reading images
 INFO:opensfm.features_processing:Skip recomputing ROOT_HAHOG features for image DSC_0438_isolated.png
 INFO:opensfm.matching:Matching 10 image pairs
 INFO:opensfm.matching:Computing pair matching with 1 processes
-INFO:opensfm.matching:Matched 10 pairs (perspective-perspective: 10) in 0.3891363000002457 seconds (0.038913699999102394 seconds/pair).
+INFO:opensfm.matching:Matched 10 pairs (perspective-perspective: 10) in 0.4098708999954397 seconds (0.04098716000007698 seconds/pair).
 INFO:root:reading features
-INFO:opensfm.tracking:1586 tracks, 5433 observations, 0 depth priors added to TracksManager
-INFO:OpenSfM-MultiPass:Tracks created: 1586 tracks
+INFO:opensfm.tracking:1590 tracks, 5444 observations, 0 depth priors added to TracksManager
+INFO:OpenSfM-MultiPass:Tracks created: 1590 tracks
 INFO:OpenSfM-MultiPass:Longest track: 5 images
 INFO:opensfm.reconstruction:Starting incremental reconstruction
 INFO:opensfm.reconstruction:Loaded 0 ground control points.
 INFO:root:Estimated reconstructability of 7 image pairs.
 INFO:opensfm.reconstruction:Starting reconstruction with DSC_0424_isolated.png and DSC_0425_isolated.png
-INFO:opensfm.reconstruction:Two-view 5-points reconstruction inliers (transposed=False): 701 / 701
-INFO:opensfm.reconstruction:Triangulated: 678
-INFO:opensfm.reconstruction:Ran GLOBAL bundle in 0.03 secs.with 2/679/1358 (2.00) shots/points/proj. (avg. length)
+INFO:opensfm.reconstruction:Two-view 5-points reconstruction inliers (transposed=False): 704 / 704
+INFO:opensfm.reconstruction:Triangulated: 680
+INFO:opensfm.reconstruction:Ran GLOBAL bundle in 0.04 secs.with 2/682/1364 (2.00) shots/points/proj. (avg. length)
 INFO:opensfm.reconstruction:Removed outliers: 0
 INFO:opensfm.reconstruction:-------------------------------------------------------
 INFO:opensfm.reconstruction:DSC_0423_isolated.png resection inliers: 613 / 621
 INFO:opensfm.reconstruction:Adding DSC_0423_isolated.png to the reconstruction
 INFO:opensfm.reconstruction:Re-triangulating
-INFO:opensfm.reconstruction:Ran GLOBAL bundle in 0.08 secs.with 3/1282/3197 (2.49) shots/points/proj. (avg. length)
-INFO:opensfm.reconstruction:Ran GLOBAL bundle in 0.07 secs.with 3/1282/3205 (2.50) shots/points/proj. (avg. length)
+INFO:opensfm.reconstruction:Ran GLOBAL bundle in 0.08 secs.with 3/1285/3203 (2.49) shots/points/proj. (avg. length)
+INFO:opensfm.reconstruction:Ran GLOBAL bundle in 0.07 secs.with 3/1285/3211 (2.50) shots/points/proj. (avg. length)
 INFO:opensfm.reconstruction:Removed outliers: 0
 INFO:opensfm.reconstruction:Reconstruction now has 3 shots.
 INFO:opensfm.reconstruction:-------------------------------------------------------
-INFO:opensfm.reconstruction:DSC_0438_isolated.png resection inliers: 917 / 925
+INFO:opensfm.reconstruction:DSC_0438_isolated.png resection inliers: 910 / 919
 INFO:opensfm.reconstruction:Adding DSC_0438_isolated.png to the reconstruction
-INFO:opensfm.reconstruction:Ran LOCAL bundle in 0.09 secs.with 4/1432/4422 (3.09) shots/points/proj. (avg. length)
+INFO:opensfm.reconstruction:Ran LOCAL bundle in 0.09 secs.with 4/1439/4429 (3.08) shots/points/proj. (avg. length)
 INFO:opensfm.reconstruction:Removed outliers: 0
 INFO:opensfm.reconstruction:Reconstruction now has 4 shots.
 INFO:opensfm.reconstruction:-------------------------------------------------------
-INFO:opensfm.reconstruction:DSC_0426_isolated.png resection inliers: 612 / 695
+INFO:opensfm.reconstruction:DSC_0426_isolated.png resection inliers: 615 / 704
 INFO:opensfm.reconstruction:Adding DSC_0426_isolated.png to the reconstruction
 INFO:opensfm.reconstruction:Re-triangulating
-INFO:opensfm.reconstruction:Ran GLOBAL bundle in 0.21 secs.with 5/1584/5338 (3.37) shots/points/proj. (avg. length)
-INFO:opensfm.reconstruction:Ran GLOBAL bundle in 0.13 secs.with 5/1584/5429 (3.43) shots/points/proj. (avg. length)
-INFO:opensfm.reconstruction:Removed outliers: 3
+INFO:opensfm.reconstruction:Ran GLOBAL bundle in 0.22 secs.with 5/1588/5342 (3.36) shots/points/proj. (avg. length)
+INFO:opensfm.reconstruction:Ran GLOBAL bundle in 0.16 secs.with 5/1588/5440 (3.43) shots/points/proj. (avg. length)
+INFO:opensfm.reconstruction:Removed outliers: 6
 INFO:opensfm.reconstruction:Reconstruction now has 5 shots.
 INFO:opensfm.reconstruction:-------------------------------------------------------
-INFO:opensfm.reconstruction:Ran GLOBAL bundle in 0.21 secs.with 5/1583/5425 (3.43) shots/points/proj. (avg. length)
+INFO:opensfm.reconstruction:Ran GLOBAL bundle in 0.22 secs.with 5/1587/5433 (3.42) shots/points/proj. (avg. length)
 INFO:opensfm.reconstruction:Removed outliers: 0
-INFO:opensfm.reconstruction:Reconstruction 0: 5 images, 1583 points
+INFO:opensfm.reconstruction:Reconstruction 0: 5 images, 1587 points
 INFO:opensfm.reconstruction:1 partial reconstructions in total.
-INFO:OpenSfM-MultiPass:Anchor reconstruction successful with 5 shots and 1583 points.
+INFO:OpenSfM-MultiPass:Anchor reconstruction successful with 5 shots and 1587 points.
 INFO:OpenSfM-MultiPass:=== PASS 2: Registering outliers ===
 INFO:root:Loading existing EXIF for DSC_0423_isolated.png
 INFO:root:Loading existing EXIF for DSC_0424_isolated.png
@@ -137,51 +137,51 @@ INFO:opensfm.features_processing:Finished reading images
 INFO:opensfm.features_processing:Skip recomputing ROOT_HAHOG features for image DSC_0438_isolated.png
 INFO:opensfm.matching:Matching 120 image pairs
 INFO:opensfm.matching:Computing pair matching with 1 processes
-INFO:opensfm.matching:Matched 120 pairs (perspective-perspective: 120) in 3.852342400001362 seconds (0.0321028566667034 seconds/pair).
+INFO:opensfm.matching:Matched 120 pairs (perspective-perspective: 120) in 4.279055699997116 seconds (0.035658799999995 seconds/pair).
 INFO:root:reading features
-INFO:opensfm.tracking:2729 tracks, 10801 observations, 0 depth priors added to TracksManager
+INFO:opensfm.tracking:2742 tracks, 10845 observations, 0 depth priors added to TracksManager
 INFO:OpenSfM-MultiPass:Registering DSC_0427_isolated.png ...
-INFO:opensfm.reconstruction:DSC_0427_isolated.png resection inliers: 903 / 903
-ERROR:OpenSfM-MultiPass:    Error registering DSC_0427_isolated.png: property '' of 'Shot' object has no setter
+INFO:opensfm.reconstruction:DSC_0427_isolated.png resection inliers: 776 / 776
+ERROR:OpenSfM-MultiPass:    Error registering DSC_0427_isolated.png: invalid unordered_map<K, T> key
 INFO:OpenSfM-MultiPass:Registering DSC_0428_isolated.png ...
-INFO:opensfm.reconstruction:DSC_0428_isolated.png resection inliers: 662 / 662
-ERROR:OpenSfM-MultiPass:    Error registering DSC_0428_isolated.png: property '' of 'Shot' object has no setter
+INFO:opensfm.reconstruction:DSC_0428_isolated.png resection inliers: 660 / 660
+ERROR:OpenSfM-MultiPass:    Error registering DSC_0428_isolated.png: invalid unordered_map<K, T> key
 INFO:OpenSfM-MultiPass:Registering DSC_0429_isolated.png ...
-INFO:opensfm.reconstruction:DSC_0429_isolated.png resection inliers: 92 / 92
-ERROR:OpenSfM-MultiPass:    Error registering DSC_0429_isolated.png: property '' of 'Shot' object has no setter
+INFO:opensfm.reconstruction:DSC_0429_isolated.png resection inliers: 96 / 96
+ERROR:OpenSfM-MultiPass:    Error registering DSC_0429_isolated.png: invalid unordered_map<K, T> key
 INFO:OpenSfM-MultiPass:Registering DSC_0430_isolated.png ...
-INFO:opensfm.reconstruction:DSC_0430_isolated.png resection inliers: 65 / 65
-ERROR:OpenSfM-MultiPass:    Error registering DSC_0430_isolated.png: property '' of 'Shot' object has no setter
+INFO:opensfm.reconstruction:DSC_0430_isolated.png resection inliers: 59 / 59
+ERROR:OpenSfM-MultiPass:    Error registering DSC_0430_isolated.png: invalid unordered_map<K, T> key
 INFO:OpenSfM-MultiPass:Registering DSC_0431_isolated.png ...
-INFO:opensfm.reconstruction:DSC_0431_isolated.png resection inliers: 84 / 84
-ERROR:OpenSfM-MultiPass:    Error registering DSC_0431_isolated.png: property '' of 'Shot' object has no setter
+INFO:opensfm.reconstruction:DSC_0431_isolated.png resection inliers: 70 / 70
+ERROR:OpenSfM-MultiPass:    Error registering DSC_0431_isolated.png: invalid unordered_map<K, T> key
 INFO:OpenSfM-MultiPass:Registering DSC_0432_isolated.png ...
-INFO:opensfm.reconstruction:DSC_0432_isolated.png resection inliers: 78 / 78
-ERROR:OpenSfM-MultiPass:    Error registering DSC_0432_isolated.png: property '' of 'Shot' object has no setter
+INFO:opensfm.reconstruction:DSC_0432_isolated.png resection inliers: 69 / 69
+ERROR:OpenSfM-MultiPass:    Error registering DSC_0432_isolated.png: invalid unordered_map<K, T> key
 INFO:OpenSfM-MultiPass:Registering DSC_0433_isolated.png ...
-INFO:opensfm.reconstruction:DSC_0433_isolated.png resection inliers: 49 / 49
-ERROR:OpenSfM-MultiPass:    Error registering DSC_0433_isolated.png: property '' of 'Shot' object has no setter
+INFO:opensfm.reconstruction:DSC_0433_isolated.png resection inliers: 54 / 54
+ERROR:OpenSfM-MultiPass:    Error registering DSC_0433_isolated.png: invalid unordered_map<K, T> key
 INFO:OpenSfM-MultiPass:Registering DSC_0434_isolated.png ...
-INFO:opensfm.reconstruction:DSC_0434_isolated.png resection inliers: 62 / 62
-ERROR:OpenSfM-MultiPass:    Error registering DSC_0434_isolated.png: property '' of 'Shot' object has no setter
+INFO:opensfm.reconstruction:DSC_0434_isolated.png resection inliers: 56 / 56
+ERROR:OpenSfM-MultiPass:    Error registering DSC_0434_isolated.png: invalid unordered_map<K, T> key
 INFO:OpenSfM-MultiPass:Registering DSC_0435_isolated.png ...
-INFO:opensfm.reconstruction:DSC_0435_isolated.png resection inliers: 61 / 61
-ERROR:OpenSfM-MultiPass:    Error registering DSC_0435_isolated.png: property '' of 'Shot' object has no setter
+INFO:opensfm.reconstruction:DSC_0435_isolated.png resection inliers: 58 / 58
+ERROR:OpenSfM-MultiPass:    Error registering DSC_0435_isolated.png: invalid unordered_map<K, T> key
 INFO:OpenSfM-MultiPass:Registering DSC_0436_isolated.png ...
-INFO:opensfm.reconstruction:DSC_0436_isolated.png resection inliers: 106 / 106
-ERROR:OpenSfM-MultiPass:    Error registering DSC_0436_isolated.png: property '' of 'Shot' object has no setter
+INFO:opensfm.reconstruction:DSC_0436_isolated.png resection inliers: 117 / 117
+ERROR:OpenSfM-MultiPass:    Error registering DSC_0436_isolated.png: invalid unordered_map<K, T> key
 INFO:OpenSfM-MultiPass:Registering DSC_0437_isolated.png ...
-INFO:opensfm.reconstruction:DSC_0437_isolated.png resection inliers: 489 / 489
-ERROR:OpenSfM-MultiPass:    Error registering DSC_0437_isolated.png: property '' of 'Shot' object has no setter
+INFO:opensfm.reconstruction:DSC_0437_isolated.png resection inliers: 483 / 483
+ERROR:OpenSfM-MultiPass:    Error registering DSC_0437_isolated.png: invalid unordered_map<K, T> key
 INFO:OpenSfM-MultiPass:=== PASS 3: Final refinement ===
 Cameras in reconstruction: ['v2 unknown unknown 3008 2000 perspective 0.0']
 Cameras in priors: ['v2 unknown unknown 3008 2000 perspective 0.0']
 INFO:OpenSfM-MultiPass:Missing camera models: set()
 Traceback (most recent call last):
-  File "C:\Users\megam\illustrious\components\sfm-processor\reconstruct_banana.py", line 185, in <module>
+  File "C:\Users\megam\illustrious\components\sfm-processor\reconstruct_banana.py", line 181, in <module>
     run_multi_pass_pipeline()
     ~~~~~~~~~~~~~~~~~~~~~~~^^
-  File "C:\Users\megam\illustrious\components\sfm-processor\reconstruct_banana.py", line 172, in run_multi_pass_pipeline
+  File "C:\Users\megam\illustrious\components\sfm-processor\reconstruct_banana.py", line 168, in run_multi_pass_pipeline
     reconstruction.bundle(
     ~~~~~~~~~~~~~~~~~~~~~^
         base_reconstruction,

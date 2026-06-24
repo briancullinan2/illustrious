@@ -14,7 +14,8 @@ import torch
 import trimesh
 import numpy as np
 from PIL import Image
-from transformers import AutoProcessor, AutoModel
+from transformers import AutoProcessor, AutoModel, AutoModelForImageTextToText
+
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from draco_glb import load_glb_scene
@@ -22,6 +23,15 @@ from draco_glb import load_glb_scene
 model_id = "HuggingFaceTB/SmolVLM-Instruct"
 HF_CACHE_DIR = "hf_cache"
 CREDENTIALS_FILE = Path("~/.credentials/huggingface-provider.json").expanduser()
+
+
+
+processor = None
+model = None
+device = None
+dtype = None
+
+
 
 def get_token():
     if CREDENTIALS_FILE.exists():
@@ -206,33 +216,56 @@ def render_model_to_2d(file_path: str, output_image_path: str = "model_preview.p
     print(f"✅ Successfully rendered asset sheet layout -> {output_image_path}")
     return output_image_path
 
-# ==================== VISION ANALYSIS PIPELINE ====================
+
+
 def analyze_image_locally(image_path: str):
+    global processor, model, device, dtype
+
     if not os.path.exists(image_path):
-        print(f"Error: Target image target context missing: {image_path}", file=sys.stderr)
+        print(f"Error: Target image missing: {image_path}", file=sys.stderr)
         sys.exit(1)
 
-    if torch.cuda.is_available():
-        device = "cuda"
-        dtype = torch.float16
-    elif torch.backends.mps.is_available():
-        device = "mps"
-        dtype = torch.float16
-    else:
-        device = "cpu"
-        dtype = torch.float32
-        print("⚠️ Running on execution fallback stack (CPU)")
+    # Lazy Initialization
+    if model is None or processor is None:
+        if torch.cuda.is_available():
+            device = "cuda"
+            dtype = torch.bfloat16
+            attn_impl = "flash_attention_2"
+        elif torch.backends.mps.is_available():
+            device = "mps"
+            dtype = torch.float16
+            attn_impl = None
+        else:
+            device = "cpu"
+            dtype = torch.float32
+            attn_impl = None
+            print("Running on CPU...")
 
-    print(f"📦 Instantiating model wrapper: {model_id} on engine target {device}...")
+        print(f"Loading SmolVLM on {device}...")
 
-    processor = AutoProcessor.from_pretrained(model_id, cache_dir=HF_CACHE_DIR, token=HF_TOKEN)
-    model = AutoModel.from_pretrained(
-        model_id,
-        torch_dtype=dtype,
-        _attn_implementation="flash_attention_2" if device == "cuda" else None,
-        cache_dir=HF_CACHE_DIR,
-        token=HF_TOKEN
-    ).to(device)
+        processor = AutoProcessor.from_pretrained(
+            model_id, 
+            cache_dir=HF_CACHE_DIR, 
+            token=HF_TOKEN
+        )
+
+        model = AutoModelForImageTextToText.from_pretrained(   # ← Updated class
+            model_id,
+            torch_dtype=dtype,
+            _attn_implementation=attn_impl,
+            cache_dir=HF_CACHE_DIR,
+            token=HF_TOKEN,
+            # device_map="auto",   # Good for low VRAM
+        ).to(device)
+
+        if device == "cpu":
+            num_cores = os.cpu_count() or 4
+            torch.set_num_threads(max(1, num_cores // 2))
+            try:
+                model = torch.compile(model)
+                print("Model compiled.")
+            except Exception:
+                pass
 
     raw_image = Image.open(image_path).convert("RGB")
 
@@ -240,30 +273,43 @@ def analyze_image_locally(image_path: str):
         "role": "user",
         "content": [
             {"type": "image"},
-            {"type": "text", "text": "Is this a 3D model render of a castle, fortress, building, stoneware, or medieval tower? Answer YES or NO + one short reason."}
+            {"type": "text", "text": "Categorize the image with descriptive adjectives and nouns. Respond quickly with only the whitespace delimited list of words."}
         ]
     }]
 
     prompt = processor.apply_chat_template(messages, add_generation_prompt=True)
+    
     inputs = processor(text=prompt, images=raw_image, return_tensors="pt").to(device)
 
-    print("👁️ Launching verification model forward checks...")
-    with torch.no_grad():
-        generated_ids = model.generate(**inputs, max_new_tokens=120)
+    if "pixel_values" in inputs:
+        inputs["pixel_values"] = inputs["pixel_values"].to(dtype)
 
-    generated_text = processor.batch_decode(generated_ids, skip_special_tokens=True)[0]
-    answer = generated_text.split("assistant")[-1].strip()
+    print("Running inference...")
+    with torch.no_grad():
+        generated_ids = model.generate(
+            **inputs, 
+            max_new_tokens=120,
+            do_sample=False,
+            temperature=0.0,
+        )
+
+    generated_ids_trimmed = [
+        out_ids[len(in_ids):] for in_ids, out_ids in zip(inputs.input_ids, generated_ids)
+    ]
+    answer = processor.batch_decode(generated_ids_trimmed, skip_special_tokens=True)[0].strip()
 
     print("\n--- LOCAL VISION ANALYSIS ---")
     print(answer)
+    return answer
 
-# ==================== EXECUTION CONTROL GATE ====================
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Cross-Platform 3D Asset Validation Engine")
     group = parser.add_mutually_exclusive_group(required=True)
     group.add_argument("--model", type=str, help="Path to target 3D asset (.glb/.obj/.fbx/.stl)")
     group.add_argument("--image", type=str, help="Path to pre-existing verification canvas image")
     parser.add_argument("--output", type=str, default="model_preview.png", help="Output collage path location")
+    parser.add_argument("--analyze", type=lambda x: (str(x).lower() == 'true'), default=False, help="Use vision LLM to describe model")
 
     args = parser.parse_args()
     target_image = args.image
@@ -277,5 +323,5 @@ if __name__ == "__main__":
             traceback.print_exc()
             sys.exit(1)
 
-    #if target_image:
-    #    analyze_image_locally(target_image)
+    if target_image and args.analyze:
+        analyze_image_locally(target_image)
