@@ -1,3 +1,5 @@
+
+import json
 import os
 import stat
 import shutil
@@ -5,6 +7,10 @@ import argparse
 import pandas as pd
 import objaverse.xl as oxl
 from typing import Dict, Any, Hashable, List
+import re
+import pyarrow as pa
+import pyarrow.parquet as pq
+
 
 # --- Windows Permission Error Fix ---
 def remove_readonly(func, path, excinfo):
@@ -44,6 +50,7 @@ def handle_found_object(
     except Exception as e:
         print(f"❌ Copy failed for {base_name}: {e}")
 
+
 def get_annotations_df(github: bool = True, gltf: bool = False, thingiverse: bool = False, smithsonian: bool = False) -> pd.DataFrame:
     """Centralized loader that profiles the dataframe to audit loaded domains and formats."""
     print(f"📦 Loading Objaverse Parquet Registries (cache: {CACHE_DIR})...")
@@ -54,6 +61,12 @@ def get_annotations_df(github: bool = True, gltf: bool = False, thingiverse: boo
     # 2. Print an explicit structural audit of what's sitting in memory
     print("\n📊 --- LOCAL CACHE PERFORMANCE AUDIT ---")
     print(f"Total entries loaded into master index frame: {len(df):,}")
+    
+    # --- NEW: PARQUET FILE SCHEMA DUMP ---
+    print("\n🗂️ Complete Parquet Column Schema & Data Types:")
+    for col, dtype in df.dtypes.items():
+        print(f"  • {col:<18} : {dtype}")
+    # -------------------------------------
     
     print("\nSource Domain Inventory Matrix:")
     for source_name, count in df["source"].value_counts().items():
@@ -81,7 +94,7 @@ def get_annotations_df(github: bool = True, gltf: bool = False, thingiverse: boo
 
 
 def list_assets(keyword: str, args):
-    """Parses and lists matching records along with direct source URLs."""
+    """Parses and lists matching records along with direct source URLs and metadata."""
     annotations = get_annotations_df(
         github=args.github,
         gltf=args.gltf,
@@ -96,18 +109,96 @@ def list_assets(keyword: str, args):
     )
     filtered_df = annotations[keyword_mask]
     
-    print(f"\n🔗 DIRECT LINKS TO TARGET ASSETS (Showing Top 20 of {len(filtered_df):,} Matches):")
+    print(f"\n🔗 TARGET ASSETS WITH METADATA (Showing Top 20 of {len(filtered_df):,} Matches):")
     for idx, row in filtered_df.head(20).iterrows():
         source = row['source']
         identifier = row['fileIdentifier']
         
+        # Build the source URI
         if source == 'github':
             clean_id = identifier.replace("https://github.com/", "").lstrip('/')
-            print(f"[{source.upper()}] https://github.com/{clean_id}")
+            url = f"https://github.com/{clean_id}"
         elif source == 'sketchfab':
-            print(f"[{source.upper()}] https://sketchfab.com/3d-models/{identifier}")
+            url = f"https://sketchfab.com/3d-models/{identifier}"
         else:
-            print(f"[{source.upper()}] {source.title()} ID: {identifier}")
+            url = f"{source.title()} ID: {identifier}"
+            
+        print(f"\n🏷️  [{source.upper()}] {url}")
+        
+        # --- NEW: PARSE AND PRINT ANY ADDITIONAL KEYWORDS AND METADATA ---
+        # Look for other common columns available in the Objaverse schema
+        for optional_col in ['sha', 'repo', 'license', 'fileType', 
+                             'source', 'fileIdentifier', 'sha', 'repo', 
+                             'search_tags', 'clean_ext']:
+            if optional_col in row and pd.notna(row[optional_col]):
+                print(f"    • {optional_col}: {row[optional_col]}")
+                
+        # Unpack the raw JSON metadata field to capture deep keywords/tags
+        raw_metadata = row.get('metadata', None)
+        if pd.notna(raw_metadata) and raw_metadata != "":
+            try:
+                # If it's a stringified JSON representation, parse it cleanly
+                if isinstance(raw_metadata, str):
+                    meta_dict = json.loads(raw_metadata)
+                else:
+                    meta_dict = raw_metadata
+                
+                # Format and isolate nested dictionary fields beautifully
+                meta_json = json.dumps(meta_dict, indent=6)
+                print(f"    • metadata:\n{meta_json}")
+            except Exception:
+                print(f"    • metadata (raw text): {raw_metadata}")
+        # -----------------------------------------------------------------
+        print("-" * 60)
+
+
+
+
+def clean_and_tokenize(df: pd.DataFrame) -> pd.DataFrame:
+    print("🛠️ Sanitizing file paths and building semantic keyword tokens...")
+    
+    # 1. Isolate the actual file names or path segments
+    # Splitting by slashes and picking up meaningful text tokens
+    def extract_keywords(row):
+        path_str = str(row['fileIdentifier'])
+        
+        # Pull out everything that looks like a word from the path
+        # This replaces underscores, dashes, and slashes with spaces
+        tokens = re.findall(re.compile(r'[a-zA-Z]{3,}'), path_str)
+        
+        # Filter out useless structural junk words from paths and links
+        junk_words = {
+            'https', 'github', 'com', 'blob', 'main', 'master', 'assets', 
+            'resources', 'models', 'mesh', 'meshes', 'thingiverse', 'thing', 
+            'files', 'fileid', 'raw', 'user', 'repo', 'production', 'download',
+            'stl', 'glb', 'fbx', 'obj', 'ply'
+        }
+        
+        # Lowercase everything and deduplicate
+        clean_tokens = [t.lower() for t in tokens if t.lower() not in junk_words]
+        
+        # Return as a clean comma-separated string for easy SQL 'LIKE' matches
+        return ",".join(set(clean_tokens))
+
+    # Apply the parser across your dataframe matrix
+    df['search_tags'] = df.apply(extract_keywords, axis=1)
+    
+    # 2. Extract clean file extension variants for quick layout engine filtering
+    df['clean_ext'] = df['fileType'].astype(str).str.lower()
+    
+    return df
+
+# --- Usage in your build step ---
+# df = oxl.get_annotations(download_dir=CACHE_DIR)
+# df_cleaned = clean_and_tokenize(df)
+#
+# # Drop the bulky original columns you don't need in the browser to save space!
+# df_final = df_cleaned[['source', 'fileIdentifier', 'sha', 'repo', 'search_tags', 'clean_ext']]
+#
+# # Write out a clean, optimized Parquet file for your browser engine
+# table = pa.Table.from_pandas(df_final)
+# pq.write_table(table, "illustrious_index.parquet", row_group_size=50000, compression="ZSTD")
+
 
 
 
@@ -155,6 +246,8 @@ def download_assets(keyword: str, sample_count: int, args, format_filter: str = 
             print(f"   • {f}")
     else:
         print("⚠️ No files exported to downloads/ folder.")
+
+
 
 def enumerate_and_curate(extensions: List[str]):
     """

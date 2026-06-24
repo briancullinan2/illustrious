@@ -14,6 +14,10 @@ const DEFAULT_URI = 'http://localhost:4000/'
 const DEFAULT_ENDPOINT = DEFAULT_URI + 'oauth2callback'
 const GLOBAL_SETTINGS = path.join(__dirname, '..', 'illustrious-config.json');
 
+// TODO: integrate this command 
+// gcloud compute backend-buckets update quake-games     --custom-response-header="Content-Security-Policy: script-src 'self' 'unsafe-eval'; worker-src 'self' blob:;"     --custom-response-header="Cross-Origin-Opener-Policy: same-origin"     --custom-response-header="Cross-Origin-Embedder-Policy: require-corp"
+
+
 
 // Set up an isolated WebSocket server that piggybacks onto the shared server container
 const wss = new WebSocket.Server({ noServer: true });
