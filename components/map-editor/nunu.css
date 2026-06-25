@@ -116,6 +116,20 @@
 }
 
 
+#nunu>div:nth-child(1)>div>div:nth-child(2)>div:nth-child(2)>div:nth-child(2)>div:nth-child(2)>div {
+    max-width: 100%;
+}
+
+#nunu>div:nth-child(1)>div>div:nth-child(2)>div:nth-child(2)>div:nth-child(2)>div:nth-child(2)>div:nth-child(2) {
+    height: 34px !important;
+}
+
+#nunu>div:nth-child(1)>div>div:nth-child(2)>div:nth-child(2)>div:nth-child(2)>div:nth-child(2)>div:nth-child(2)>div {
+    height: 100% !important;
+    width: 100% !important;
+}
+
+
 #nunu>div:nth-child(2)>div:nth-child(even) {
     width: auto !important;
 }
@@ -262,8 +276,20 @@
 }
 
 #nunu>div:nth-child(1)>div>div:nth-child(2)>div:nth-child(2)>div:nth-child(2)>div>div:first-child {
-    height: calc(100% - var(--global-height)) !important;
+    height: calc(100% - 34px) !important;
 }
+
+
+/*
+#nunu>div:nth-child(1)>div>div:nth-child(2)>div:nth-child(2)>div:nth-child(2)>div:nth-child(1)>div:nth-child(2) {
+    display: flex !important;
+
+}
+
+#nunu>div:nth-child(1)>div>div:nth-child(2)>div:nth-child(2)>div:nth-child(2)>div:nth-child(1)>div:nth-child(2)>div {
+    position: static !important;
+}
+*/
 
 #nunu div:has(>div:first-child>[draggable]>img[src*="close"])>div:nth-child(2)>div {
     width: 100% !important;

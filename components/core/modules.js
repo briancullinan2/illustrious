@@ -188,7 +188,7 @@ async function manageServiceWorker() {
         };
 
         // Ping the worker
-        registration.active.postMessage({ type: 'GET_VERSION' }, [messageChannel.port2]);
+        registration.active.postMessage({ type: 'GET_VERSION', shutup: true }, [messageChannel.port2]);
 
         // 2. The "Dumb" Poll: Wait for response or 10s timeout
         const startTime = Date.now();
@@ -253,5 +253,6 @@ async function manageServiceWorker() {
             console.error('Service Worker registration failed:', err);
         });
 }
+
 
 

@@ -13,7 +13,8 @@ app.use(express.urlencoded({ extended: true }));
 // Global System Credential Directory (Safe from repo tracking)
 const GLOBAL_CRED_DIR = path.join(os.homedir(), '.credentials');
 
-
+app.use('/privacy', express.static(path.join(__dirname, 'privacy')));
+app.use('/terms', express.static(path.join(__dirname, 'terms')));
 
 function serveErrorScreen(res, title, description, showSetupButton = true) {
     // FIXED: Corrected closing tags from </button> to </a>

@@ -9,6 +9,8 @@ const DEFAULT_GBNF = '/loras/spatial_engine/grammar.gbnf'
 const DEFAULT_PARQUET = 'https://storage.googleapis.com/quake-games/models/github.parquet';
 const SEARCH_WORKER = '/components/llm-workers/objaverse/catalog-worker.js';
 
+const CONVERT_WORKER = '/components/llm-workers/convert/convert-worker.js';
+
 
 const WLLAMA_WORKER = '/components/llm-workers/wllama/worker.js';   // direct path
 const ONNX_WORKER = '/components/llm-workers/onnx/worker.js';   // direct path
@@ -35,7 +37,7 @@ function injectSetupSettingsCog() {
     cogWrapper.href = '/setup';
     cogWrapper.title = 'Open Infrastructure Configuration Wizard';
     cogWrapper.className = 'header-icon-btn settings-cog'; // 👉 Clean separation of concerns
-
+    cogWrapper.target = '_blank'
     cogWrapper.innerHTML = `
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
             <circle cx="12" cy="12" r="3"></circle>
@@ -119,6 +121,11 @@ if (!window.modules) {
         e.stopPropagation();
         document.body.classList.remove('canvas-mode');
         return false;
+    }
+
+    window.modules['about/open'] = {}
+    window.modules['about/open'][void 0] = e => {
+        window.open('https://github.com/briancullinan2/illustrious', '_blank');
     }
 }
 

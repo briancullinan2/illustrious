@@ -101,14 +101,14 @@ function assembleBufferChunks(chunks, totalSize) {
 
 async function installDatabaseIfNeeded(database) {
     const databases = await getDatabaseMetadata();
-    console.log('⚙️ [SW-INSTALL] Extracted internal IndexedDB metadata dictionaries:', databases);
+    console.log('⚙️ [DOWNLOADER] Extracted internal IndexedDB metadata dictionaries:', databases);
     const shouldInstall = (await needsInstall(database, DB_SCHEME)).item3
     if (databases.filter(d => d.key == database).length == 0
         || shouldInstall) {
-        console.warn(`⚠️ [SW-DATABASE] Target database "${database}" missing. Initializing core database maps now.`);
+        console.warn(`⚠️ [DOWNLOADER] Target database "${database}" missing. Initializing core database maps now.`);
         await deleteOldDatabase(database)
         await setupDatabase(database, DB_SCHEME);
-        console.log(`✅ [SW-DATABASE] Target database infrastructure initialized cleanly.`);
+        console.log(`✅ [DOWNLOADER] Target database infrastructure initialized cleanly.`);
     }
 
 }

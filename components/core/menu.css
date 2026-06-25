@@ -11,7 +11,7 @@
     background: var(--bg-darker);
     color: var(--accent);
     border: 1px solid var(--border);
-    padding: 4px 18px;
+    padding: 4px 4px;
     border-radius: 20px;
     font-family: monospace;
     font-size: 12px;
@@ -200,4 +200,18 @@ body.canvas-mode li:has(.floating-back-btn) {
     height: 1px;
     background-color: var(--border-dark);
     margin: 0;
+}
+
+
+@media all and (max-width: 768px) {
+
+    .main_menu {
+        border-radius: 0;
+        position: static;
+    }
+
+    .menu_bar {
+        flex-wrap: wrap;
+    }
+
 }

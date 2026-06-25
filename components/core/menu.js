@@ -81,7 +81,7 @@ const SITE_MENU = [
     },
     {
         name: "About",
-        icon: "bx-info-circle",
+        icon: "bxl bx-github",
         target: "about/open",
         children: []
     },

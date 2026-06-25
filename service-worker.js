@@ -5,7 +5,31 @@ const api = {
 }
 
 let localVersion = null;
+let SHUTUP = true
 
+const originalConsole = {
+    log: console.log,
+    warn: console.warn,
+    error: console.error,
+    info: console.info
+};
+
+
+self.console.log = (...args) => {
+    if (!SHUTUP && typeof originalConsole != 'undefined') originalConsole.log(...args);
+};
+
+self.console.warn = (...args) => {
+    if (!SHUTUP && typeof originalConsole != 'undefined') originalConsole.warn(...args);
+};
+
+self.console.error = (...args) => {
+    if (!SHUTUP && typeof originalConsole != 'undefined') originalConsole.error(...args);
+};
+
+self.console.info = (...args) => {
+    if (!SHUTUP && typeof originalConsole != 'undefined') originalConsole.info(...args);
+};
 
 const ERROR_PREAMBLE = '\x1b[38;5;196m[ERROR]\x1b[0m ';       // Intense Crimson Red
 const GITHUB_PREAMBLE = '\x1b[38;5;27m[GITHUB]\x1b[0m ';      // Deep Brand Blue
@@ -182,7 +206,7 @@ async function fetchAsset(urlInput, key, selected) {
         }
 
         if (!response.ok && response.type !== 'opaque') {
-            console.error(`❌ [SW-NET] Response evaluation failed validation checks for "${key}". Status code is bad.`);
+            console.error(`❌ [SW-NET] Response evaluation failed validation checks for "${key}". Status code is bad: ${response.status}`);
             throw new Error(`Request for ${key} failed with status: ${response.status}`);
         }
 
@@ -585,6 +609,7 @@ self.addEventListener('message', async (event) => {
     }
     else if (event.data && event.data.type === 'GET_VERSION') {
         console.log('✉️ [SW-MESSAGE] Command route identified: GET_VERSION parameter data report request.');
+        SHUTUP = !!event.data.shutup
 
         if (!localVersion || !api.environmentRepository) {
             await lookupLocalVersion()

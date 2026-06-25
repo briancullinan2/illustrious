@@ -9,13 +9,13 @@ globalThis.document = {
 const wllamaWasm = 'components/llm-workers/wllama/wllama.wasm';
 
 
-let putRecord, getRecord, DB_STORE_NAME, Wllama
-
-
 async function initWLLaMa() {
     const WllamaLoaded = await import('./index.min.js');
     Wllama = WllamaLoaded.Wllama
 }
+
+let putRecord, getRecord, DB_STORE_NAME, Wllama
+
 
 async function initLocalStorage() {
     try {

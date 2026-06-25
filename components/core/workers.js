@@ -4,6 +4,43 @@ let searchWorker
 
 let worker
 
+let searchResults = []
+
+let converterReady = false
+
+
+async function bootAvailableWorkers() {
+
+    if (toggleCheckbox.checked) {
+        bootWllamaWorker()
+    } else {
+        const treeStatus = document.getElementById('tree-status');
+        if (treeStatus) {
+            treeStatus.textContent = 'Disabled...';
+            treeStatus.className = 'tree-val text-muted';
+        }
+    }
+
+
+    searchWorker = new Worker(SEARCH_WORKER, { type: 'module' });
+    searchWorker.onerror = (err) => {
+        console.error("Worker error:", err);
+    }
+    searchWorker.onmessage = searchResponseInterface;
+
+
+    convertWorker = new Worker(CONVERT_WORKER, { type: 'module' });
+    convertWorker.onerror = function (event) {
+        console.error("❌ Worker crashed!");
+        console.error("Message:", event.message);   // <-- The actual error text
+        console.error("File:", event.filename);     // <-- Which file caused it
+        console.error("Line:", event.lineno);       // <-- The exact line number
+
+        // Prevent the error from bubbling up further if needed
+        event.preventDefault();
+    };
+    convertWorker.onmessage = convertResponseInterface;
+}
 
 
 toggleCheckbox.addEventListener('change', (e) => {
@@ -19,7 +56,9 @@ async function bootWllamaWorker() {
 
     worker = new Worker(DEFAULT_WORKER, DEFAULT_WORKER.includes('wllama') ? { type: 'module' } : {});
 
-    worker.onerror = (err) => console.error("Worker error:", err);
+    worker.onerror = (err) => {
+        console.error("Worker error:", err);
+    }
     worker.onmessage = workerResponseInterface;
 
 }
@@ -63,8 +102,9 @@ async function doNunuSearch() {
     }
     currentTimeout = setTimeout(() => {
         currentTimeout = null
-        if(previousSearch.trim().length === 0)
+        if (previousSearch.trim().length === 0)
             return
+
         searchWorker.postMessage({
             type: 'SEARCH_QUERY',
             baseURI: window.location.origin + '/',
@@ -73,6 +113,155 @@ async function doNunuSearch() {
         });
     }, 1000)
 }
+
+async function convertResponseInterface(e) {
+    const { type, payload } = e.data;
+
+    if (type === 'WORKER_READY') {
+        convertWorker.postMessage({
+            type: 'LOAD_CONVERT',
+            baseURI: window.location.origin + '/',
+            payload: {
+            }
+        });
+    }
+
+    if (type === 'UNAUTHORIZED') {
+
+    }
+    if (type === 'CONVERT_LOADED') {
+        converterReady = true
+        const currentSearch = searchResults
+        searchResults = []
+        convertWorker.postMessage({
+            type: 'DOWNLOAD_SEARCH',
+            baseURI: window.location.origin + '/',
+            payload: searchResults
+        });
+    }
+
+
+    if (type === 'DOWNLOAD_FINISHED') {
+        for (let item of payload || []) {
+            if (item.success)
+                addVisualModelToNunuAssets(item)
+        }
+    }
+}
+
+
+
+
+async function addModelToNunuAssets(payload) {
+    try {
+        if (!payload.success) {
+            throw new Error("Cannot asset-load a failed worker download payload.");
+        }
+
+        // 1. Fetch the binary Blob back out of IndexedDB using the store name and repo key
+        const record = await getRecord(DB_STORE_NAME, payload.path, payload.db);
+        if (!record || !record.contents) {
+            throw new Error(`Model data not found in IndexedDB for path: ${payload.path}`);
+        }
+
+        const fileName = payload.path.split('/').pop();
+        const extension = fileName.split('.').pop().toLowerCase();
+
+        // 3. Create a raw nunuStudio Binary Resource container
+        // NunuStudio organizes files in its asset manager via instances of Resource wrappers
+        const resource = new window.nunu.BinaryResource(record.contents, extension);
+        resource.name = decodeURIComponent(fileName);
+
+        // 4. Register the asset strictly to the Program Manager (Assets list), NOT the Scene
+        // 'editor' refers to the global nunuStudio Editor core instance
+        if (typeof editor !== 'undefined' && editor.program) {
+
+            // Add the resource container directly into the project asset registry
+            editor.program.addResource(resource);
+
+            // 5. Force the Editor GUI Asset panel UI to redraw and show the new entry
+            if (editor.gui && editor.gui.assetTab) {
+                editor.gui.assetTab.updateObjects();
+            } else if (editor.updateObjectsViews) {
+                editor.updateObjectsViews();
+            }
+
+            console.log(`Successfully injected "${resource.name}" into the nunuStudio Assets layout.`);
+            return resource;
+        } else {
+            throw new Error("nunuStudio global 'editor' context context or active program structure was unavailable.");
+        }
+
+    } catch (error) {
+        console.error("Failed to inject model into nunuStudio Assets:", error);
+    }
+}
+
+
+
+async function addVisualModelToNunuAssets(payload, classes) {
+    const THREE = require('three')
+    classes ||= THREE.resolveNunuClasses()
+
+    try {
+        if (!payload.success) return;
+
+        // 1. Grab file from IndexedDB
+        const record = await getRecord(DB_STORE_NAME, payload.path, payload.db);
+        if (!record || !record.contents) return;
+
+        const fileName = payload.path.split('/').pop();
+        const extension = fileName.split('.').pop().toLowerCase();
+
+        let geometry;
+        let material = new classes.Material(); // Uses your resolved default material
+        let mesh;
+
+        // 2. Parse the bytes into structural 3D Geometry based on type
+        if (extension === 'stl') {
+            // If using standard Three.js loaders available in nunuStudio context
+            const loader = new THREE.STLLoader();
+            geometry = loader.parse(record.contents);
+            mesh = new classes.Mesh(geometry, material);
+        }
+        else if (extension === 'obj') {
+            const loader = new THREE.OBJLoader();
+            const textDecoder = new TextDecoder('utf-8');
+            const objText = textDecoder.decode(record.contents);
+
+            // OBJLoader returns a structural Group/Object3D wrapper containing meshes
+            const objRoot = loader.parse(objText);
+
+            // Extract the geometry or map the whole group structure to a nunu Mesh format
+            mesh = objRoot;
+        }
+
+        if (!mesh) {
+            console.warn(`Unsupported parsing for type: ${extension}`);
+            return;
+        }
+
+        // Set identification details
+        mesh.name = decodeURIComponent(fileName);
+
+        // 3. Inject it straight into the Project Program Shapes/Objects list
+        if (window.nunu && window.nunu.program) {
+            // This adds it to the project's object pool without placing it in the active scene tree yet
+            window.nunu.program.addResource(mesh);
+
+            // Force asset drawer layout update
+            window.nunu.updateObjectsViewsGUI();
+            console.log(`Injected 3D Mesh asset: ${mesh.name}`);
+        }
+
+    } catch (error) {
+        console.error("Failed parsing asset into BufferGeometry:", error);
+    }
+}
+
+
+
+
 
 
 async function searchResponseInterface(e) {
@@ -90,8 +279,18 @@ async function searchResponseInterface(e) {
 
         console.log(e.data)
     } else if (type === 'SEARCH_RESULTS') {
+        // TODO: immediately pass to the downloader module
 
+        if (!converterReady) {
+            searchResults.push(...e.data.payload)
+        } else {
+            convertWorker.postMessage({
+                type: 'DOWNLOAD_SEARCH',
+                baseURI: window.location.origin + '/',
+                payload: e.data.payload
+            });
 
+        }
         console.log(e.data)
     }
 }
@@ -251,26 +450,6 @@ async function workerResponseInterface(e) {
     }
 }
 
-
-
-async function bootAvailableWorkers() {
-
-    if (toggleCheckbox.checked) {
-        bootWllamaWorker()
-    } else {
-        const treeStatus = document.getElementById('tree-status');
-        if (treeStatus) {
-            treeStatus.textContent = 'Disabled...';
-            treeStatus.className = 'tree-val text-muted';
-        }
-    }
-
-
-    searchWorker = new Worker(SEARCH_WORKER, { type: 'module' });
-
-    searchWorker.onerror = (err) => console.error("Worker error:", err);
-    searchWorker.onmessage = searchResponseInterface;
-}
 
 
 async function handleGenerate() {
