@@ -67,7 +67,7 @@ async function downloadAndStoreModel(item, selectedDb) {
         if (!loadedDatabases[selectedDb || dbName])
             try {
                 const databases = await getDatabaseMetadata();
-                console.log('⚙️ [CONVERTER] Extracted internal IndexedDB metadata dictionaries:', databases);
+                //console.log('⚙️ [CONVERTER] Extracted internal IndexedDB metadata dictionaries:', databases);
                 const shouldInstall = (await needsInstall(selectedDb || dbName, DB_SCHEME)).item3
                 if (databases.filter(d => d.key == selectedDb || dbName).length == 0
                     || shouldInstall) {

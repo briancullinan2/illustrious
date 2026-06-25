@@ -101,7 +101,7 @@ function assembleBufferChunks(chunks, totalSize) {
 
 async function installDatabaseIfNeeded(database) {
     const databases = await getDatabaseMetadata();
-    console.log('⚙️ [DOWNLOADER] Extracted internal IndexedDB metadata dictionaries:', databases);
+    //console.log('⚙️ [DOWNLOADER] Extracted internal IndexedDB metadata dictionaries:', databases);
     const shouldInstall = (await needsInstall(database, DB_SCHEME)).item3
     if (databases.filter(d => d.key == database).length == 0
         || shouldInstall) {

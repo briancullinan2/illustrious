@@ -198,64 +198,41 @@ async function addModelToNunuAssets(payload) {
 }
 
 
-
 async function addVisualModelToNunuAssets(payload, classes) {
-    const THREE = require('three')
-    classes ||= THREE.resolveNunuClasses()
+    const THREE = require('three');
+    classes ||= THREE.resolveNunuClasses();
 
     try {
         if (!payload.success) return;
 
-        // 1. Grab file from IndexedDB
+        // 1. Grab file from IndexedDB using your variables
         const record = await getRecord(DB_STORE_NAME, payload.path, payload.db);
         if (!record || !record.contents) return;
 
-        const fileName = payload.path.split('/').pop();
-        const extension = fileName.split('.').pop().toLowerCase();
+        // Extract filename from the payload path
+        const rawFileName = payload.path.split('/').pop();
+        const decodedFileName = decodeURIComponent(rawFileName);
 
-        let geometry;
-        let material = new classes.Material(); // Uses your resolved default material
-        let mesh;
+        // 2. Convert the stored ArrayBuffer into a File instance
+        // This supplies the .name and .size properties that loadModel expects
+        const fileReference = new File([record.contents], decodedFileName, {
+            type: "application/octet-stream"
+        });
 
-        // 2. Parse the bytes into structural 3D Geometry based on type
-        if (extension === 'stl') {
-            // If using standard Three.js loaders available in nunuStudio context
-            const loader = new THREE.STLLoader();
-            geometry = loader.parse(record.contents);
-            mesh = new classes.Mesh(geometry, material);
-        }
-        else if (extension === 'obj') {
-            const loader = new THREE.OBJLoader();
-            const textDecoder = new TextDecoder('utf-8');
-            const objText = textDecoder.decode(record.contents);
+        // 3. Forward the target file straight into your exposed loader pipeline
+        if (window.nunu && window.nunu.Loader && typeof window.nunu.Loader.loadModel === 'function') {
 
-            // OBJLoader returns a structural Group/Object3D wrapper containing meshes
-            const objRoot = loader.parse(objText);
+            // Pass the file reference. The second parameter (target parent container) 
+            // is optional; omitted here so it defaults to the active editor scene scope.
+            window.nunu.Loader.loadModel.call(window.nunu.Loader, fileReference);
 
-            // Extract the geometry or map the whole group structure to a nunu Mesh format
-            mesh = objRoot;
-        }
-
-        if (!mesh) {
-            console.warn(`Unsupported parsing for type: ${extension}`);
-            return;
-        }
-
-        // Set identification details
-        mesh.name = decodeURIComponent(fileName);
-
-        // 3. Inject it straight into the Project Program Shapes/Objects list
-        if (window.nunu && window.nunu.program) {
-            // This adds it to the project's object pool without placing it in the active scene tree yet
-            window.nunu.program.addResource(mesh);
-
-            // Force asset drawer layout update
-            window.nunu.updateObjectsViewsGUI();
-            console.log(`Injected 3D Mesh asset: ${mesh.name}`);
+            console.log(`Dispatched ${decodedFileName} directly to window.nunu.Loader.loadModel`);
+        } else {
+            console.error("nunuStudio loader tracking endpoint is missing at window.nunu.Loader.loadModel");
         }
 
     } catch (error) {
-        console.error("Failed parsing asset into BufferGeometry:", error);
+        console.error("Failed executing visual model asset load assignment pipeline:", error);
     }
 }
 
