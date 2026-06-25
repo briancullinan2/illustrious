@@ -134,7 +134,7 @@
     width: auto !important;
 }
 
-#nunu>div:not(.context-menu) {
+#nunu>div:not(.context-menu):not(.loading-panel) {
     position: relative !important;
     top: 0 !important;
     left: 0 !important;

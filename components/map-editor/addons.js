@@ -390,5 +390,373 @@
         console.log(`Successfully merged SfM structural entity [${entityName}] into Nunu workspace context.`);
     }
 
+    // Central Engine Definition Profile Matrix
+    const ENGINE_PROFILES = {
+        MINECRAFT: {
+            unitsPerMeter: 1.0,
+            defaultGridSize: 1.0,      // 1x1 Voxel Block
+            minSnapIncrement: 0.0625,  // 1/16th of a block (1 Minecraft Texture Pixel)
+        },
+        QUAKE_3: {
+            unitsPerMeter: 26.2467,    // 8 units per foot 
+            defaultGridSize: 2.4384,   // 64 Quake Units (Standard Wall Height / 8 Feet)
+            minSnapIncrement: 0.3048   // 8 Quake Units (1 Foot)
+        }
+    };
+
+
+
+
+    class SceneScaleManager {
+        constructor(editorInstance) {
+            this.editor = editorInstance;
+            this.currentProfile = ENGINE_PROFILES.MINECRAFT;
+        }
+
+        /**
+         * Changes target outputs without breaking camera vectors or physical workspace scales
+         */
+        switchOutputEngine(engineKey) {
+            this.currentProfile = ENGINE_PROFILES[engineKey];
+
+            // Update the visual grid lines controller natively inside nunuStudio
+            const gridHelper = this.editor.getGridHelper();
+            gridHelper.setSize(100);
+            gridHelper.setDivisions(100 / this.currentProfile.defaultGridSize);
+
+            // Bind the snap layouts seamlessly to the engine specifications
+            this.editor.settings.grid.size = this.currentProfile.defaultGridSize;
+            this.editor.settings.grid.snap = this.currentProfile.minSnapIncrement;
+        }
+
+        /**
+         * Run this during file imports (e.g., parsing a Quake .map file)
+         */
+        importVertexPosition(nativeX, nativeY, nativeZ) {
+            const scaleFactor = 1.0 / this.currentProfile.unitsPerMeter;
+            return new THREE.Vector3(
+                nativeX * scaleFactor,
+                nativeY * scaleFactor,
+                nativeZ * scaleFactor
+            );
+        }
+
+        /**
+         * Run this during export compilation tasks
+         */
+        exportVertexPosition(threeVector3) {
+            const scaleFactor = this.currentProfile.unitsPerMeter;
+            return {
+                x: threeVector3.x * scaleFactor,
+                y: threeVector3.y * scaleFactor,
+                z: threeVector3.z * scaleFactor
+            };
+        }
+    }
+
+
+
+    async function addModelToNunuAssets(payload) {
+        try {
+            if (!payload.success) {
+                throw new Error("Cannot asset-load a failed worker download payload.");
+            }
+
+            // 1. Fetch the binary Blob back out of IndexedDB using the store name and repo key
+            const record = await getRecord(DB_STORE_NAME, payload.path, payload.db);
+            if (!record || !record.contents) {
+                throw new Error(`Model data not found in IndexedDB for path: ${payload.path}`);
+            }
+
+            const fileName = payload.path.split('/').pop();
+            const extension = fileName.split('.').pop().toLowerCase();
+
+            // 3. Create a raw nunuStudio Binary Resource container
+            // NunuStudio organizes files in its asset manager via instances of Resource wrappers
+            const resource = new window.nunu.BinaryResource(record.contents, extension);
+            resource.name = decodeURIComponent(fileName);
+
+            // 4. Register the asset strictly to the Program Manager (Assets list), NOT the Scene
+            // 'editor' refers to the global nunuStudio Editor core instance
+            if (typeof editor !== 'undefined' && editor.program) {
+
+                // Add the resource container directly into the project asset registry
+                editor.program.addResource(resource);
+
+                // 5. Force the Editor GUI Asset panel UI to redraw and show the new entry
+                if (editor.gui && editor.gui.assetTab) {
+                    editor.gui.assetTab.updateObjects();
+                } else if (editor.updateObjectsViews) {
+                    editor.updateObjectsViews();
+                }
+
+                console.log(`Successfully injected "${resource.name}" into the nunuStudio Assets layout.`);
+                return resource;
+            } else {
+                throw new Error("nunuStudio global 'editor' context context or active program structure was unavailable.");
+            }
+
+        } catch (error) {
+            console.error("Failed to inject model into nunuStudio Assets:", error);
+        }
+    }
+
+
+
+    // Clean bypass mechanism for direct cache injection without scene mutability
+    function parseAssetDirectly(extension, rawData, options = {}) {
+        const LoaderClass = window.nunu.LoaderRegistry[extension.toLowerCase()];
+        if (!LoaderClass) {
+            throw new Error(`No loader class registered for extension: ${extension}`);
+        }
+
+        const loaderInstance = new LoaderClass();
+
+        // Account for special path requirements discovered in source text
+        if (options.path && typeof loaderInstance.setPath === 'function') {
+            loaderInstance.setPath(options.path);
+        }
+        if (options.path && extension === 'awd') {
+            loaderInstance._baseDir = options.path;
+        }
+        if (options.path && extension === 'x') {
+            loaderInstance.baseDir = options.path;
+        }
+
+        // Draco decoder initialization defaults matching layout parameters
+        if (typeof loaderInstance.setDecoderPath === 'function') {
+            loaderInstance.setDecoderPath(options.decoderPath || "wasm/draco/");
+            loaderInstance.setDecoderConfig({ type: "wasm" });
+        }
+
+        const parsed = loaderInstance.parse(rawData);
+        const created = LoaderClass.create(parsed);
+        return created
+    }
+
+
+    function getFileExtension(t) {
+        return void 0 !== t ? (t instanceof File && (t = t.name),
+            t.substring(t.lastIndexOf(".") + 1, t.length).toLowerCase()) : ""
+    }
+
+
+    function loadAssetObject(assetsPanel, program, object3D, targetContainer) {
+        console.log("[Intercepted] Bypassing scene placement for:", object3D);
+
+        if (object3D) {
+            // Recurse into groups/hierarchies to catch split models or collections
+            object3D.traverse(function (child) {
+                // Steal Material references
+                if (child.material) {
+                    const mats = Array.isArray(child.material) ? child.material : [child.material];
+                    mats.forEach(mat => {
+                        if (mat.uuid && program && !program.materials[mat.uuid]) {
+                            program.materials[mat.uuid] = mat;
+                        }
+                    });
+                }
+                // Steal Geometry definitions
+                if (child.geometry && child.geometry.uuid) {
+                    if (program && !program.geometries[child.geometry.uuid]) {
+                        program.geometries[child.geometry.uuid] = child.geometry;
+                    }
+                }
+                // Steal Textures if tied to standard diffuse maps, normals, etc.
+                if (child.material) {
+                    const mats = Array.isArray(child.material) ? child.material : [child.material];
+                    mats.forEach(mat => {
+                        ['map', 'bumpMap', 'normalMap', 'specularMap', 'emissiveMap', 'roughnessMap', 'metalnessMap'].forEach(mapType => {
+                            if (mat[mapType] && mat[mapType].uuid && program) {
+                                if (!program.textures[mat[mapType].uuid]) {
+                                    program.textures[mat[mapType].uuid] = mat[mapType];
+                                }
+                            }
+                        });
+                    });
+                }
+            });
+        }
+
+        // 3. Force the Asset Panel interface views to synchronize immediately
+        // Search dynamically for an instantiated assets view panel or fallback to prototype invocation context
+        if (window.nunu && typeof window.nunu.updateObjectsView === 'function') {
+            window.nunu.updateObjectsView();
+        } else if (assetsPanel && typeof assetsPanel.updateObjectsView === 'function') {
+            assetsPanel.updateObjectsView();
+        }
+    }
+
+
+
+
+    async function addVisualModelToNunuAssets(payload, classes) {
+        const THREE = require('three');
+        classes ||= THREE.resolveNunuClasses();
+
+        try {
+            if (!payload.success) return;
+
+            // 1. Grab file from IndexedDB using your variables
+            const record = await getRecord(DB_STORE_NAME, payload.path, payload.db);
+            if (!record || !record.contents) return;
+
+            // Extract filename from the payload path
+            const rawFileName = payload.path.split('/').pop();
+            const decodedFileName = decodeURIComponent(rawFileName);
+
+            const fileReference = new File([record.contents], decodedFileName, {
+                type: "application/octet-stream"
+            });
+
+
+            // Ensure we can access the panel tracking structures
+            const program = window.nunu?.program
+            const assetsPanel = window.nunu?.gui?.tab?.group?.elementA?.elementB
+
+            if (window.nunu && window.nunu.Loader && typeof window.nunu.Loader.loadModel === 'function') {
+
+                // 1. Store the authentic scene-injection method safely
+                const originalAddObject = window.nunu.addObject;
+
+                // 2. Override it temporarily to steal assets before they hit the viewport
+                window.nunu.addObject = loadAssetObject.bind(window.nunu, assetsPanel, program);
+
+                try {
+                    // 4. Pass the custom file binary layout straight into the native engine pipelines
+                    window.nunu.Loader.loadModel.call(window.nunu.Loader, fileReference);
+                    console.log(`Dispatched ${decodedFileName} directly to window.nunu.Loader.loadModel`);
+                } finally {
+                    // 5. Restore core engine loop immediately via queueMicrotask to ensure asynchronous loop completion finishes cleanly
+                    queueMicrotask(() => {
+                        //window.nunu.addObject = originalAddObject;
+                        console.log("[Restored] window.nunu.addObject pipeline returned to normal scene injection mode.");
+                    });
+                }
+
+            } else {
+                console.error("nunuStudio loader tracking endpoint is missing at window.nunu.Loader.loadModel");
+            }
+
+
+
+            // this is turning into a giant fucking pain in the ass
+            /*
+            const ext = getFileExtension(fileReference).toLowerCase();
+            const readMode = window.nunu.LoaderReadModes[ext] || "arraybuffer"; // fallback to safe default
+
+            const reader = new FileReader();
+
+            reader.onload = function () {
+                const parsed = parseAssetDirectly(ext, reader.result);
+
+                // Send final processed asset mesh data directly to the asset manager
+                // e.g., assetManager.add(finalAsset);
+
+                console.log(`Dispatched ${fileReference.name} directly to assets panel via readAs${readMode.toUpperCase()}.`);
+            };
+
+            if (readMode === "text") {
+                reader.readAsText(fileReference);
+            } else {
+                reader.readAsArrayBuffer(fileReference);
+            }
+            */
+
+        } catch (error) {
+            console.error("Failed executing visual model asset load assignment pipeline:", error);
+        }
+    }
+
+    window.nunu.addVisualModelToNunuAssets = addVisualModelToNunuAssets
+
+    /**
+     * Intercepts a drag event on a corner gripper, applies grid snapping,
+     * and updates all corresponding vertex points on the target geometry.
+     * * @param {THREE.Vector3} rawNewPosition - The un-snapped world position of the drag handle.
+     * @param {Object} gripperInstance - Custom object tracking the gripper mesh and associated vertex indices.
+     * @param {THREE.Mesh} targetMesh - The actual model mesh being skewed.
+     */
+    function handleGripperDrag(rawNewPosition, gripperInstance, targetMesh) {
+        // 1. Fetch live grid settings from nunuStudio's Editor core
+        // In nunuStudio, snap settings are usually tied to Editor.toolSnap or Editor.settings
+        const snapEnabled = Editor.toolSnap ?? true;
+        const snapRegion = Editor.settings?.grid?.size ?? 1.0;
+
+        const finalPosition = rawNewPosition.clone();
+
+        // 2. Math to force grid alignment if snapping is active
+        if (snapEnabled && snapRegion > 0) {
+            finalPosition.x = Math.round(finalPosition.x / snapRegion) * snapRegion;
+            finalPosition.y = Math.round(finalPosition.y / snapRegion) * snapRegion;
+            finalPosition.z = Math.round(finalPosition.z / snapRegion) * snapRegion;
+        }
+
+        // Update the visual handle to the snapped position
+        gripperInstance.mesh.position.copy(finalPosition);
+
+        // 3. Convert the world-space snapped position back to the mesh's local space
+        targetMesh.updateMatrixWorld(true);
+        const localTargetPosition = finalPosition.clone().applyMatrix4(targetMesh.matrixWorldInverse);
+
+        // 4. Update all vertices bound to this specific corner gripper
+        const geometry = targetMesh.geometry;
+        const positionAttribute = geometry.attributes.position;
+
+        // A corner often affects multiple overlapping vertex elements in the array
+        for (const vertexIndex of gripperInstance.associatedIndices) {
+            positionAttribute.setXYZ(
+                vertexIndex,
+                localTargetPosition.x,
+                localTargetPosition.y,
+                localTargetPosition.z
+            );
+        }
+
+        // 5. Commit changes to GPU and fix lighting anomalies immediately
+        positionAttribute.needsUpdate = true;
+        geometry.computeVertexNormals();
+        geometry.computeBoundingBox();
+        geometry.computeBoundingSphere();
+    }
+
+
+    /**
+ * Modifies a single vertex in a nunuStudio/Three.js Mesh 
+ * and properly updates its shading properties.
+ * * @param {THREE.Mesh} mesh - The target mesh object.
+ * @param {number} vertexIndex - The sequential index of the vertex.
+ * @param {number} dx - The change in X.
+ * @param {number} dy - The change in Y.
+ * @param {number} dz - The change in Z.
+ */
+    function modifyVertex(mesh, vertexIndex, dx, dy, dz) {
+        const geometry = mesh.geometry;
+
+        // 1. Target the position attribute buffer
+        const positionAttribute = geometry.attributes.position;
+
+        if (!positionAttribute) {
+            console.error("Geometry does not have a position attribute buffer.");
+            return;
+        }
+
+        // 2. Read the current localized coordinates
+        let x = positionAttribute.getX(vertexIndex);
+        let y = positionAttribute.getY(vertexIndex);
+        let z = positionAttribute.getZ(vertexIndex);
+
+        // 3. Apply the skew/displacement
+        positionAttribute.setXYZ(vertexIndex, x + dx, y + dy, z + dz);
+
+        // 4. CRITICAL: Signal to the GPU that the data array changed
+        positionAttribute.needsUpdate = true;
+
+        // 5. CRITICAL: Recalculate spatial and shading properties
+        // This fixes the "ruined lighting" by recalculating surface vectors
+        geometry.computeVertexNormals();
+        geometry.computeBoundingBox();
+        geometry.computeBoundingSphere();
+    }
 
 })()

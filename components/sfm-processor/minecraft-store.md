@@ -972,3 +972,352 @@ Make sure that port matches whatever you specified as the `server-port=` inside 
 
 
 
+To bridge the gap between nunuStudio (which evaluates to a traditional Three.js scene graph of meshes, materials, and geometries) and Minecraft's rigid, grid-aligned voxel structure (`.schematic` or `.schem` formats), you need to pass the geometry through a **3D raycasting voxelizer** or **surface sampler**.
+
+Since your architecture heavily favors zero-backend, client-side compilation via Web Workers, the most efficient way to handle this is entirely in-browser. You can extract the raw buffers from your nunuStudio/Three.js objects, map them to an aligned 3D bounding grid, and export an array of byte data.
+
+Here is the technical blueprint and a complete, zero-dependency client-side implementation designed to run inside a Web Worker or directly on your canvas logic.
+
+---
+
+## The Voxelization Pipeline
+
+Converting smooth or complex 3D meshes into a Minecraft-compatible structure requires three distinct phases:
+
+1. **Scene Traversal & Extraction:** Recursively walk your nunuStudio scene object to find all `THREE.Mesh` instances, computing their world matrices so their local coordinates align perfectly in a single global space.
+2. **Ray-AABB Intersect / Bounding Box Grid:** Determine the boundaries of the scene, divide that 3D space into discrete $1 \times 1 \times 1$ cubes (voxels), and test which meshes occupy which grids.
+3. **Minecraft Format Encoding:** Map the resulting grid coordinates to classic Minecraft `BlockID` and `Data` bytes, or the modern, more robust `.schem` NBT (Named Binary Tag) schema.
+
+---
+
+## Complete Client-Side Voxelizer
+
+This implementation extracts vertex attributes directly from a target nunuStudio canvas/scene object, performs a fast 3D bounding box intersection check per voxel unit, and formats the output into a structured JavaScript object ready for an NBT encoder.
+
+```javascript
+/**
+ * Zero-dependency Client-Side Three.js / nunuStudio Voxelizer
+ * Maps complex scene geometry into a dense 3D grid layout.
+ */
+function voxelizeNunuScene(sceneObject, voxelScale = 1.0) {
+    // 1. Gather all meshes and compute world-space bounding boxes
+    const meshes = [];
+    sceneObject.updateMatrixWorld(true);
+    
+    sceneObject.traverse((child) => {
+        if (child.isMesh && child.geometry) {
+            // Ensure we have up-to-date world geometry boundaries
+            if (!child.geometry.boundingBox) {
+                child.geometry.computeBoundingBox();
+            }
+            
+            const worldBox = child.geometry.boundingBox.clone().applyMatrix4(child.matrixWorld);
+            meshes.push({
+                mesh: child,
+                box: worldBox
+            });
+        }
+    });
+
+    if (meshes.length === 0) {
+        return { dimensions: [0, 0, 0], blocks: [] };
+    }
+
+    // 2. Compute the global scene bounding box to establish our grid origin
+    const globalBox = meshes[0].box.clone();
+    for (let i = 1; i < meshes.length; i++) {
+        globalBox.union(meshes[i].box);
+    }
+
+    const min = globalBox.min;
+    const max = globalBox.max;
+
+    // Calculate dimensions based on the target voxel size
+    const sizeX = Math.ceil((max.x - min.x) / voxelScale);
+    const sizeY = Math.ceil((max.y - min.y) / voxelScale);
+    const sizeZ = Math.ceil((max.z - min.z) / voxelScale);
+
+    // Flat array optimization for high-density spatial grids
+    // Minecraft classic format layout size: X * Y * Z
+    const totalCells = sizeX * sizeY * sizeZ;
+    const blockIds = new Uint8Array(totalCells);
+    const blockData = new Uint8Array(totalCells);
+
+    // Helper to map 3D grid coordinates to a 1D flat index
+    const getIndex = (x, y, z) => {
+        return (y * sizeZ + z) * sizeX + x;
+    };
+
+    // 3. Perform spatial sampling (AABB voxel intersections)
+    // For extreme performance inside complex scenes, port this loop to a Web Worker
+    const sampleBox = new THREE.Box3();
+
+    for (let x = 0; x < sizeX; x++) {
+        for (let y = 0; y < sizeY; y++) {
+            for (let z = 0; z < sizeZ; z++) {
+                
+                // Define the boundaries of the current voxel cell
+                sampleBox.min.set(
+                    min.x + (x * voxelScale),
+                    min.y + (y * voxelScale),
+                    min.z + (z * voxelScale)
+                );
+                sampleBox.max.set(
+                    min.x + ((x + 1) * voxelScale),
+                    min.y + ((y + 1) * voxelScale),
+                    min.z + ((z + 1) * voxelScale)
+                );
+
+                // Check intersection against our extracted scene meshes
+                for (const item of meshes) {
+                    if (sampleBox.intersectsBox(item.box)) {
+                        const index = getIndex(x, y, z);
+                        
+                        // Default block assignment (e.g., ID 1 = Stone)
+                        // This can be expanded to analyze vertex colors or material types
+                        blockIds[index] = 1; 
+                        blockData[index] = 0;
+                        break; 
+                    }
+                }
+            }
+        }
+    }
+
+    return {
+        width: sizeX,  // X Axis
+        height: sizeY, // Y Axis
+        length: sizeZ, // Z Axis
+        blocks: blockIds,
+        data: blockData
+    };
+}
+
+```
+
+---
+
+## Exporting to Map Formats (`.schematic`)
+
+Once you run your canvas through the voxelizer, you have a coordinate grid matching the coordinate syntax expected by WorldEdit and MCEdit. To turn this raw object into a file Minecraft actually accepts, write out a classic **Sponge Schematic** or **MCEdit Schematic** payload using a client-side NBT parser (like `prismarine-nbt` compiled into your runtime).
+
+For a lightweight, legacy `.schematic` format (which is the easiest to construct raw via standard JavaScript `ArrayBuffer` allocations), the output structure must match this NBT schema:
+
+```json
+{
+  "Schematic": {
+    "type": "compound",
+    "value": {
+      "Width": { "type": "short", "value": width },
+      "Height": { "type": "short", "value": height },
+      "Length": { "type": "short", "value": length },
+      "Materials": { "type": "string", "value": "Alpha" },
+      "Blocks": { "type": "byteArray", "value": blocksUint8Array },
+      "Data": { "type": "byteArray", "value": dataUint8Array }
+    }
+  }
+}
+
+```
+
+Once packed with Gzip (using an engine like `pako` directly in the browser), you can immediately pipe the output into a standard `Blob` download link (`application/octet-stream`), giving you a `.schematic` file that can be dropped directly into local Minecraft map files via WorldEdit (`//schematic load`).
+
+---
+
+### Advancing the Pipeline
+
+If you are working with textured shapes, you can intercept the mesh loop to sample the material colors at the center point of each intersecting voxel. By computing a quick Euclidean color-distance check against a JSON map of standard Minecraft block textures, you can dynamically assign specific block IDs (like mapping green meshes to `grass_block` or grey regions to `andesite`) instead of defaulting to plain stone.
+
+
+
+
+Not exactly. Custom models in Minecraft do **not** have to use a voxel structure. They are actually parsed as traditional 3D models composed of **polygonal cuboids**.
+
+Minecraft supports custom geometry meshes, but it interprets them via two entirely separate pipelines depending on whether you want a static world map or an interactive object.
+
+---
+
+### Pipeline 1: The Voxel Structure (`.nbt` Map Format)
+
+This matches the pipeline we built for your nunuStudio canvas. It treats your models like a grid of actual, placeable vanilla blocks (e.g., individual $1 \times 1 \times 1$ cubes of stone, glass, or dirt).
+
+* **The Limitation:** Everything must align rigidly to the $1 \times 1 \times 1$ world grid.
+* **The Benefit:** It is part of the actual game map geometry. Players can stand on the blocks, mine them, or explode them natively.
+
+---
+
+### Pipeline 2: JSON Polygonal Cuboids (The Resource Pack Method)
+
+Minecraft resource packs allow you to load arbitrary 3D shapes. If you skew a model using your corner gripper in nunuStudio, you don't actually *have* to slice it into voxels. You can export the geometric bounds directly as a collection of custom 3D boxes.
+
+Minecraft handles this by evaluating custom **JSON element meshes**:
+
+```json
+{
+  "textures": { "0": "custom_app:block/my_texture" },
+  "elements": [
+    {
+      "from": [ 0, 0, 0 ],
+      "to": [ 16, 16, 16 ],
+      "faces": {
+        "down":  { "uv": [ 0, 0, 16, 16 ], "texture": "#0" },
+        "up":    { "uv": [ 0, 0, 16, 16 ], "texture": "#0" }
+      }
+    }
+  ]
+}
+
+```
+
+* **The Math:** Inside this file, spatial measurements are not restricted to $1 \times 1 \times 1$ block increments. Instead, a standard single block space is divided into a $16 \times 16 \times 16$ coordinate grid. You can define non-voxel shapes—like thin tables, slanted slopes, or complex machinery—down to a precision of $1/16$th of a block.
+* **The Catch:** Modern versions of Minecraft enforce a strict orientation constraint. Custom polygonal elements inside these JSON models can only be rotated in specific steps ($\pm22.5^\circ$ or $\pm45^\circ$) along a single axis at a time.
+
+---
+
+### Which one fits your canvas?
+
+If your nunuStudio shapes require smooth angles, fine details, or arbitrary skews that don't map neatly to a jagged voxel grid, skip the 3D raycast voxelizer. Instead, write a client-side parser that translates your Three.js `BufferGeometry` bounding boxes into a custom item resource pack JSON format. You can link this custom geometry to an item via a unique metadata tag and display your fine-grained, smooth 3D shape directly inside the game world.
+
+[How to Add Custom Blocks to Minecraft](https://www.youtube.com/watch?v=WWrg9NIx2CQ) goes into full detail on using data packs and resource packs to introduce custom 3D geometries that don't rely on the engine's strict world voxel system.
+
+
+
+To convert a Three.js / nunuStudio mesh into a native Minecraft 3D JSON model, we need to translate Three.js world units into Minecraft’s **16x16x16 block element coordinate system**.
+
+In Minecraft's model format, a single block space spans from coordinate `0` to `16`. If your Three.js model is larger than one unit, we can break it down into multiple 16-unit cuboids or scale it down to fit.
+
+Here is a complete client-side JavaScript parser that traverses a Three.js group/mesh, extracts its bounding geometric components, maps them to Minecraft's coordinate space, and exports a valid Minecraft resource pack `.json` model file.
+
+---
+
+### Three.js to Minecraft Model Parser
+
+```javascript
+/**
+ * Translates Three.js Geometry bounds into a native Minecraft 1.20+ JSON Model.
+ * Maps Three.js meters directly to Minecraft 16x16x16 element space.
+ * * @param {THREE.Object3D} rootObject - The nunuStudio/Three.js mesh or group.
+ * @param {number} scaleFactor - Multiplier to fit your mesh into the 16x16x16 bounds.
+ * @returns {Object} Valid Minecraft JSON model schema
+ */
+function exportToMinecraftJsonModel(rootObject, scaleFactor = 16.0) {
+    const elements = [];
+    
+    // Ensure all world matrices are calculated accurately
+    rootObject.updateMatrixWorld(true);
+
+    rootObject.traverse((child) => {
+        if (child.isMesh && child.geometry) {
+            // Compute the bounding box for the individual geometric component
+            if (!child.geometry.boundingBox) {
+                child.geometry.computeBoundingBox();
+            }
+
+            // Clone and transform local bounding box to global world space
+            const worldBox = child.geometry.boundingBox.clone().applyMatrix4(child.matrixWorld);
+            
+            // Map Three.js coordinates (meters) to Minecraft's 0-16 localized coordinate grid
+            // Minecraft's origin [0,0,0] is the bottom-north-west corner of the block
+            const fromX = Math.max(0, Math.min(16, (worldBox.min.x * scaleFactor) + 8));
+            const fromY = Math.max(0, Math.min(16, (worldBox.min.y * scaleFactor)));
+            const fromZ = Math.max(0, Math.min(16, (worldBox.min.z * scaleFactor) + 8));
+
+            const toX = Math.max(0, Math.min(16, (worldBox.max.x * scaleFactor) + 8));
+            const toY = Math.max(0, Math.min(16, (worldBox.max.y * scaleFactor)));
+            const toZ = Math.max(0, Math.min(16, (worldBox.max.z * scaleFactor) + 8));
+
+            // Prevent generating invisible zero-width elements
+            if (Math.abs(toX - fromX) < 0.01 || Math.abs(toY - fromY) < 0.01 || Math.abs(toZ - fromZ) < 0.01) {
+                return; 
+            }
+
+            // Extract basic rotation along the Y-axis if present
+            const rotation = new THREE.Euler().setFromRotationMatrix(child.matrixWorld, 'YXZ');
+            const degreesY = Math.round(rotation.y * (180 / Math.PI));
+            
+            // Snap rotation to valid Minecraft mechanics (-45, -22.5, 0, 22.5, 45)
+            const validRotations = [-45, -22.5, 0, 22.5, 45];
+            const snappedRotationY = validRotations.reduce((prev, curr) => 
+                Math.abs(curr - degreesY) < Math.abs(prev - degreesY) ? curr : prev
+            );
+
+            // Construct the single cuboid element block
+            const element = {
+                from: [parseFloat(fromX.toFixed(4)), parseFloat(fromY.toFixed(4)), parseFloat(fromZ.toFixed(4))],
+                to: [parseFloat(toX.toFixed(4)), parseFloat(toY.toFixed(4)), parseFloat(toZ.toFixed(4))],
+                faces: {
+                    down:  { uv: [0, 0, 16, 16], texture: "#texture0", cullface: "down" },
+                    up:    { uv: [0, 0, 16, 16], texture: "#texture0", cullface: "up" },
+                    north: { uv: [0, 0, 16, 16], texture: "#texture0" },
+                    south: { uv: [0, 0, 16, 16], texture: "#texture0" },
+                    west:  { uv: [0, 0, 16, 16], texture: "#texture0" },
+                    east:  { uv: [0, 0, 16, 16], texture: "#texture0" }
+                }
+            };
+
+            // Inject rotation definitions if the mesh is angled
+            if (snappedRotationY !== 0) {
+                element.rotation = {
+                    origin: [
+                        parseFloat(((fromX + toX) / 2).toFixed(4)),
+                        parseFloat(((fromY + toY) / 2).toFixed(4)),
+                        parseFloat(((fromZ + toZ) / 2).toFixed(4))
+                    ],
+                    axis: "y",
+                    angle: snappedRotationY
+                };
+            }
+
+            elements.push(element);
+        }
+    });
+
+    // Wrap the collected elements inside a standard vanilla block template
+    return {
+        credit: "Generated via Client-Side Three.js Parser",
+        textures: {
+            particle: "minecraft:block/stone",
+            texture0: "minecraft:block/stone" // Replace with your custom atlas texture path
+        },
+        elements: elements
+    };
+}
+
+```
+
+---
+
+### Linking the Custom Mesh to an Item (`CustomModelData`)
+
+To load this fine-grained mesh into your game without breaking vanilla blocks, you assign it a **Custom Model Data** tag. This intercepts an item—like a `feather` or a `carved_pumpkin`—and swaps its appearance only if the specific ID matches.
+
+Save this file as `feather.json` inside your Resource Pack under `assets/minecraft/models/item/`:
+
+```json
+{
+  "parent": "minecraft:item/generated",
+  "textures": {
+    "layer0": "minecraft:item/feather"
+  },
+  "overrides": [
+    { 
+      "predicate": { "custom_model_data": 12345 }, 
+      "model": "custom_app:block/my_custom_canvas_mesh" 
+    }
+  ]
+}
+
+```
+
+---
+
+### Spawning the Precise Model In-Game
+
+Once the resource pack is activated, players can summon your precise, un-voxelized geometric shape using an invisible **Item Display Entity**. Run this command in-game:
+
+```text
+/summon item_display ~ ~ ~ {item:{id:"minecraft:feather",count:1,components:{"minecraft:custom_model_data":12345}}}
+
+```
+
+The game engine handles this smoothly: it skips world grid constraints entirely, rendering your custom sub-block resolution mesh with exact real-time lighting arrays anywhere in the environment.

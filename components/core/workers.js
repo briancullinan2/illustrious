@@ -144,97 +144,11 @@ async function convertResponseInterface(e) {
     if (type === 'DOWNLOAD_FINISHED') {
         for (let item of payload || []) {
             if (item.success)
-                addVisualModelToNunuAssets(item)
+                window.nunu.addVisualModelToNunuAssets(item)
         }
     }
 }
 
-
-
-
-async function addModelToNunuAssets(payload) {
-    try {
-        if (!payload.success) {
-            throw new Error("Cannot asset-load a failed worker download payload.");
-        }
-
-        // 1. Fetch the binary Blob back out of IndexedDB using the store name and repo key
-        const record = await getRecord(DB_STORE_NAME, payload.path, payload.db);
-        if (!record || !record.contents) {
-            throw new Error(`Model data not found in IndexedDB for path: ${payload.path}`);
-        }
-
-        const fileName = payload.path.split('/').pop();
-        const extension = fileName.split('.').pop().toLowerCase();
-
-        // 3. Create a raw nunuStudio Binary Resource container
-        // NunuStudio organizes files in its asset manager via instances of Resource wrappers
-        const resource = new window.nunu.BinaryResource(record.contents, extension);
-        resource.name = decodeURIComponent(fileName);
-
-        // 4. Register the asset strictly to the Program Manager (Assets list), NOT the Scene
-        // 'editor' refers to the global nunuStudio Editor core instance
-        if (typeof editor !== 'undefined' && editor.program) {
-
-            // Add the resource container directly into the project asset registry
-            editor.program.addResource(resource);
-
-            // 5. Force the Editor GUI Asset panel UI to redraw and show the new entry
-            if (editor.gui && editor.gui.assetTab) {
-                editor.gui.assetTab.updateObjects();
-            } else if (editor.updateObjectsViews) {
-                editor.updateObjectsViews();
-            }
-
-            console.log(`Successfully injected "${resource.name}" into the nunuStudio Assets layout.`);
-            return resource;
-        } else {
-            throw new Error("nunuStudio global 'editor' context context or active program structure was unavailable.");
-        }
-
-    } catch (error) {
-        console.error("Failed to inject model into nunuStudio Assets:", error);
-    }
-}
-
-
-async function addVisualModelToNunuAssets(payload, classes) {
-    const THREE = require('three');
-    classes ||= THREE.resolveNunuClasses();
-
-    try {
-        if (!payload.success) return;
-
-        // 1. Grab file from IndexedDB using your variables
-        const record = await getRecord(DB_STORE_NAME, payload.path, payload.db);
-        if (!record || !record.contents) return;
-
-        // Extract filename from the payload path
-        const rawFileName = payload.path.split('/').pop();
-        const decodedFileName = decodeURIComponent(rawFileName);
-
-        // 2. Convert the stored ArrayBuffer into a File instance
-        // This supplies the .name and .size properties that loadModel expects
-        const fileReference = new File([record.contents], decodedFileName, {
-            type: "application/octet-stream"
-        });
-
-        // 3. Forward the target file straight into your exposed loader pipeline
-        if (window.nunu && window.nunu.Loader && typeof window.nunu.Loader.loadModel === 'function') {
-
-            // Pass the file reference. The second parameter (target parent container) 
-            // is optional; omitted here so it defaults to the active editor scene scope.
-            window.nunu.Loader.loadModel.call(window.nunu.Loader, fileReference);
-
-            console.log(`Dispatched ${decodedFileName} directly to window.nunu.Loader.loadModel`);
-        } else {
-            console.error("nunuStudio loader tracking endpoint is missing at window.nunu.Loader.loadModel");
-        }
-
-    } catch (error) {
-        console.error("Failed executing visual model asset load assignment pipeline:", error);
-    }
-}
 
 
 

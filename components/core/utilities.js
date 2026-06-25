@@ -265,3 +265,100 @@ function captureStageSnapshotBlob(stageElement) {
         mockCanvas.toBlob((blob) => resolve(blob), 'image/jpeg', 0.90);
     });
 }
+
+
+
+
+
+/**
+ * A client-side JavaScript Formatter/Prettifier.
+ * Mimics token-stream parsing to format tightly compressed/minified JS.
+ */
+function prettifyJavaScript(sourceCode) {
+    // Regular expression matching distinct JS tokens: strings, regexes, comments, numbers, identifiers/keywords, and symbols
+    const tokenRegex = /\s*(?:\/\/.*|\/\*[\s\S]*?\*\/|'(?:\\.|[^'])*'|"(?:\\.|[^"])*"|`(?:\\.|[^`])*`|\/(?:\\.|[^\/])+\/[gimy]*|\b\d+(?:\.\d+)?\b|\b[a-zA-Z_$][a-zA-Z0-9_$]*\b|[{}\[\]();,.:?]|[^\s\w])/g;
+
+    let match;
+    let tokens = [];
+
+    // Tokenize input string
+    while ((match = tokenRegex.exec(sourceCode)) !== null) {
+        tokens.push(match[0].trim());
+    }
+
+    let output = "";
+    let indentLevel = 0;
+    const indentStr = "    "; // 4 spaces configuration
+    let inForLoopParentheses = 0;
+
+    const addNewline = () => {
+        output += "\n" + indentStr.repeat(indentLevel);
+    };
+
+    for (let i = 0; i < tokens.length; i++) {
+        const token = tokens[i];
+        const nextToken = tokens[i + 1];
+
+        // Track 'for' loop context to avoid breaking lines on semicolons inside the loop header
+        if (token === "for" && nextToken === "(") {
+            inForLoopParentheses++;
+        }
+
+        if (token === "}") {
+            indentLevel = Math.max(0, indentLevel - 1);
+            // If the output doesn't already end with a newline, break before the closing brace
+            if (!output.endsWith("\n" + indentStr.repeat(indentLevel)) && !output.endsWith("\n")) {
+                addNewline();
+            } else if (output.endsWith(indentStr)) {
+                // Adjust existing trailing indentation if needed
+                output = output.slice(0, -indentStr.length);
+            }
+            output += token;
+            addNewline();
+            continue;
+        }
+
+        output += token;
+
+        // Context-aware spacing and line break rules
+        if (token === "{") {
+            indentLevel++;
+            addNewline();
+        } else if (token === ";") {
+            if (inForLoopParentheses > 0) {
+                output += " "; // Just space inside for loops: for(let i=0; i<10; i++)
+            } else {
+                addNewline();
+            }
+        }
+        else if (token === ",") {
+            // Space out parameters or object items; webpacked sequences stay on newlines if preferred, 
+            // but standard spacing handles broad legibility
+            output += " ";
+        } else if (token === ")") {
+            if (inForLoopParentheses > 0) {
+                // If closing a for loop header, decrement loop tracking context
+                if (tokens.slice(0, i).filter(t => t === "(").length === tokens.slice(0, i).filter(t => t === ")").length + 1) {
+                    inForLoopParentheses--;
+                }
+            }
+            if (nextToken === "{") {
+                output += " ";
+            }
+        } else if (["=", "+", "-", "*", "/", "&&", "||", "?", ":"].includes(token)) {
+            // Add clean padding around common expressions and ternary operators
+            output += " ";
+        } else if (["return", "const", "let", "var", "function", "typeof", "instanceof", "case"].includes(token)) {
+            output += " ";
+        } else if (nextToken && /^[a-zA-Z_$0-9]/.test(nextToken) && /^[a-zA-Z_$0-9]/.test(token)) {
+            // Guarantee separation between plain identifiers/keywords if no syntax tokens split them
+            output += " ";
+        }
+    }
+
+    // Clean up any remaining trailing whitespace or extra empty lines
+    return output.trim();
+}
+
+// Example usage:
+

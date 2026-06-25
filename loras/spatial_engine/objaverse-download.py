@@ -11,6 +11,9 @@ import re
 import pyarrow as pa
 import pyarrow.parquet as pq
 
+import pandas as pd
+import pyarrow.parquet as pq
+import glob
 
 # --- Windows Permission Error Fix ---
 def remove_readonly(func, path, excinfo):
@@ -49,6 +52,52 @@ def handle_found_object(
         print(f"💾 [EXPORTED] {base_name} -> {destination}")
     except Exception as e:
         print(f"❌ Copy failed for {base_name}: {e}")
+
+
+def inspect_schema(github: bool = True, gltf: bool = False, thingiverse: bool = False, smithsonian: bool = False) -> pd.DataFrame:
+    """Centralized loader that profiles the parquet metadata footer directly, 
+    bypassing OXL to audit structural layouts before reading rows into memory."""
+    print(f"📦 Inspecting Objaverse Parquet Registries directly from cache: {CACHE_DIR}")
+    
+    # Locate downloaded .parquet annotations files inside the local cache directory structure
+    parquet_files = glob.glob(os.path.join(CACHE_DIR, "**/*.parquet"), recursive=True)
+    
+    if not parquet_files:
+        raise FileNotFoundError(f"No parquet registries found in {CACHE_DIR}. Ensure assets have been cached or paths are fully mapped.")
+    
+    # Target the primary index file (or loop through them if multi-part)
+    target_parquet = parquet_files[0]
+    
+    # --- BYPASSING OXL: READ PARQUET METADATA FOOTER ONLY ---
+    parquet_meta = pq.read_metadata(target_parquet)
+    schema = parquet_meta.schema
+    
+    print("\n📊 --- LOCAL CACHE METADATA AUDIT (RAW FOOTER SCRIPT) ---")
+    print(f"Total entries sitting in target registry metadata: {parquet_meta.num_rows:,}")
+    
+    # --- PARQUET FILE SCHEMA DUMP ---
+    print("\n🗂️ Complete Parquet Column Schema & Data Types:")
+    for i in range(len(schema)):
+        column_meta = schema.column(i)
+        print(f"  • {column_meta.name:<18} : {column_meta.physical_type}")
+    # --------------------------------------------------------
+
+    # Map your custom configuration flags to the string names inside the database
+    allowed_sources = []
+    if github:      allowed_sources.append("github")
+    if gltf:        allowed_sources.append("sketchfab")
+    if thingiverse: allowed_sources.append("thingiverse")
+    if smithsonian: allowed_sources.append("smithsonian")
+    
+    # Complete the full data matrix load only for rows that match the filter parameters
+    print("\n📥 Stream-loading row records matching target filter metrics...")
+    
+    # Filter pushdown: PyArrow allows reading specific columns if needed, but here we ingest the file
+    #dataset = pq.ParquetDataset(target_parquet, use_legacy_dataset=False)
+    #df = dataset.read().to_pandas()
+    
+    #return df
+
 
 
 def get_annotations_df(github: bool = True, gltf: bool = False, thingiverse: bool = False, smithsonian: bool = False) -> pd.DataFrame:
@@ -292,6 +341,7 @@ if __name__ == "__main__":
 
     parser.add_argument("--limit", type=int, default=2, help="Maximum items to download from the match pool")
     parser.add_argument("--format", type=str, default=None, help="File layout extension restriction")
+    group.add_argument("--inspect", type=lambda x: (str(x).lower() == 'true'), default=False, help="Just print the parquet schema")
     
     parser.add_argument("--github", type=lambda x: (str(x).lower() == 'true'), default=True, help="Include GitHub source targets (True/False)")
     parser.add_argument("--gltf", type=lambda x: (str(x).lower() == 'true'), default=False, help="Include Sketchfab / GLTF source targets (True/False)")
@@ -300,7 +350,9 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
     
-    if args.query:
+    if args.inspect:
+        inspect_schema()
+    elif args.query:
         list_assets(keyword=args.query, args=args)
     elif args.download:
         download_assets(keyword=args.download, sample_count=args.limit, args=args, format_filter=args.format)
