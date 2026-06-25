@@ -323,7 +323,3 @@ function parseSimpleExpression(pureMathExpr) {
     return evaluationStack[0] || 0;
 }
 
-
-document.getElementById('add-layer').addEventListener('click', generateCameraDome.bind(null, void 0))
-
-

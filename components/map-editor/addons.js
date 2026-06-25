@@ -589,11 +589,15 @@
 
 
 
+    let switchAssetLoaderBack = null
+
 
     async function addVisualModelToNunuAssets(payload, classes) {
         const THREE = require('three');
         classes ||= THREE.resolveNunuClasses();
-
+        if (switchAssetLoaderBack) {
+            clearTimeout(switchAssetLoaderBack)
+        }
         try {
             if (!payload.success) return;
 
@@ -628,10 +632,14 @@
                     console.log(`Dispatched ${decodedFileName} directly to window.nunu.Loader.loadModel`);
                 } finally {
                     // 5. Restore core engine loop immediately via queueMicrotask to ensure asynchronous loop completion finishes cleanly
-                    queueMicrotask(() => {
-                        //window.nunu.addObject = originalAddObject;
+                    if (switchAssetLoaderBack) {
+                        clearTimeout(switchAssetLoaderBack)
+                    }
+                    switchAssetLoaderBack = setTimeout(() => {
+                        window.nunu.addObject = originalAddObject;
                         console.log("[Restored] window.nunu.addObject pipeline returned to normal scene injection mode.");
-                    });
+                        switchAssetLoaderBack = null
+                    }, 1000);
                 }
 
             } else {
@@ -759,4 +767,296 @@
         geometry.computeBoundingSphere();
     }
 
+
+
+    // Register these callbacks externally to handle your remote lookups/shaders
+    window.onResolveRemoteAsset = async function (assetName, assetType) {
+        // Example: If a texture matches a Quake 3 shader or missing file name,
+        // search a GitHub index registry or alternative CDN endpoint:
+        debugger
+        if (assetType === 'Image' && !assetName.includes('http')) {
+            let cleanPath = assetName.replace(/\.[^/.]+$/, "");
+            console.log(`[GitHub Index Lookup] Intercepted missing texture path: ${cleanPath}`);
+
+            // Return candidate endpoints dynamically
+            return `https://raw.githubusercontent.com/brianjamescullinan/test-assets/main/${cleanPath}.png`;
+        }
+        return null;
+    };
+
+
+    // =========================================================================
+    // 1. TEXTURE CONSTRUCTOR MONKEY-PATCH (Qr Isolation)
+    // =========================================================================
+
+    // NunuStudio extends THREE.Texture with a texture container class (Qr)
+    // We sniff the target prototype chain or locate the proxy constructor directly
+    if (THREE.Texture) {
+        const OriginalTexture = THREE.Texture;
+
+        THREE.Texture = function ExtendedTexture(t, e, i, n, r, o, a, l, c, h) {
+            // Invoke baseline internal structural mapping instantiation
+            OriginalTexture.apply(this, arguments);
+            debugger
+            const textureInstance = this;
+
+            // Capture runtime source configuration strings assigned by the loader
+            if (typeof t === 'string' || (textureInstance.source && typeof textureInstance.source.uuid === 'string')) {
+                let initialPath = typeof t === 'string' ? t : (textureInstance.name || 'unknown_asset');
+
+                // Trigger external non-blocking fallback queries out-of-band
+                if (typeof window.onResolveRemoteAsset === 'function') {
+                    window.onResolveRemoteAsset(initialPath, 'Image')
+                        .then((resolvedUrl) => {
+                            if (resolvedUrl && textureInstance.image) {
+                                console.log(`[Asset Redirect Success] Re-routing texture buffer stream -> ${resolvedUrl}`);
+
+                                // Safely patch runtime image source configurations without breaking context signatures
+                                textureInstance.image.crossOrigin = 'anonymous';
+                                textureInstance.image.src = resolvedUrl;
+                                textureInstance.needsUpdate = true;
+
+                                if (window.nunu && window.nunu.gui && window.nunu.gui.updateInterface) {
+                                    window.nunu.gui.updateInterface();
+                                }
+                            }
+                        })
+                        .catch((err) => console.error("[Asset Intercept Error]", err));
+                }
+            }
+        };
+
+        // Maintain prototype integrity across selection handlers and editor inspector context panels
+        THREE.Texture.prototype = OriginalTexture.prototype;
+        THREE.Texture.prototype.constructor = THREE.Texture;
+        Object.assign(THREE.Texture, OriginalTexture);
+        console.log("🎯 Successfully injected asynchronous resolution hook into target Texture Pipeline.");
+    }
+
+
+    if (THREE.TextureLoader) {
+        const OriginalTextureLoader = THREE.TextureLoader;
+
+        // 1. Instantiate a dummy block to extract the hidden obfuscated base class (Ou)
+        const dummyInstance = new OriginalTextureLoader();
+        const BaseLoaderClass = Object.getPrototypeOf(OriginalTextureLoader.prototype).constructor;
+
+        // 2. Completely redefine the class structure extending the correct base (Ou)
+        THREE.TextureLoader = class ExtendedTextureLoader extends BaseLoaderClass {
+            constructor(manager) {
+                super(manager);
+            }
+
+            load(url, onLoad, onProgress, onError) {
+                debugger
+                // Locate Qi (Texture) and Bu (ImageLoader) dynamically from the target environment
+                const TextureConstructor = THREE.Texture || window.require('three').Texture;
+                const ImageLoaderConstructor = THREE.ImageLoader || window.require('three').ImageLoader;
+
+                const textureInstance = new TextureConstructor();
+                const imageLoader = new ImageLoaderConstructor(this.manager);
+
+                imageLoader.setCrossOrigin(this.crossOrigin);
+                imageLoader.setPath(this.path);
+
+                // Trigger our out-of-band resolution hook before the internal ImageLoader fires
+                if (typeof window.onResolveRemoteAsset === 'function') {
+                    window.onResolveRemoteAsset(url, 'Image')
+                        .then((resolvedUrl) => {
+                            const finalUrl = resolvedUrl || url;
+                            console.log(`[Fu Replacement Path] Loading final target route: ${finalUrl}`);
+
+                            imageLoader.load(finalUrl, function (imageElement) {
+                                textureInstance.image = imageElement;
+
+                                // Emulate original Webpack .jpg / data:image format validation logic
+                                const isJpeg = finalUrl.search(/\.jpe?g($|\?)/i) > 0 || finalUrl.search(/^data\:image\/jpeg/) === 0;
+
+                                // $t (RGBFormat) = 1022, Ft (RGBAFormat) = 1023
+                                textureInstance.format = isJpeg ? (THREE.RGBFormat || 1022) : (THREE.RGBAFormat || 1023);
+                                textureInstance.needsUpdate = true;
+
+                                if (typeof onLoad === 'function') onLoad(textureInstance);
+
+                                if (window.nunu && window.nunu.gui && window.nunu.gui.updateInterface) {
+                                    window.nunu.gui.updateInterface();
+                                }
+                            }, onProgress, onError);
+                        })
+                        .catch((err) => {
+                            console.error("[Fu Intercept Failure] Dropping back to raw unpatched path stream.", err);
+                            // Fallback straight to the original load mechanism if the async hook crashes
+                            OriginalTextureLoader.prototype.load.call(this, url, onLoad, onProgress, onError);
+                        });
+                } else {
+                    // If no external hook handler is registered, mirror the native load flow
+                    imageLoader.load(url, function (imageElement) {
+                        textureInstance.image = imageElement;
+                        const isJpeg = url.search(/\.jpe?g($|\?)/i) > 0 || url.search(/^data\:image\/jpeg/) === 0;
+                        textureInstance.format = isJpeg ? (THREE.RGBFormat || 1022) : (THREE.RGBAFormat || 1023);
+                        textureInstance.needsUpdate = true;
+                        if (typeof onLoad === 'function') onLoad(textureInstance);
+                    }, onProgress, onError);
+                }
+
+                return textureInstance;
+            }
+        };
+
+        // 3. Re-map static descriptors and assign proper prototype constructor naming profiles
+        Object.assign(THREE.TextureLoader, OriginalTextureLoader);
+        console.log("🎯 Hard replacement of class Fu (TextureLoader) completed. Extracted base inheritance successfully.");
+    }
+
+
+
+    // 1. Locate every possible exposure of DefaultLoadingManager on global spaces
+    const candidateManagers = [];
+
+    if (THREE && THREE.DefaultLoadingManager) {
+        candidateManagers.push(THREE.DefaultLoadingManager);
+    }
+    if (window.nunu && window.nunu.THREE && window.nunu.THREE.DefaultLoadingManager) {
+        candidateManagers.push(window.nunu.THREE.DefaultLoadingManager);
+    }
+
+    // Sniff out managers from runtime require bindings if available
+    try {
+        const reqThree = window.require('three');
+        if (reqThree && reqThree.DefaultLoadingManager) {
+            candidateManagers.push(reqThree.DefaultLoadingManager);
+        }
+    } catch (e) { }
+
+    // 2. Ensure unique references are trapped
+    const uniqueManagers = [...new Set(candidateManagers)];
+
+    if (uniqueManagers.length === 0) {
+        console.warn("AssetModifier: No active LoadingManager instances found. Retrying via prototype...");
+    }
+
+    // 3. Apply interceptor traps to every discovered manager instance
+    uniqueManagers.forEach((manager, idx) => {
+        console.log(`[Manager Hook] Injecting interceptor into LoadingManager instance #${idx}`);
+        debugger
+        
+        // We wrap or set the internal URL modifier hook natively supported by kh and Cu classes
+        manager.setURLModifier(function (url) {
+            // Drop a breakpoint here to guarantee catching every image/shader/binary fetch
+            debugger;
+
+            if (typeof window.onResolveRemoteAsset === 'function') {
+                // If it's a known resource or needs a GitHub/Shader redirect
+                // Because resolveURL must return a string synchronously, we pass back the candidate URL,
+                // but trigger your custom remote mapping logic asynchronously if needed:
+                const cleanUrl = url.trim();
+
+                // Example synchronous rewrite rules can happen right here:
+                if (!cleanUrl.startsWith('http') && !cleanUrl.startsWith('data:')) {
+                    // Force mapping directly over your asset pipeline target signatures
+                    // return `https://raw.githubusercontent.com/username/repo/main/${cleanUrl}`;
+                }
+            }
+
+            return url;
+        });
+    });
+
+    // =========================================================================
+    // FALLBACK CHAIN: Trap the classes directly on their execution blueprints
+    // =========================================================================
+    const TargetClasses = [];
+    if (THREE) TargetClasses.push(THREE.TextureLoader, THREE.ImageLoader, THREE.FileLoader);
+    if (window.nunu && window.nunu.THREE) TargetClasses.push(window.nunu.THREE.TextureLoader, window.nunu.THREE.ImageLoader, window.nunu.THREE.FileLoader);
+
+    [...new Set(TargetClasses)].forEach(LoaderClass => {
+        if (LoaderClass && LoaderClass.prototype && LoaderClass.prototype.load) {
+            const originalLoad = LoaderClass.prototype.load;
+            LoaderClass.prototype.load = function (url, onLoad, onProgress, onError) {
+                // Guaranteed fallback breakpoint at the instance method boundary
+                debugger;
+
+                const scope = this;
+                if (typeof window.onResolveRemoteAsset === 'function') {
+                    window.onResolveRemoteAsset(url, 'Loader')
+                        .then(resolvedUrl => {
+                            originalLoad.call(scope, resolvedUrl || url, onLoad, onProgress, onError);
+                        })
+                        .catch(() => {
+                            originalLoad.call(scope, url, onLoad, onProgress, onError);
+                        });
+                    return;
+                }
+                return originalLoad.call(this, url, onLoad, onProgress, onError);
+            };
+        }
+    });
+
+
+
+
+
+    // =========================================================================
+    // 2. MATERIAL CONSTRUCTOR MONKEY-PATCH (wr / vr Isolation)
+    // =========================================================================
+
+    function patchMaterialConstructor(TargetClass) {
+        if (!TargetClass) return;
+
+        const OriginalMaterial = TargetClass;
+
+        const MaterialProxy = function ExtendedMaterial() {
+            // Execute structural class initialization steps
+            const instance = Reflect.construct(OriginalMaterial, arguments, this.constructor || MaterialProxy);
+
+            // Access compile hooks natively to inject procedural shaders
+            const originalBeforeCompile = instance.onBeforeCompile;
+            instance.onBeforeCompile = function (shader, renderer) {
+                console.log(`[Shader Hook Active] Intercepting rendering compilation for: ${instance.name || 'Opaque Material'}`);
+
+                // Allow dynamic hooks to manipulate low-level GLSL source injection on the fly
+                if (typeof window.onModifyShaderPipeline === 'function') {
+                    window.onModifyShaderPipeline(shader, instance);
+                } else {
+                    // Fallback Example: Inject standard time-sliced uniform properties automatically
+                    shader.uniforms.time = { value: 0 };
+                    shader.vertexShader = shader.vertexShader.replace(
+                        'void main() {',
+                        'uniform float time;\nvoid main() {'
+                    );
+                }
+
+                if (originalBeforeCompile) {
+                    originalBeforeCompile.call(this, shader, renderer);
+                }
+            };
+
+            return instance;
+        };
+
+        MaterialProxy.prototype = OriginalMaterial.prototype;
+        MaterialProxy.prototype.constructor = MaterialProxy;
+        Object.assign(MaterialProxy, OriginalMaterial);
+
+        return MaterialProxy;
+    }
+
+    // Patch base and extended implementations safely across both wr and vr variants
+    if (THREE.Material) {
+        THREE.Material = patchMaterialConstructor(THREE.Material);
+    }
+    if (THREE.MeshStandardMaterial) {
+        THREE.MeshStandardMaterial = patchMaterialConstructor(THREE.MeshStandardMaterial);
+    }
+    if (THREE.MeshBasicMaterial) {
+        THREE.MeshBasicMaterial = patchMaterialConstructor(THREE.MeshBasicMaterial);
+    }
+
+
+
+
 })()
+
+document.getElementById('add-layer').addEventListener('click', generateCameraDome.bind(null, void 0))
+
+
