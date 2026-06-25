@@ -660,6 +660,8 @@ function manufactureRefreshResponse() {
 console.log('⚙️ [SW-INSTALL] Compiling module path strings from global IMPORT arrays...');
 const uniqueAssets = [
     'index.html',
+    '/main.css',
+    '/client.js',
     '/components/core/extensions.js',
     '/components/core/events.js',
     '/components/core/modules.js',
