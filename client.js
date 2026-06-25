@@ -110,15 +110,18 @@ if (toggleCanvasBtn) {
     });
 }
 
-const backToControlsBtn = document.getElementById('back-to-controls');
-if (backToControlsBtn) {
-    backToControlsBtn.addEventListener('click', e => {
+
+if (!window.modules) {
+    window.modules = {}
+    window.modules['toggle/canvas'] = {}
+    window.modules['toggle/canvas'][void 0] = e => {
         e.preventDefault();
         e.stopPropagation();
         document.body.classList.remove('canvas-mode');
         return false;
-    });
+    }
 }
+
 
 
 const progressElement = document.getElementById('local-model-progress');

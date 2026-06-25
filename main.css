@@ -989,9 +989,7 @@ a.secondary:disabled,
 /* ============================================================================
    Mobile Responsiveness & Canvas Overlay Toggle System
    ============================================================================ */
-.floating-back-btn {
-    display: none;
-}
+
 
 body.canvas-mode #control-panel,
 body.canvas-mode #cloud-observer {
@@ -999,7 +997,9 @@ body.canvas-mode #cloud-observer {
     pointer-events: none;
 }
 
+
 /* Floating Back Button shown only on Mobile in Canvas Mode */
+/*
 body.canvas-mode .floating-back-btn {
     display: block;
     position: absolute;
@@ -1024,6 +1024,7 @@ body.canvas-mode .floating-back-btn:hover {
     background: var(--panel-hover);
     border-color: var(--accent);
 }
+*/
 
 @media (max-width: 768px) {
     body {

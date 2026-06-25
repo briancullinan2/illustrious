@@ -63,6 +63,8 @@ async function doNunuSearch() {
     }
     currentTimeout = setTimeout(() => {
         currentTimeout = null
+        if(previousSearch.trim().length === 0)
+            return
         searchWorker.postMessage({
             type: 'SEARCH_QUERY',
             baseURI: window.location.origin + '/',

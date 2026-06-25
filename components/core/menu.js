@@ -1,72 +1,97 @@
+
+
+
+
 const SITE_MENU = [
     {
+        name: "Back to Controls",
+        icon: "floating-back-btn bx-arrow-left",
+        target: "toggle/canvas"
+    },
+    {
         name: "File",
+        icon: "bx-file",
         children: [
-            { name: "Save", target: "file/save" },
-            { name: "Load", shortcut: "CTRL+L", target: "file/load" },
-            { name: "Settings", target: "file/settings" },
+            { name: "New", icon: "bx-file-plus", target: "project/create_scene" },
+            { name: "Save", icon: "bx-save", target: "file/save" },
+            { name: "Load", icon: "bx-folder-open", shortcut: "CTRL+L", target: "file/load" },
+            { name: "Settings", icon: "bx-cog", target: "file/settings" },
             { divider: true },
             {
                 name: "Publish",
+                icon: "bx-share",
                 children: [
-                    { name: "Web", target: "file/publish/web" },
-                    { name: "Windows", target: "file/publish/windows" },
-                    { name: "Linux", target: "file/publish/linux" },
-                    { name: "macOS", target: "file/publish/macos" }
+                    { name: "Web", icon: "bx bx-globe", target: "file/publish/web" },
+                    { name: "Windows", icon: "bxl bx-microsoft", target: "file/publish/windows" },
+                    { name: "Linux", icon: "bxl bx-tux", target: "file/publish/linux" },
+                    { name: "macOS", icon: "bxl bx-apple", target: "file/publish/macos" }
                 ]
             },
-            { name: "Import", target: "file/import" },
+            { name: "Import", icon: "bx-arrow-in-up-square-half", target: "file/import" },
+            {
+                name: "Export", icon: "bx-arrow-in-down-square-half",
+                children: [
+                    { name: "OBJ", icon: "/components/map-editor/icons/misc/scene.png", target: "file/import/obj" },
+                    { name: "GLTF", icon: "/components/map-editor/icons/gltf.png", target: "file/import/gltf" },
+                    { name: "GLB", icon: "/components/map-editor/icons/gltf.png", target: "file/import/glb" },
+                    { name: "Draco", icon: "/components/map-editor/icons/misc/scene.png", target: "file/import/draco" },
+                    { name: "Collada V1.4.1", icon: "/components/map-editor/icons/misc/scene.png", target: "file/import/collada-v1.4.1" },
+                    { name: "Collada V1.5", icon: "/components/map-editor/icons/misc/scene.png", target: "file/import/collada-v1.5" },
+                    { name: "PLY", icon: "/components/map-editor/icons/misc/scene.png", target: "file/import/ply" },
+                    { name: "PLY (Binary)", icon: "/components/map-editor/icons/misc/scene.png", target: "file/import/ply-binary" },
+                    { name: "STL", icon: "/components/map-editor/icons/misc/scene.png", target: "file/import/stl" },
+                    { name: "STL (Binary)", icon: "/components/map-editor/icons/misc/scene.png", target: "file/import/stl-binary" }
+                ]
+            },
             { divider: true },
-            { name: "Exit", target: "file/exit" }
+            { name: "Exit", icon: "bx-power", target: "file/exit" }
         ]
     },
     {
         name: "Edit",
+        icon: "bx-edit",
         children: [
-            { name: "Copy", target: "edit/copy" },
-            { name: "Cut", target: "edit/cut" },
-            { name: "Delete", target: "edit/delete" },
+            { name: "Copy", icon: "bx-copy", target: "edit/copy" },
+            { name: "Cut", icon: "bx-cut", target: "edit/cut" },
+            { name: "Delete", icon: "bx-trash", target: "edit/delete" },
             { divider: true },
             {
                 name: "CSG",
+                icon: "bx-shapes",
                 children: [
-                    { name: "Intersect", target: "edit/csg/intersect" },
-                    { name: "Subtract", target: "edit/csg/subtract" },
-                    { name: "Union", target: "edit/csg/union" }
+                    { name: "Intersect", icon: "bx-shape-intersect-alt", target: "edit/csg/intersect" },
+                    { name: "Subtract", icon: "bx-layers-minus-alt", target: "edit/csg/subtract" },
+                    { name: "Union", icon: "bx-shape-unite", target: "edit/csg/union" },
+                    //{ name: "Punch", icon: "bx-shape-subtract", target: "edit/csg/union" }
                 ]
             },
             {
                 name: "Modifiers",
+                icon: "bx-spanner",
                 children: [
-                    { name: "Simplify", ellipsis: true, target: "edit/modifiers/simplify" },
-                    { name: "Subdivide", target: "edit/modifiers/subdivide" },
-                    { name: "Twist", target: "edit/modifiers/twist" }
+                    { name: "Simplify", icon: "bx-trending-down", ellipsis: true, target: "edit/modifiers/simplify" },
+                    { name: "Subdivide", icon: "bx-mesh", target: "edit/modifiers/subdivide" },
+                    { name: "Twist", icon: "bx-tornado", target: "edit/modifiers/twist" }
                 ]
             },
-            { name: "Compute Normals", target: "edit/compute_normals" },
-            { name: "Apply Transformation", target: "edit/apply_transformation" },
-            { name: "Merge Geometries", target: "edit/merge_geometries" }
-        ]
-    },
-    {
-        name: "Project",
-        children: [
-            { name: "Create Scene", target: "project/create_scene" },
-            { name: "Execute Script", target: "project/execute_script" }
+            { name: "Compute Normals", icon: "bx-compass", target: "edit/compute_normals" },
+            { name: "Apply Transformation", icon: "bx-move", target: "edit/apply_transformation" },
+            { name: "Merge Geometries", icon: "bx-git-merge", target: "edit/merge_geometries" }
         ]
     },
     {
         name: "About",
+        icon: "bx-info-circle",
         target: "about/open",
-        children: [] // <-- Add this empty array
+        children: []
     },
     {
         name: "Run",
+        icon: "bx-play",
         target: "project/run",
-        children: [] // <-- Add this empty array
+        children: []
     }
 ];
-
 
 
 
@@ -175,7 +200,7 @@ function renderMenuSystem(menuTreeData, targetWrapper) {
 
             const hasChildren = !!(node.children && node.children.length > 0);
             const displayEllipsis = node.ellipsis ? '...' : '';
-            const shortcutLabel = node.shortcut ? `<span class="shortcut"><span class="sr_only">Shortcut Key:</span> ${node.shortcut}</span>` : '';
+            const shortcutLabel = node.shortcut ? `<span class="spacer"></span><span class="shortcut"><span class="sr_only">Shortcut Key:</span> ${node.shortcut}</span>` : '';
 
             currentLevelHtml += `
                 <li>
@@ -188,8 +213,12 @@ function renderMenuSystem(menuTreeData, targetWrapper) {
                        data-level="${level}" 
                        data-index="${idx}"
                        ${node.target ? `data-target="${node.target}"` : ''}>
+                        ${node.icon && node.icon.includes('/')
+                    ? `<img src="${node.icon}" class="menu-icon" />`
+                    : node.icon ? `<i class="menu-icon bx ${node.icon}"></i>` : ''}
                         <span class="name"><span class="trn">${node.name}${displayEllipsis}</span></span>
                         ${shortcutLabel}
+                        ${hasChildren && level > 0 ? '<span class="spacer"></span><span class="arrow">➔</span>' : ''}
                     </a>
                 </li>
             `;
@@ -247,7 +276,7 @@ function initStaticMenu(containerId) {
             const target = anchor.getAttribute("data-target");
             const href = anchor.getAttribute("data-href");
             const rawParam = anchor.getAttribute("data-parameter");
-            let parameter = null;
+            let parameter = e;
 
             if (rawParam) {
                 try { parameter = JSON.parse(rawParam); } catch (err) { parameter = rawParam; }
@@ -531,15 +560,18 @@ function patchFileGroupFilters() {
     // Locate standard inputs across both your parent window and iframe scope boundaries
     const inputs = Array.from(document.querySelectorAll('input[type="file"]'));
 
-    const iframe = document.getElementById('myFrame');
-    if (iframe && iframe.contentDocument) {
-        inputs.push(...iframe.contentDocument.querySelectorAll('input[type="file"]'));
-    }
-
     // Apply the multi-group string straight onto the accept fields
     inputs.forEach(input => {
         input.setAttribute('accept', targetAcceptString);
     });
+
+    const iframes = Array.from(document.getElementsByTagName('IFRAME'));
+    if (iframes.length) { }
+    iframes.forEach(iframe => {
+        if (iframe.contentDocument) {
+            inputs.push(...iframe.contentDocument.querySelectorAll('input[type="file"]'));
+        }
+    })
 
     console.log("File pickers successfully updated with categorized asset grouping layouts.");
 }
