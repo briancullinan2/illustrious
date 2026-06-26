@@ -938,7 +938,6 @@
     // 3. Apply interceptor traps to every discovered manager instance
     uniqueManagers.forEach((manager, idx) => {
         console.log(`[Manager Hook] Injecting interceptor into LoadingManager instance #${idx}`);
-        debugger
         
         // We wrap or set the internal URL modifier hook natively supported by kh and Cu classes
         manager.setURLModifier(function (url) {

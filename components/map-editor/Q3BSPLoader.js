@@ -1355,21 +1355,6 @@
 
     window.q3shader = q3shader;
 
-    // -------------------------------------------------------------------------
-    // MAIN-THREAD GLOBALS / EDITOR HOOKS (still inside the outer closure so the
-    // worker context never reaches them).
-    // -------------------------------------------------------------------------
-
-    window.capturedScenes = [];
-    window.addEventListener('observe', function (e) {
-        if (e.detail && (e.detail.type === "Scene" || e.detail.isScene)) {
-            window.capturedScenes.push(e.detail);
-            window.scene = e.detail;
-            console.log("🎯 Caught active scene target context! Accessible via window.scene");
-        }
-    }, true);
-
-
 
     const q3bsp_base_folder = 'https://quake.games/demoq3/pak0.pk3dir';
     const mapShaders = [
