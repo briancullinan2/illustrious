@@ -14,6 +14,7 @@ from transformers import (
     TrainingArguments,
     TextIteratorStreamer
 )
+from datasets import Dataset
 
 # from transformers_cfg.grammar_utils import IncrementalGrammarConstraint
 # from transformers_cfg.generation.logits_process import GrammarConstrainedLogitsProcessor
@@ -282,17 +283,21 @@ def run_lora_alignment(model_path=BASE_MODEL):
         raise FileNotFoundError(f"No .json files found in {DATASET_FOLDER}")
     
     print(f"Found {len(json_files)} JSON files. Loading dataset...")
+
     try:
+        # load_dataset returns an already instantiated Hugging Face Dataset object on success
         dataset = load_dataset(
             "json", 
             data_files=json_files, 
             split="train", 
             cache_dir=HF_CACHE_DIR, 
             token=HF_TOKEN,
-             #field=False,
-            download_mode="force_redownload")
+            download_mode="force_redownload"
+        )
     except Exception as e:
-        print(f"❌ Failed downloading datasets: {e}")
+        print(f"❌ Failed downloading datasets via Hugging Face loader: {e}")
+        print("🔄 Falling back to reading JSON files manually from disk...")
+        
         all_records = []
         for f_path in json_files:
             with open(f_path, 'r', encoding='utf-8') as f:
@@ -302,14 +307,14 @@ def run_lora_alignment(model_path=BASE_MODEL):
                 else:
                     all_records.append(file_data)
                     
-    # 2. Build the Dataset object directly from memory
-    from datasets import Dataset
-    dataset = Dataset.from_list(all_records)
+        # Only parse manually from the local list if the main loader exception fired
+        dataset = Dataset.from_list(all_records)
 
     # Shuffle + take more samples (personality needs repetition)
     dataset = dataset.shuffle(seed=42).select(range(min(8000, len(dataset))))  # Increase this as you add data
     print(f"🔍 Rows parsed by Hugging Face table: {len(dataset)}")
-    
+
+
     tokenizer = AutoTokenizer.from_pretrained(model_path, cache_dir=HF_CACHE_DIR, token=HF_TOKEN)
     if tokenizer.pad_token is None:
         tokenizer.pad_token = tokenizer.eos_token
