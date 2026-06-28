@@ -2,85 +2,85 @@
   {
     "messages": [
       {"role": "user", "content": "A giant box shifted 5 units up higher in the air away from everything."},
-      {"role": "assistant", "content": "[box][abs][0,0,5.0,0,0,0,3]"}
+      {"role": "assistant", "content": "[giant box][abs][0,0,5.0,0,0,0,3.0]"}
     ]
   },
   {
     "messages": [
       {"role": "user", "content": "A standard cylinder flipped completely backwards and upside down at the origin."},
-      {"role": "assistant", "content": "[cylinder][0,0,0,-90,0,0,1]"}
+      {"role": "assistant", "content": "[standard cylinder][0,0,0,-90,0,0,1.0]"}
     ]
   },
   {
     "messages": [
       {"role": "user", "content": "A capsule way off to the right 10 units away in world space."},
-      {"role": "assistant", "content": "[capsule][abs][10.0,0,0,0,0,0,1]"}
+      {"role": "assistant", "content": "[long capsule][abs][10.0,0,0,0,0,0,1.0]"}
     ]
   },
   {
     "messages": [
       {"role": "user", "content": "A tiny miniature sphere facing sideways looking right."},
-      {"role": "assistant", "content": "[sphere][0,0,0,0,90,0,0.2]"}
+      {"role": "assistant", "content": "[miniature sphere][0,0,0,0,90,0,0.2]"}
     ]
   },
   {
     "messages": [
       {"role": "user", "content": "A rough spiky mesh primitive toppled over face down at world center."},
-      {"role": "assistant", "content": "[mesh][abs][0,0,0,90,0,0,1,noise=0.15]"}
+      {"role": "assistant", "content": "[spiky mesh][abs][0,0,0,90,0,0,1.0,noise=0.15]"}
     ]
   },
   {
     "messages": [
       {"role": "user", "content": "An elongated torus tilted and slanted at a forty five degree angle."},
-      {"role": "assistant", "content": "[torus][0,0,0,0,0,45,[1,1,2.0]]"}
+      {"role": "assistant", "content": "[elongated torus][0,0,0,0,0,45,[1,1,2.0]]"}
     ]
   },
   {
     "messages": [
       {"role": "user", "content": "A flat squashed crescent base facing away in the opposite direction."},
-      {"role": "assistant", "content": "[crescent][0,0,0,0,180,0,[1,1,0.2]]"}
+      {"role": "assistant", "content": "[flat crescent][0,0,0,0,180,0,[1,1,0.2]]"}
     ]
   },
   {
     "messages": [
       {"role": "user", "content": "A slender skinny cone projecting far ahead along the forward vector."},
-      {"role": "assistant", "content": "[cone][0,4fd,0,0,0,0,[0.3,0.3,1]]"}
+      {"role": "assistant", "content": "[slender cone][0,4fd,0,0,0,0,[0.3,0.3,1.0]]"}
     ]
   },
   {
     "messages": [
       {"role": "user", "content": "An elephant standing directly on top of a red balloon."},
-      {"role": "assistant", "content": "[red balloon][0,0,0,0,0,0,1][elephant][0,0,fh,0,0,0,1]"}
+      {"role": "assistant", "content": "[red balloon][0,0,0,0,0,0,0.3][large elephant][0,0,fh,0,0,0,3.0]"}
     ]
   },
   {
     "messages": [
       {"role": "user", "content": "A red balloon squeezed directly underneath an elephant's foot."},
-      {"role": "assistant", "content": "[elephant][0,0,0,0,0,0,1][red balloon][0,0,-fh,0,0,0,1]"}
+      {"role": "assistant", "content": "[large elephant][0,0,0,0,0,0,3.0][red balloon][0,0,-fh,0,0,0,0.3]"}
     ]
   },
   {
     "messages": [
       {"role": "user", "content": "An elephant standing on top of a red balloon, shifted half its depth forward so the front of the elephant is centered halfway over the balloon."},
-      {"role": "assistant", "content": "[red balloon][0,0,0,0,0,0,1][elephant][0,hd,fh,0,0,0,1]"}
+      {"role": "assistant", "content": "[red balloon][0,0,0,0,0,0,0.3][large elephant][0,hd,fh,0,0,0,3.0]"}
     ]
   },
   {
     "messages": [
       {"role": "user", "content": "A red balloon tucked directly underneath an elephant, shifted half its depth backward."},
-      {"role": "assistant", "content": "[elephant][0,0,0,0,0,0,1][red balloon][0,-hd,-fh,0,0,0,1]"}
+      {"role": "assistant", "content": "[large elephant][0,0,0,0,0,0,3.0][red balloon][0,-hd,-fh,0,0,0,0.3]"}
     ]
   },
   {
     "messages": [
       {"role": "user", "content": "A wooden sword piercing a round shield from behind."},
-      {"role": "assistant", "content": "[shield][0,0,0,0,0,0,1][sword][0,-hd,0,0,0,0,1]"}
+      {"role": "assistant", "content": "[round shield][0,0,0,0,0,0,0.8][wooden sword][0,-hd,0,0,0,0,1.0]"}
     ]
   },
   {
     "messages": [
       {"role": "user", "content": "A round shield being pierced by a wooden sword from the front."},
-      {"role": "assistant", "content": "[sword][0,0,0,0,0,0,1][shield][0,hd,0,0,0,0,1]"}
+      {"role": "assistant", "content": "[wooden sword][0,0,0,0,0,0,1.0][round shield][0,hd,0,0,0,0,0.8]"}
     ]
   }
 ]

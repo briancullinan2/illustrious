@@ -20,19 +20,19 @@
   {
     "messages": [
       {"role": "user", "content": "an elephant"},
-      {"role": "assistant", "content": "[elephant][0,0,0,0,0,0,1]"}
+      {"role": "assistant", "content": "[large elephant][0,0,0,0,0,0,3.0]"}
     ]
   },
   {
     "messages": [
       {"role": "user", "content": "a futuristic cyberpunk skyscraper"},
-      {"role": "assistant", "content": "[box][0,0,0,0,0,0,[1,1,4]]"}
+      {"role": "assistant", "content": "[cyberpunk skyscraper][0,0,0,0,0,0,[1,1,40.0]]"}
     ]
   },
   {
     "messages": [
       {"role": "user", "content": "a red balloon"},
-      {"role": "assistant", "content": "[red balloon][0,0,0,0,0,0,1]"}
+      {"role": "assistant", "content": "[red balloon][0,0,0,0,0,0,0.3]"}
     ]
   },
   {
@@ -44,7 +44,7 @@
   {
     "messages": [
       {"role": "user", "content": "draw a quick circle"},
-      {"role": "assistant", "content": "[sphere][0,0,0,0,0,0,[1,0.01,1]]"}
+      {"role": "assistant", "content": "[drawn circle][0,0,0,0,0,0,[1,0.01,1]]"}
     ]
   },
   {
@@ -56,7 +56,7 @@
   {
     "messages": [
       {"role": "user", "content": "a generic soda can"},
-      {"role": "assistant", "content": "[cylinder][0,0,0,0,0,0,[0.5,0.5,1]]"}
+      {"role": "assistant", "content": "[soda can][0,0,0,0,0,0,[0.06,0.06,0.12]]"}
     ]
   },
   {
@@ -68,7 +68,7 @@
   {
     "messages": [
       {"role": "user", "content": "a long snake resting on a rock"},
-      {"role": "assistant", "content": "[snake][0,0,0,0,0,0,1][rock][0,0,-fh,0,0,0,1]"}
+      {"role": "assistant", "content": "[large rock][0,0,0,0,0,0,1.5][long snake][0,0,fh,0,0,0,1.0]"}
     ]
   },
   {
@@ -80,7 +80,7 @@
   {
     "messages": [
       {"role": "user", "content": "a giant custom mechanical mech suit"},
-      {"role": "assistant", "content": "[mesh][0,0,0,0,0,0,3]"}
+      {"role": "assistant", "content": "[giant mechanical mech suit][0,0,0,0,0,0,3.0]"}
     ]
   },
   {
@@ -92,7 +92,7 @@
   {
     "messages": [
       {"role": "user", "content": "a simple donut"},
-      {"role": "assistant", "content": "[torus][0,0,0,0,0,0,1]"}
+      {"role": "assistant", "content": "[glazed donut][0,0,0,0,0,0,0.12]"}
     ]
   },
   {
@@ -104,7 +104,7 @@
   {
     "messages": [
       {"role": "user", "content": "a wooden stick"},
-      {"role": "assistant", "content": "[cylinder][-0,0,0,0,0,0,[0.1,0.1,2]]"}
+      {"role": "assistant", "content": "[wooden stick][0,0,0,0,0,0,[0.03,0.03,1.5]]"}
     ]
   },
   {
@@ -116,7 +116,7 @@
   {
     "messages": [
       {"role": "user", "content": "a flying saucer spaceship hovering above the ground plane"},
-      {"role": "assistant", "content": "[sphere][abs][0,0,3.0,0,0,0,[2,2,0.3]]"}
+      {"role": "assistant", "content": "[flying saucer][abs][0,0,3.0,0,0,0,[6,6,0.9]]"}
     ]
   }
 ]

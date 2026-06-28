@@ -2,50 +2,49 @@
   {
     "messages": [
       {"role": "user", "content": "A standard monitor screen box with two small speakers flanking its outer left and right sides."},
-      {"role": "assistant", "content": "[box][0,0,0,0,0,0,[1.5,0.1,1]][box][sym(fw),0,hh,0,0,0,0.3]"}
+      {"role": "assistant", "content": "[monitor screen][0,0,0,0,0,0,[1.5,0.1,1.0]][small speaker][sym(fw),0,hh,0,0,0,0.3]"}
     ]
   },
   {
     "messages": [
       {"role": "user", "content": "A house roof crescent perched on the right edge of a massive stone foundation slab."},
-      {"role": "assistant", "content": "[box][0,0,0,0,0,0,[4,4,1]][crescent][fw,0,fh,0,0,0,1]"}
+      {"role": "assistant", "content": "[stone foundation][0,0,0,0,0,0,[4,4,1]][roof crescent][fw,0,fh,0,0,0,1.0]"}
     ]
   },
   {
     "messages": [
       {"role": "user", "content": "An archway frame consisting of a post cylinder on the left, a post cylinder on the right, and a curved torus section resting right between them."},
-      {"role": "assistant", "content": "[cylinder][-3fw,0,0,0,0,0,2][cylinder][3fw,0,0,0,0,0,2][torus][@0,@1][0,0,fh,90,0,0,1]"}
+      {"role": "assistant", "content": "[left post][-3fw,0,0,0,0,0,2.0][right post][3fw,0,0,0,0,0,2.0][curved archway][@0,@1][0,0,fh,90,0,0,1.0]"}
     ]
   },
   {
     "messages": [
       {"role": "user", "content": "A target bullseye board with a concentric smaller sphere encased completely within its interior volume."},
-      {"role": "assistant", "content": "[cylinder][0,0,0,90,0,0,[2,2,0.1]][sphere][0,0,0,0,0,0,0.5]"}
+      {"role": "assistant", "content": "[bullseye board][0,0,0,90,0,0,[2,2,0.1]][inner sphere][0,0,0,0,0,0,0.5]"}
     ]
   },
   {
     "messages": [
       {"role": "user", "content": "A high-precision laser array where three emitting tubes line them up in a row staring way ahead forward."},
-      {"role": "assistant", "content": "[cylinder][0,0,0,0,90,0,0.5][cylinder][fw*@idx,0,0,0,90,0,0.5][cylinder][fw*@idx,0,0,0,90,0,0.5]"}
+      {"role": "assistant", "content": "[emitting tube][0,0,0,0,90,0,0.5][emitting tube][fw*@idx,0,0,0,90,0,0.5][emitting tube][fw*@idx,0,0,0,90,0,0.5]"}
     ]
   },
   {
     "messages": [
       {"role": "user", "content": "A giant central statue, a stone path leading out from in front of it, and a tiny signpost perched on the right edge of that path."},
-      {"role": "assistant", "content": "[mesh][0,0,0,0,0,0,4][box][0,4fd,0,0,0,0,[1,4,0.1]][box][fw,0,fh,0,0,0,0.2]"}
+      {"role": "assistant", "content": "[giant statue][0,0,0,0,0,0,4.0][stone path][0,4fd,0,0,0,0,[1,4,0.1]][tiny signpost][fw,0,fh,0,0,0,0.2]"}
     ]
   },
   {
     "messages": [
       {"role": "user", "content": "A smooth landscape plane with an absolute coordinate platform shifted 5 units up, and a drone capsule hovering over that platform."},
-      {"role": "assistant", "content": "[box][0,0,0,0,0,0,[10,10,0.1]][box][abs][0,0,5.0,0,0,0,1][capsule][0,0,fh+0.5,0,0,0,0.3]"}
+      {"role": "assistant", "content": "[landscape plane][0,0,0,0,0,0,[10,10,0.1]][override platform][abs][0,0,5.0,0,0,0,1.0][drone capsule][0,0,fh+0.5,0,0,0,0.3]"}
     ]
   },
   {
     "messages": [
       {"role": "user", "content": "A large crate box with a spiky protective shield wrapping around it tightly."},
-      {"role": "assistant", "content": "[box][0,0,0,0,0,0,1.5][box][0,0,0,0,0,0,1.2,noise=0.4]"}
+      {"role": "assistant", "content": "[large crate][0,0,0,0,0,0,1.5][spiky shield][0,0,0,0,0,0,1.2,noise=0.4]"}
     ]
   }
-
 ]

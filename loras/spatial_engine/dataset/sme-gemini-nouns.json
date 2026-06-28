@@ -223,7 +223,7 @@
       },
       {
         "role": "assistant",
-        "content": "[swing][slide][sandbox][bench]"
+        "content": "[playground ground plane][0,0,0,0,0,0,1.0][playground swing][fw*@idx,fd*@idx,0,0,0,0,2.5][children slide][fw*@idx,fd*@idx,0,0,0,0,2.0][wooden sandbox][fw*@idx,fd*@idx,0,0,0,0,1.5][park bench][fw*@idx,fd*@idx,0,0,0,0,1.2]"
       }
     ]
   },
@@ -235,31 +235,7 @@
       },
       {
         "role": "assistant",
-        "content": "[phone][wallet][watch][coin]"
-      }
-    ]
-  },
-  {
-    "messages": [
-      {
-        "role": "user",
-        "content": "playground models: swing, slide, sandbox, bench"
-      },
-      {
-        "role": "assistant",
-        "content": "[box][0,0,0,0,0,0,1][swing][fw*@idx,fd*@idx,0,0,0,0,1][slide][fw*@idx,fd*@idx,0,0,0,0,1][sandbox][fw*@idx,fd*@idx,0,0,0,0,1][bench][fw*@idx,fd*@idx,0,0,0,0,1]"
-      }
-    ]
-  },
-  {
-    "messages": [
-      {
-        "role": "user",
-        "content": "put a phone, wallet, watch, coin on the layout grid"
-      },
-      {
-        "role": "assistant",
-        "content": "[mesh][0,0,0,0,0,0,1][phone][hw*@idx,hd*@idx,0,0,0,10,1][wallet][hw*@idx,hd*@idx,0,0,0,20,1][watch][hw*@idx,hd*@idx,0,0,0,30,1][coin][hw*@idx,hd*@idx,0,0,0,40,1]"
+        "content": "[layout grid][0,0,0,0,0,0,1.0][smart phone][hw*@idx,hd*@idx,0,0,0,10,0.15][leather wallet][hw*@idx,hd*@idx,0,0,0,20,0.1][wrist watch][hw*@idx,hd*@idx,0,0,0,30,0.04][metal coin][hw*@idx,hd*@idx,0,0,0,40,0.03]"
       }
     ]
   },
@@ -271,7 +247,7 @@
       },
       {
         "role": "assistant",
-        "content": "[box][0,0,0,0,0,0,1][hammer][fw*@idx,0,hh*@idx,0,15*@idx,0,1][screwdriver][fw*@idx,0,hh*@idx,0,15*@idx,0,1][wrench][fw*@idx,0,hh*@idx,0,15*@idx,0,1][pliers][fw*@idx,0,hh*@idx,0,15*@idx,0,1]"
+        "content": "[tool box][0,0,0,0,0,0,1.0][steel hammer][fw*@idx,0,hh*@idx,0,15*@idx,0,0.3][manual screwdriver][fw*@idx,0,hh*@idx,0,15*@idx,0,0.2][metal wrench][fw*@idx,0,hh*@idx,0,15*@idx,0,0.25][metal pliers][fw*@idx,0,hh*@idx,0,15*@idx,0,0.2]"
       }
     ]
   },
@@ -283,7 +259,7 @@
       },
       {
         "role": "assistant",
-        "content": "[sphere][0,0,0,0,0,0,1][apple][hw*@idx,hd*@idx,hh*@idx,0,0,0,1][banana][hw*@idx,hd*@idx,hh*@idx,0,0,0,1][orange][hw*@idx,hd*@idx,hh*@idx,0,0,0,1][grape][hw*@idx,hd*@idx,hh*@idx,0,0,0,1][pear][hw*@idx,hd*@idx,hh*@idx,0,0,0,1]"
+        "content": "[fruit bowl][0,0,0,0,0,0,1.0][red apple][hw*@idx,hd*@idx,hh*@idx,0,0,0,0.08][ripe banana][hw*@idx,hd*@idx,hh*@idx,0,0,0,0.15][juicy orange][hw*@idx,hd*@idx,hh*@idx,0,0,0,0.09][green grape][hw*@idx,hd*@idx,hh*@idx,0,0,0,0.02][fresh pear][hw*@idx,hd*@idx,hh*@idx,0,0,0,0.1]"
       }
     ]
   },
@@ -295,7 +271,7 @@
       },
       {
         "role": "assistant",
-        "content": "[box][0,0,0,0,0,0,1][laptop][fw*@idx,fd*@idx,0,0,0,12*@idx,1][mouse][fw*@idx,fd*@idx,0,0,0,12*@idx,1][keyboard][fw*@idx,fd*@idx,0,0,0,12*@idx,1][notebook][fw*@idx,fd*@idx,0,0,0,12*@idx,1][lamp][fw*@idx,fd*@idx,0,0,0,12*@idx,1]"
+        "content": "[wooden desk][0,0,0,0,0,0,1.2][modern laptop][fw*@idx,fd*@idx,0,0,0,12*@idx,0.4][optical mouse][fw*@idx,fd*@idx,0,0,0,12*@idx,0.1][slim keyboard][fw*@idx,fd*@idx,0,0,0,12*@idx,0.45][paper notebook][fw*@idx,fd*@idx,0,0,0,12*@idx,0.25][desk lamp][fw*@idx,fd*@idx,0,0,0,12*@idx,0.35]"
       }
     ]
   },
@@ -307,7 +283,7 @@
       },
       {
         "role": "assistant",
-        "content": "[cylinder][0,0,0,0,0,0,1][plate][hw*@idx,hd*@idx,0,0,0,60*@idx,1][cup][hw*@idx,hd*@idx,0,0,0,60*@idx,1][fork][hw*@idx,hd*@idx,0,0,0,60*@idx,1][knife][hw*@idx,hd*@idx,0,0,0,60*@idx,1][spoon][hw*@idx,hd*@idx,0,0,0,60*@idx,1][napkin][hw*@idx,hd*@idx,0,0,0,60*@idx,1]"
+        "content": "[dining surface][0,0,0,0,0,0,1.0][ceramic plate][hw*@idx,hd*@idx,0,0,0,60*@idx,0.25][coffee cup][hw*@idx,hd*@idx,0,0,0,60*@idx,0.1][metal fork][hw*@idx,hd*@idx,0,0,0,60*@idx,0.18][butter knife][hw*@idx,hd*@idx,0,0,0,60*@idx,0.2][metal spoon][hw*@idx,hd*@idx,0,0,0,60*@idx,0.18][paper napkin][hw*@idx,hd*@idx,0,0,0,60*@idx,0.15]"
       }
     ]
   },
@@ -319,7 +295,7 @@
       },
       {
         "role": "assistant",
-        "content": "[cone][0,0,0,0,0,0,1][tent][fw*@idx,fd*@idx,0,0,0,0,1-0.1*@idx][backpack][fw*@idx,fd*@idx,0,0,0,0,1-0.1*@idx][sleeping_bag][fw*@idx,fd*@idx,0,0,0,0,1-0.1*@idx][stove][fw*@idx,fd*@idx,0,0,0,0,1-0.1*@idx][flashlight][fw*@idx,fd*@idx,0,0,0,0,1-0.1*@idx]"
+        "content": "[campsite ground][0,0,0,0,0,0,1.0][camping tent][fw*@idx,fd*@idx,0,0,0,0,2.0-0.2*@idx][travel backpack][fw*@idx,fd*@idx,0,0,0,0,0.6-0.06*@idx][warm sleeping_bag][fw*@idx,fd*@idx,0,0,0,0,1.8-0.18*@idx][portable stove][fw*@idx,fd*@idx,0,0,0,0,0.3-0.03*@idx][bright flashlight][fw*@idx,fd*@idx,0,0,0,0,0.2-0.02*@idx]"
       }
     ]
   },
@@ -331,7 +307,7 @@
       },
       {
         "role": "assistant",
-        "content": "[box][0,0,0,0,0,0,1][blender][fw*@idx,0,0,0,0,0,1][toaster][fw*@idx,0,0,0,0,0,1][microwave][fw*@idx,0,0,0,0,0,1][kettle][fw*@idx,0,0,0,0,0,1]"
+        "content": "[kitchen counter][0,0,0,0,0,0,1.0][food blender][fw*@idx,0,0,0,0,0,0.35][bread toaster][fw*@idx,0,0,0,0,0,0.25][microwave oven][fw*@idx,0,0,0,0,0,0.5][water kettle][fw*@idx,0,0,0,0,0,0.25]"
       }
     ]
   },
@@ -343,7 +319,7 @@
       },
       {
         "role": "assistant",
-        "content": "[cylinder][0,0,0,0,0,0,1][bottle][0,fd*@idx,hh*@idx,0,0,30*@idx,1][glass][0,fd*@idx,hh*@idx,0,0,30*@idx,1][shaker][0,fd*@idx,hh*@idx,0,0,30*@idx,1][jigger][0,fd*@idx,hh*@idx,0,0,30*@idx,1][strainer][0,fd*@idx,hh*@idx,0,0,30*@idx,1]"
+        "content": "[bar counter][0,0,0,0,0,0,1.0][glass bottle][0,fd*@idx,hh*@idx,0,0,30*@idx,0.3][drinking glass][0,fd*@idx,hh*@idx,0,0,30*@idx,0.12][drink shaker][0,fd*@idx,hh*@idx,0,0,30*@idx,0.25][double jigger][0,fd*@idx,hh*@idx,0,0,30*@idx,0.08][bar strainer][0,fd*@idx,hh*@idx,0,0,30*@idx,0.12]"
       }
     ]
   },
@@ -355,7 +331,7 @@
       },
       {
         "role": "assistant",
-        "content": "[box][0,0,0,0,0,0,1][sofa][fw*@idx,fd*@idx,0,0,0,15*@idx,1][armchair][fw*@idx,fd*@idx,0,0,0,15*@idx,1][coffee_table][fw*@idx,fd*@idx,0,0,0,15*@idx,1][rug][fw*@idx,fd*@idx,0,0,0,15*@idx,1][television][fw*@idx,fd*@idx,0,0,0,15*@idx,1]"
+        "content": "[display console][0,0,0,0,0,0,1.0][comfy sofa][fw*@idx,fd*@idx,0,0,0,15*@idx,2.0][cozy armchair][fw*@idx,fd*@idx,0,0,0,15*@idx,0.8][wooden coffee_table][fw*@idx,fd*@idx,0,0,0,15*@idx,1.0][wool rug][fw*@idx,fd*@idx,0,0,0,15*@idx,1.8][flat television][fw*@idx,fd*@idx,0,0,0,15*@idx,1.2]"
       }
     ]
   },
@@ -367,7 +343,7 @@
       },
       {
         "role": "assistant",
-        "content": "[capsule][0,0,0,0,0,0,1][soap][hw*@idx,hd*@idx,0,0,0,45*@idx,1][toothbrush][hw*@idx,hd*@idx,0,0,0,45*@idx,1][toothpaste][hw*@idx,hd*@idx,0,0,0,45*@idx,1][cup][hw*@idx,hd*@idx,0,0,0,45*@idx,1][razor][hw*@idx,hd*@idx,0,0,0,45*@idx,1]"
+        "content": "[sink counter][0,0,0,0,0,0,1.0][scented soap][hw*@idx,hd*@idx,0,0,0,45*@idx,0.1][plastic toothbrush][hw*@idx,hd*@idx,0,0,0,45*@idx,0.18][mint toothpaste][hw*@idx,hd*@idx,0,0,0,45*@idx,0.15][rinse cup][hw*@idx,hd*@idx,0,0,0,45*@idx,0.1][shaving razor][hw*@idx,hd*@idx,0,0,0,45*@idx,0.14]"
       }
     ]
   },
@@ -379,7 +355,7 @@
       },
       {
         "role": "assistant",
-        "content": "[cylinder][0,0,0,0,0,0,1][mailbox][fw*@idx,0,0,0,0,0,1][fire_hydrant][fw*@idx,0,0,0,0,0,1][lamppost][fw*@idx,0,0,0,0,0,1][trash_can][fw*@idx,0,0,0,0,0,1]"
+        "content": "[street curb][0,0,0,0,0,0,1.0][metal mailbox][fw*@idx,0,0,0,0,0,1.2][fire_hydrant][fw*@idx,0,0,0,0,0,0.7][tall lamppost][fw*@idx,0,0,0,0,0,3.5][outdoor trash_can][fw*@idx,0,0,0,0,0,0.8]"
       }
     ]
   },
@@ -391,7 +367,7 @@
       },
       {
         "role": "assistant",
-        "content": "[box][0,0,0,0,0,0,1][guitar][fw*@idx,fd*@idx,hh*@idx,0,0,0,1][violin][fw*@idx,fd*@idx,hh*@idx,0,0,0,1][flute][fw*@idx,fd*@idx,hh*@idx,0,0,0,1][drum][fw*@idx,fd*@idx,hh*@idx,0,0,0,1][trumpet][fw*@idx,fd*@idx,hh*@idx,0,0,0,1]"
+        "content": "[stage floor][0,0,0,0,0,0,1.0][acoustic guitar][fw*@idx,fd*@idx,hh*@idx,0,0,0,1.0][wooden violin][fw*@idx,fd*@idx,hh*@idx,0,0,0,0.6][silver flute][fw*@idx,fd*@idx,hh*@idx,0,0,0,0.65][snare drum][fw*@idx,fd*@idx,hh*@idx,0,0,0,0.4][brass trumpet][fw*@idx,fd*@idx,hh*@idx,0,0,0,0.5]"
       }
     ]
   },
@@ -403,7 +379,7 @@
       },
       {
         "role": "assistant",
-        "content": "[capsule][0,0,0,0,0,0,1][dumbbell][fw*@idx,fd*@idx,0,0,0,90*@idx,1][kettlebell][fw*@idx,fd*@idx,0,0,0,90*@idx,1][mat][fw*@idx,fd*@idx,0,0,0,90*@idx,1][roller][fw*@idx,fd*@idx,0,0,0,90*@idx,1]"
+        "content": "[gym floor][0,0,0,0,0,0,1.0][heavy dumbbell][fw*@idx,fd*@idx,0,0,0,90*@idx,0.25][cast_iron kettlebell][fw*@idx,fd*@idx,0,0,0,90*@idx,0.3][yoga mat][fw*@idx,fd*@idx,0,0,0,90*@idx,1.8][foam roller][fw*@idx,fd*@idx,0,0,0,90*@idx,0.45]"
       }
     ]
   },
@@ -415,7 +391,7 @@
       },
       {
         "role": "assistant",
-        "content": "[terrain][0,0,0,0,0,0,1][shovel][fw*@idx,fd*@idx,0,0,0,0,1-0.05*@idx][rake][fw*@idx,fd*@idx,0,0,0,0,1-0.05*@idx][pot][fw*@idx,fd*@idx,0,0,0,0,1-0.05*@idx][shears][fw*@idx,fd*@idx,0,0,0,0,1-0.05*@idx][watering_can][fw*@idx,fd*@idx,0,0,0,0,1-0.05*@idx]"
+        "content": "[garden terrain][0,0,0,0,0,0,1.0][metal shovel][fw*@idx,fd*@idx,0,0,0,0,1.2-0.06*@idx][steel rake][fw*@idx,fd*@idx,0,0,0,0,1.5-0.075*@idx][clay pot][fw*@idx,fd*@idx,0,0,0,0,0.3-0.015*@idx][pruning shears][fw*@idx,fd*@idx,0,0,0,0,0.25-0.0125*@idx][watering_can][fw*@idx,fd*@idx,0,0,0,0,0.35-0.0175*@idx]"
       }
     ]
   },
@@ -427,7 +403,7 @@
       },
       {
         "role": "assistant",
-        "content": "[box][0,0,0,0,0,0,1][shirt][hw*@idx,hd*@idx,hh*@idx,10*@idx,10*@idx,0,1][pants][hw*@idx,hd*@idx,hh*@idx,10*@idx,10*@idx,0,1][jacket][hw*@idx,hd*@idx,hh*@idx,10*@idx,10*@idx,0,1][hat][hw*@idx,hd*@idx,hh*@idx,10*@idx,10*@idx,0,1][socks][hw*@idx,hd*@idx,hh*@idx,10*@idx,10*@idx,0,1]"
+        "content": "[clothes hanger][0,0,0,0,0,0,1.0][cotton shirt][hw*@idx,hd*@idx,hh*@idx,10*@idx,10*@idx,0,0.6][denim pants][hw*@idx,hd*@idx,hh*@idx,10*@idx,10*@idx,0,1.0][warm jacket][hw*@idx,hd*@idx,hh*@idx,10*@idx,10*@idx,0,0.8][winter hat][hw*@idx,hd*@idx,hh*@idx,10*@idx,10*@idx,0,0.25][woolen socks][hw*@idx,hd*@idx,hh*@idx,10*@idx,10*@idx,0,0.2]"
       }
     ]
   },
@@ -439,7 +415,7 @@
       },
       {
         "role": "assistant",
-        "content": "[cylinder][0,0,0,0,0,0,1][jug][fw*@idx,fd*@idx,0,0,0,0,1][vase][fw*@idx,fd*@idx,0,0,0,0,1][bowl][fw*@idx,fd*@idx,0,0,0,0,1][chalice][fw*@idx,fd*@idx,0,0,0,0,1]"
+        "content": "[workshop counter][0,0,0,0,0,0,1.0][clay jug][fw*@idx,fd*@idx,0,0,0,0,0.35][ceramic vase][fw*@idx,fd*@idx,0,0,0,0,0.3][soup bowl][fw*@idx,fd*@idx,0,0,0,0,0.2][royal chalice][fw*@idx,fd*@idx,0,0,0,0,0.25]"
       }
     ]
   },
@@ -451,7 +427,7 @@
       },
       {
         "role": "assistant",
-        "content": "[box][0,0,0,0,0,0,1][engine_block][fw*@idx,0,0,0,0,25*@idx,1][alternator][fw*@idx,0,0,0,0,25*@idx,1][battery][fw*@idx,0,0,0,0,25*@idx,1][radiator][fw*@idx,0,0,0,0,25*@idx,1]"
+        "content": "[mechanic bench][0,0,0,0,0,0,1.0][engine_block][fw*@idx,0,0,0,0,25*@idx,0.6][alternator][fw*@idx,0,0,0,0,25*@idx,0.2][car battery][fw*@idx,0,0,0,0,25*@idx,0.35][cooling radiator][fw*@idx,0,0,0,0,25*@idx,0.5]"
       }
     ]
   },
@@ -463,7 +439,7 @@
       },
       {
         "role": "assistant",
-        "content": "[cylinder][0,0,0,0,0,0,1][candle][hw*@idx,hd*@idx,0,0,0,0,1][napkin_ring][hw*@idx,hd*@idx,0,0,0,0,1][wine_bottle][hw*@idx,hd*@idx,0,0,0,0,1][centerpiece][hw*@idx,hd*@idx,0,0,0,0,1]"
+        "content": "[dining table][0,0,0,0,0,0,1.0][tall candle][hw*@idx,hd*@idx,0,0,0,0,0.25][napkin_ring][hw*@idx,hd*@idx,0,0,0,0,0.05][wine_bottle][hw*@idx,hd*@idx,0,0,0,0,0.3][floral centerpiece][hw*@idx,hd*@idx,0,0,0,0,0.4]"
       }
     ]
   },
@@ -475,7 +451,7 @@
       },
       {
         "role": "assistant",
-        "content": "[box][0,0,0,0,0,0,1][shield][fw*@idx,fd*@idx,hh*@idx,0,0,18*@idx,1][sword][fw*@idx,fd*@idx,hh*@idx,0,0,18*@idx,1][helmet][fw*@idx,fd*@idx,hh*@idx,0,0,18*@idx,1][gauntlet][fw*@idx,fd*@idx,hh*@idx,0,0,18*@idx,1][boots][fw*@idx,fd*@idx,hh*@idx,0,0,18*@idx,1]"
+        "content": "[armory crate][0,0,0,0,0,0,1.0][knight shield][fw*@idx,fd*@idx,hh*@idx,0,0,18*@idx,0.7][steel sword][fw*@idx,fd*@idx,hh*@idx,0,0,18*@idx,1.0][iron helmet][fw*@idx,fd*@idx,hh*@idx,0,0,18*@idx,0.3][armored gauntlet][fw*@idx,fd*@idx,hh*@idx,0,0,18*@idx,0.35][leather boots][fw*@idx,fd*@idx,hh*@idx,0,0,18*@idx,0.4]"
       }
     ]
   }

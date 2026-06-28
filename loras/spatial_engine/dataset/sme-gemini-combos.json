@@ -7,7 +7,7 @@
       },
       {
         "role": "assistant",
-        "content": "[sphere][0,0,0,0,0,0,[1,1,1.5]][sphere][0,0,fh,0,0,0,[1,1,0.2],noise=0.3][sphere][sym(fw),0,hh,0,0,0,0.2][cone][0,hd,hh,0,0,0,0.25][crescent][0,hd+0.05,hh*0.5,0,0,0,[-0.5,1,-0.15]][sphere][sym(hw*0.4),hd,hh*1.2,0,0,0,-0.2]"
+        "content": "[elongated sphere][0,0,0,0,0,0,[1,1,1.5]][fuzzy sphere][0,0,fh,0,0,0,[1,1,0.2],noise=0.3][flat sphere][sym(fw),0,hh,0,0,0,0.2][rounded cone][0,hd,hh,0,0,0,0.25][skinny crescent][0,hd+0.05,hh*0.5,0,0,0,[-0.5,1,-0.15]][depressed sphere][sym(hw*0.4),hd,hh*1.2,0,0,0,-0.2]"
       }
     ]
   },
@@ -19,7 +19,7 @@
       },
       {
         "role": "assistant",
-        "content": "[table][0,0,0,0,0,0,1][plate][0,0,fh,0,0,0,1][cup][@1][fw,0,0,0,0,0,1]"
+        "content": "[wooden table][0,0,0,0,0,0,1.2][ceramic plate][0,0,fh,0,0,0,0.25][coffee cup][@1][fw,0,0,0,0,0,0.12]"
       }
     ]
   },
@@ -31,7 +31,7 @@
       },
       {
         "role": "assistant",
-        "content": "[elephant][0,0,0,0,0,0,1][mouse][abs][10.0,0,0,0,0,0,1][bird][@0][0,0,fh+5.0,0,0,0,1]"
+        "content": "[large elephant][0,0,0,0,0,0,3.0][tiny mouse][abs][10.0,0,0,0,0,0,0.1][flying bird][@0][0,0,fh+5.0,0,0,0,0.25]"
       }
     ]
   },
@@ -43,7 +43,7 @@
       },
       {
         "role": "assistant",
-        "content": "[couch][-4fw,0,0,0,0,0,1][chair][4fw,0,0,0,0,0,1][rug][@0,@1][0,0,0,0,0,0,0.5]"
+        "content": "[couch][-4fw,0,0,0,0,0,2.0][chair][4fw,0,0,0,0,0,0.8][small rug][@0,@1][0,0,0,0,0,0,1.2]"
       }
     ]
   },
@@ -55,7 +55,7 @@
       },
       {
         "role": "assistant",
-        "content": "[box][0,0,0,0,0,0,1][sphere][0,0,fh+0.5,0,0,0,1][capsule][0,0,-fh-0.5,0,0,0,1][cylinder][-4fw,0,0,90,0,0,1]"
+        "content": "[wooden box][0,0,0,0,0,0,1.0][floating ball][0,0,fh+0.5,0,0,0,0.3][buried capsule][0,0,-fh-0.5,0,0,0,0.4][toppled cylinder][-4fw,0,0,90,0,0,0.5]"
       }
     ]
   },
@@ -67,7 +67,7 @@
       },
       {
         "role": "assistant",
-        "content": "[cylinder][0,0,0,0,0,0,[1,1,3]][torus][0,0,hh,0,-90,0,1.2]"
+        "content": "[giant pillar][0,0,0,0,0,0,[1,1,3]][wrapped torus][0,0,hh,0,-90,0,1.2]"
       }
     ]
   },
@@ -79,7 +79,7 @@
       },
       {
         "role": "assistant",
-        "content": "[box][0,0,0,0,0,0,3][box][0,fd,0,0,0,0,0.2][sphere][@0][sym(fw),0,hh,0,0,0,0.2]"
+        "content": "[massive block][0,0,0,0,0,0,3.0][small cube][0,fd,0,0,0,0,0.2][tiny sphere][@0][sym(fw),0,hh,0,0,0,0.1]"
       }
     ]
   },
@@ -91,7 +91,7 @@
       },
       {
         "role": "assistant",
-        "content": "[box][0,0,0,0,0,0,1][box][fw*@idx,0,0,0,0,0,1][box][fw*@idx,0,0,0,0,0,1][box][fw*@idx,0,0,0,0,0,1]"
+        "content": "[wooden box][0,0,0,0,0,0,1.0][wooden box][fw*@idx,0,0,0,0,0,1.0][wooden box][fw*@idx,0,0,0,0,0,1.0][wooden box][fw*@idx,0,0,0,0,0,1.0]"
       }
     ]
   },
@@ -103,7 +103,7 @@
       },
       {
         "role": "assistant",
-        "content": "[sphere][0,0,0,0,0,0,1][capsule][hw,hd+0.1,0,0,0,45,0.3]"
+        "content": "[main sphere][0,0,0,0,0,0,1.0][small capsule][hw,hd+0.1,0,0,0,45,0.3]"
       }
     ]
   },
@@ -115,7 +115,7 @@
       },
       {
         "role": "assistant",
-        "content": "[table][0,0,0,0,0,0,1][box][0,0,fh,0,0,0,0.4][cylinder][0,0,fh,0,0,0,0.2][chair][abs][0,0,5.0,0,0,0,1]"
+        "content": "[wooden table][0,0,0,0,0,0,1.2][resting book][0,0,fh,0,0,0,0.25][coffee mug][0,0,fh,0,0,0,0.12][high chair][abs][0,0,5.0,0,0,0,0.8]"
       }
     ]
   },
@@ -127,7 +127,7 @@
       },
       {
         "role": "assistant",
-        "content": "[box][0,0,0,0,0,0,[2,1,0.5]][cylinder][sym(hw*0.5),-hd,-hh,0,90,0,0.3][cylinder][sym(hw*0.5),hd,-hh,0,90,0,0.3]"
+        "content": "[car base][0,0,0,0,0,0,[2,1,0.5]][rubber wheel][sym(hw*0.5),-hd,-hh,0,90,0,0.3][rubber wheel][sym(hw*0.5),hd,-hh,0,90,0,0.3]"
       }
     ]
   },
@@ -139,7 +139,7 @@
       },
       {
         "role": "assistant",
-        "content": "[box][0,0,0,0,0,0,[4,4,0.1]][box][0,0,0,0,0,0,[-1,1,-0.1]][mesh][@0][fw,0,fh,0,0,0,0.15]"
+        "content": "[flat plane][0,0,0,0,0,0,[4,4,0.1]][pool basin][0,0,0,0,0,0,[-1,1,-0.1]][tiny ladder][@0][fw,0,fh,0,0,0,0.4]"
       }
     ]
   },
@@ -151,7 +151,7 @@
       },
       {
         "role": "assistant",
-        "content": "[cylinder][0,0,0,0,0,0,[0.2,0.2,2]][sphere][0,0,fh,0,0,0,3][sphere][0,0,-fh,0,0,0,0.1]"
+        "content": "[wooden trunk][0,0,0,0,0,0,[0.2,0.2,2]][green canopy][0,0,fh,0,0,0,3.0][fruit sphere][0,0,-fh,0,0,0,0.1]"
       }
     ]
   },
@@ -163,7 +163,7 @@
       },
       {
         "role": "assistant",
-        "content": "[cylinder][-4fw,0,0,0,0,0,1][cylinder][4fw,0,0,0,0,0,1][box][@0,@1][0,0,fh,0,0,0,1]"
+        "content": "[left pillar][-4fw,0,0,0,0,0,3.0][right pillar][4fw,0,0,0,0,0,3.0][heavy ceiling slab][@0,@1][0,0,fh,0,0,0,1.0]"
       }
     ]
   }

@@ -2,121 +2,121 @@
   {
     "messages": [
       {"role": "user", "content": "A vast mountain terrain landscape with a tiny pine tree sitting exactly at the absolute coordinate origin."},
-      {"role": "assistant", "content": "[terrain][0,0,0,0,0,0,[20,20,5],noise=0.8][pine_tree][abs][0,0,0,0,0,0,0.25]"}
+      {"role": "assistant", "content": "[mountain terrain][0,0,0,0,0,0,[20,20,5],noise=0.8][tiny pine_tree][abs][0,0,0,0,0,0,0.25]"}
     ]
   },
   {
     "messages": [
       {"role": "user", "content": "A flat grassy field terrain with a row of three street lamps lined up one after another starting from the center front surface."},
-      {"role": "assistant", "content": "[terrain][0,0,0,0,0,0,[15,15,0.1]][lamp][0,fd,0,0,0,0,1][lamp][fw*@idx,0,0,0,0,0,1][lamp][fw*@idx,0,0,0,0,0,1]"}
+      {"role": "assistant", "content": "[grassy terrain][0,0,0,0,0,0,[15,15,0.1]][street lamp][0,fd,0,0,0,0,3.0][street lamp][fw*@idx,0,0,0,0,0,3.0][street lamp][fw*@idx,0,0,0,0,0,3.0]"}
     ]
   },
   {
     "messages": [
       {"role": "user", "content": "A rugged desert terrain with a massive boulder rock placed far to the left, and an absolute override car shifted 10 units out along the positive X axis."},
-      {"role": "assistant", "content": "[terrain][0,0,0,0,0,0,[30,30,2],noise=0.4][rock][-4fw,0,0,0,0,0,4][car][abs][10.0,0,0,0,0,0,1]"}
+      {"role": "assistant", "content": "[desert terrain][0,0,0,0,0,0,[30,30,2],noise=0.4][massive rock][-4fw,0,0,0,0,0,4.0][override car][abs][10.0,0,0,0,0,0,1.8]"}
     ]
   },
   {
     "messages": [
       {"role": "user", "content": "A park scene terrain containing a wooden bench in the middle front, with a huge oak tree sprouting from the crest directly behind that bench."},
-      {"role": "assistant", "content": "[terrain][0,0,0,0,0,0,[10,10,0.1]][wooden bench][0,hd,0,0,0,0,1][oak tree][0,-fd,0,0,0,0,3]"}
+      {"role": "assistant", "content": "[park terrain][0,0,0,0,0,0,[10,10,0.1]][wooden bench][0,hd,0,0,0,0,1.2][huge oak tree][0,-fd,0,0,0,0,6.0]"}
     ]
   },
   {
     "messages": [
       {"role": "user", "content": "A village landscape terrain featuring a large stone church house at the center, flanked directly on its left and right sides by long sections of fence walls."},
-      {"role": "assistant", "content": "[terrain][0,0,0,0,0,0,[40,40,0.5]][stone church][0,0,0,0,0,0,5][fence][sym(fw),0,0,0,0,0,1]"}
+      {"role": "assistant", "content": "[village terrain][0,0,0,0,0,0,[40,40,0.5]][stone church][0,0,0,0,0,0,12.0][long fence][sym(fw),0,0,0,0,0,2.0]"}
     ]
   },
   {
     "messages": [
       {"role": "user", "content": "A small island terrain with a lighthouse cylinder structure standing on its peak vertical ceiling, looking sideways right."},
-      {"role": "assistant", "content": "[terrain][0,0,0,0,0,0,[8,8,3],noise=0.6][cylinder][0,0,fh,0,90,0,[1,1,4]]"}
+      {"role": "assistant", "content": "[island terrain][0,0,0,0,0,0,[8,8,3],noise=0.6][lighthouse tower][0,0,fh,0,90,0,[1,1,4.0]]"}
     ]
   },
   {
     "messages": [
       {"role": "user", "content": "A smooth landscape plane with an absolute coordinate platform shifted 5 units up, and a flying drone capsule hovering over that platform plane."},
-      {"role": "assistant", "content": "[terrain][0,0,0,0,0,0,[50,50,0.1]][box][abs][0,0,5.0,0,0,0,1][capsule][0,0,fh+0.5,0,0,0,0.3]"}
+      {"role": "assistant", "content": "[smooth terrain][0,0,0,0,0,0,[50,50,0.1]][absolute platform][abs][0,0,5.0,0,0,0,1.5][flying drone][0,0,fh+0.5,0,0,0,0.4]"}
     ]
   },
   {
     "messages": [
       {"role": "user", "content": "A dense forest terrain setup featuring a central campfire structure cone, surrounded completely by four distinct pine trees on the diagonal front and back perimeter profiles."},
-      {"role": "assistant", "content": "[terrain][0,0,0,0,0,0,[25,25,0.2]][cone][0,0,0,0,0,0,0.5,noise=0.3][pine_tree][fw,fd,0,0,0,0,1.5][pine_tree][-fw,fd,0,0,0,0,1.5][pine_tree][fw,-fd,0,0,0,0,1.5][pine_tree][-fw,-fd,0,0,0,0,1.5]"}
+      {"role": "assistant", "content": "[forest terrain][0,0,0,0,0,0,[25,25,0.2]][campfire structure][0,0,0,0,0,0,0.5,noise=0.3][pine tree][fw,fd,0,0,0,0,3.5][pine tree][-fw,fd,0,0,0,0,3.5][pine tree][fw,-fd,0,0,0,0,3.5][pine tree][-fw,-fd,0,0,0,0,3.5]"}
     ]
   },
   {
     "messages": [
       {"role": "user", "content": "An outdoor cemetery terrain with a stone tombstone box near the middle front, and an old dead tree peeking out from behind it, tucked slightly back and scaled down by half."},
-      {"role": "assistant", "content": "[terrain][0,0,0,0,0,0,[12,12,0.1]][box][0,hd,0,0,0,0,[0.6,0.2,0.8]][dead tree][hw,-hd,hh,0,0,0,0.5]"}
+      {"role": "assistant", "content": "[cemetery terrain][0,0,0,0,0,0,[12,12,0.1]][stone tombstone][0,hd,0,0,0,0,[0.6,0.2,0.8]][old dead tree][hw,-hd,hh,0,0,0,2.5]"}
     ]
   },
   {
     "messages": [
       {"role": "user", "content": "A simple rolling hills terrain with a lone wooden cabin house standing at the origin center profile, flipped backwards and upside down."},
-      {"role": "assistant", "content": "[terrain][0,0,0,0,0,0,[20,20,1.5],noise=0.5][wooden cabin][0,0,0,-90,0,0,2]"}
+      {"role": "assistant", "content": "[hills terrain][0,0,0,0,0,0,[20,20,1.5],noise=0.55][wooden cabin][0,0,0,-90,0,0,4.5]"}
     ]
   },
   {
     "messages": [
       {"role": "user", "content": "A street scene terrain with an absolute disconnect truck asset positioned 15 units out along the longitudinal Y axis, facing sideways looking left."},
-      {"role": "assistant", "content": "[terrain][0,0,0,0,0,0,[30,10,0.1]][truck][abs][0,15.0,0,0,-90,0,1.5]"}
+      {"role": "assistant", "content": "[street terrain][0,0,0,0,0,0,[30,10,0.1]][diesel truck][abs][0,15.0,0,0,-90,0,4.0]"}
     ]
   },
   {
     "messages": [
       {"role": "user", "content": "A low poly stylized mountain terrain path with a small crescent bridge arch spanning right between a rock on the left and a rock on the right."},
-      {"role": "assistant", "content": "[terrain][0,0,0,0,0,0,[35,15,4],noise=0.7][rock][-3fw,0,0,0,0,0,2][rock][3fw,0,0,0,0,0,2][crescent][@1,@2][0,0,0,0,0,0,1.2]"}
+      {"role": "assistant", "content": "[mountain terrain][0,0,0,0,0,0,[35,15,4.0],noise=0.7][large rock][-3fw,0,0,0,0,0,2.5][large rock][3fw,0,0,0,0,0,2.5][crescent bridge][@1,@2][0,0,0,0,0,0,1.5]"}
     ]
   },
   {
     "messages": [
       {"role": "user", "content": "A flat concrete square courtyard terrain with a generic sculpture sphere encased completely within an architectural torus loop matching its absolute center vector."},
-      {"role": "assistant", "content": "[terrain][0,0,0,0,0,0,[15,15,0.1]][torus][0,0,0,90,0,0,2][sphere][0,0,0,0,0,0,0.5]"}
+      {"role": "assistant", "content": "[courtyard terrain][0,0,0,0,0,0,[15,15,0.1]][torus loop][0,0,0,90,0,0,2.0][sculpture sphere][0,0,0,0,0,0,0.8]"}
     ]
   },
   {
     "messages": [
       {"role": "user", "content": "A high elevation mountain peak terrain that tapers sharply along the vertical axis, with a cross signpost capsule protruding directly out of its apex peek normal vector."},
-      {"role": "assistant", "content": "[terrain][0,0,0,0,0,0,[10,10,8],taper=(z,0.1)][capsule][0,0,fh+0.1,0,0,0,0.5]"}
+      {"role": "assistant", "content": "[mountain terrain][0,0,0,0,0,0,[10,10,8.0],taper=(z,0.1)][signpost capsule][0,0,fh+0.1,0,0,0,0.5]"}
     ]
   },
   {
     "messages": [
       {"role": "user", "content": "A quiet garden terrain with a flower plant sitting near the front edge of a central stone well cylinder layout structure."},
-      {"role": "assistant", "content": "[terrain][0,0,0,0,0,0,[10,10,0.1]][cylinder][0,0,0,0,0,0,[1.2,1.2,0.8]][plant][0,-fd,0,0,0,0,0.4]"}
+      {"role": "assistant", "content": "[garden terrain][0,0,0,0,0,0,[10,10,0.1]][stone well][0,0,0,0,0,0,[1.2,1.2,0.8]][flower plant][0,-fd,0,0,0,0,0.4]"}
     ]
   },
   {
     "messages": [
       {"role": "user", "content": "A highway strip terrain with four identical barricade boxes lined up one after another in a row starting far to the left profile away from the main lane."},
-      {"role": "assistant", "content": "[terrain][0,0,0,0,0,0,[4,40,0.1]][box][-4fw,0,0,0,0,0,0.6][box][fw*@idx,0,0,0,0,0,0.6][box][fw*@idx,0,0,0,0,0,0.6][box][fw*@idx,0,0,0,0,0,0.6]"}
+      {"role": "assistant", "content": "[highway terrain][0,0,0,0,0,0,[4,40,0.1]][barricade box][-4fw,0,0,0,0,0,0.8][barricade box][fw*@idx,0,0,0,0,0,0.8][barricade box][fw*@idx,0,0,0,0,0,0.8][barricade box][fw*@idx,0,0,0,0,0,0.8]"}
     ]
   },
   {
     "messages": [
       {"role": "user", "content": "A rocky cavern terrain floor with an inverted dome sphere divet carved directly out of the center map space to create a deep circular fire pit crater mesh layout."},
-      {"role": "assistant", "content": "[terrain][0,0,0,0,0,0,[20,20,1],noise=0.3][sphere][0,0,0,0,0,0,[-1,1,-0.3]]"}
+      {"role": "assistant", "content": "[cavern terrain][0,0,0,0,0,0,[20,20,1.0],noise=0.3][inverted sphere][0,0,0,0,0,0,[-1,1,-0.3]]"}
     ]
   },
   {
     "messages": [
       {"role": "user", "content": "A farm patch terrain layout space with a tractor vehicle parked tightly packed against the rear surface profile of a massive red barn house block asset."},
-      {"role": "assistant", "content": "[terrain][0,0,0,0,0,0,[30,30,0.1]][red barn house][0,0,0,0,0,0,[4,3,3]][tractor][0,-fd,0,0,0,0,1]"}
+      {"role": "assistant", "content": "[farm terrain][0,0,0,0,0,0,[30,30,0.1]][red barn house][0,0,0,0,0,0,[4,3,3.0]][tractor vehicle][0,-fd,0,0,0,0,2.0]"}
     ]
   },
   {
     "messages": [
       {"role": "user", "content": "A wavy sand dune desert terrain with a single palm tree primitive tilted and slanted at a forty five degree angle near the center profile."},
-      {"role": "assistant", "content": "[terrain][0,0,0,0,0,0,[25,25,1.8],noise=0.55][palm tree][0,0,0,0,0,45,1.2]"}
+      {"role": "assistant", "content": "[sand terrain][0,0,0,0,0,0,[25,25,1.8],noise=0.55][palm tree][0,0,0,0,0,45,4.0]"}
     ]
   },
   {
     "messages": [
       {"role": "user", "content": "A clean courtyard paving terrain with a rectangular bench resting a short distance to the right of an ornate fountain basin statue mesh centerpiece asset."},
-      {"role": "assistant", "content": "[terrain][0,0,0,0,0,0,[16,16,0.1]][mesh][0,0,0,0,0,0,1.8][rectangular bench][2fw,0,0,0,0,0,0.75]"}
+      {"role": "assistant", "content": "[courtyard terrain][0,0,0,0,0,0,[16,16,0.1]][ornate fountain][0,0,0,0,0,0,2.2][rectangular bench][2fw,0,0,0,0,0,0.75]"}
     ]
   }
 ]
