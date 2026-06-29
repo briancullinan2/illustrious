@@ -116,6 +116,10 @@ async function doNunuSearch() {
 	}, 1000);
 }
 
+
+let conversionResults = [];
+
+
 async function convertResponseInterface(e) {
 	const { type, payload } = e.data;
 
@@ -142,12 +146,17 @@ async function convertResponseInterface(e) {
 		});
 	}
 
-
+	let count = 0;
 	if(type === 'DOWNLOAD_FINISHED') {
+		conversionResults = payload;
 		for(let item of payload || []) {
-			if(item.success)
+			if(item.success) {
 				window.Editor.addVisualModelToNunuAssets(item);
-			break;
+			}
+			if(count > 2) {
+				break;
+			}
+			count++;
 		}
 	}
 }
@@ -315,28 +324,28 @@ async function workerResponseInterface(e) {
 		multicastButton.removeAttribute('disabled', 'disabled');
 	} else if(type === 'WORKER_READY') {
 		const toggle = document.getElementById('local-model-toggle');
-		progressText.textContent = 'Loading';
-		generalProgressText.textContent = 'Loading';
-		progressElement.value = 0;
-		generalProgressElement.value = 0;
-
-		const statusElement = document.getElementById('tree-status');
-		if(statusElement) {
-			statusElement.textContent = 'Loading model...';
-			statusElement.className = 'tree-val tree-status-thinking';
-		}
-
-		const response = await fetch(DEFAULT_JINJA);
-		if(response.ok) {
-			jinjaText = await response.text();
-		}
-
-		const response2 = await fetch(DEFAULT_GBNF);
-		if(response2.ok) {
-			grammerText = await response2.text();
-		}
-
 		if(toggle?.checked) {
+			progressText.textContent = 'Loading';
+			generalProgressText.textContent = 'Loading';
+			progressElement.value = 0;
+			generalProgressElement.value = 0;
+
+
+			const statusElement = document.getElementById('tree-status');
+			if(statusElement) {
+				statusElement.textContent = 'Loading model...';
+				statusElement.className = 'tree-val tree-status-thinking';
+			}
+
+			const response = await fetch(DEFAULT_JINJA);
+			if(response.ok) {
+				jinjaText = await response.text();
+			}
+
+			const response2 = await fetch(DEFAULT_GBNF);
+			if(response2.ok) {
+				grammerText = await response2.text();
+			}
 
 			fakeLoadingInterval = setInterval(() => {
 				if(progressElement.value < 90) {
