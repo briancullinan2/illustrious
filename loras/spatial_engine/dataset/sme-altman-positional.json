@@ -1,0 +1,242 @@
+[
+	{
+		"messages": [
+			{
+				"role": "user",
+				"content": "A weather vane mounted directly above a barn roof."
+			},
+			{
+				"role": "assistant",
+				"content": "[barn roof][0,0,0,0,0,0,2.0][weather vane][0,0,fh,0,0,0,0.2]"
+			}
+		]
+	},
+	{
+		"messages": [
+			{
+				"role": "user",
+				"content": "A scarecrow standing a few paces in front of a cornfield."
+			},
+			{
+				"role": "assistant",
+				"content": "[cornfield][0,0,0,0,0,0,3.0][scarecrow][0,3fd,0,0,0,0,1.0]"
+			}
+		]
+	},
+	{
+		"messages": [
+			{
+				"role": "user",
+				"content": "A mailbox positioned off to the front-right of a country road."
+			},
+			{
+				"role": "assistant",
+				"content": "[country road][0,0,0,0,0,0,[1,8,0.1]][mailbox][fw,fd,0,0,0,0,0.4]"
+			}
+		]
+	},
+	{
+		"messages": [
+			{
+				"role": "user",
+				"content": "A crow peeking out from behind a gravestone."
+			},
+			{
+				"role": "assistant",
+				"content": "[gravestone][0,0,0,0,0,0,1.0][crow][hw,-hd,hh,0,0,0,0.2]"
+			}
+		]
+	},
+	{
+		"messages": [
+			{
+				"role": "user",
+				"content": "A lantern hanging underneath a wooden porch."
+			},
+			{
+				"role": "assistant",
+				"content": "[wooden porch][0,0,0,0,0,0,2.0][lantern][0,0,-fh,0,0,0,0.3]"
+			}
+		]
+	},
+	{
+		"messages": [
+			{
+				"role": "user",
+				"content": "A fishing boat floating far away from a dock."
+			},
+			{
+				"role": "assistant",
+				"content": "[dock][0,0,0,0,0,0,2.0][fishing boat][0,4fd,0,0,0,0,1.5]"
+			}
+		]
+	},
+	{
+		"messages": [
+			{
+				"role": "user",
+				"content": "A park bench directly to the left of a drinking fountain."
+			},
+			{
+				"role": "assistant",
+				"content": "[drinking fountain][0,0,0,0,0,0,1.0][park bench][-fw,0,0,0,0,0,0.8]"
+			}
+		]
+	},
+	{
+		"messages": [
+			{
+				"role": "user",
+				"content": "A squirrel perched on top of a tree stump."
+			},
+			{
+				"role": "assistant",
+				"content": "[tree stump][0,0,0,0,0,0,1.0][squirrel][0,0,fh,0,0,0,0.15]"
+			}
+		]
+	},
+	{
+		"messages": [
+			{
+				"role": "user",
+				"content": "A wagon parked directly behind a farmhouse."
+			},
+			{
+				"role": "assistant",
+				"content": "[farmhouse][0,0,0,0,0,0,2.5][wagon][0,-fd,0,0,0,0,1.0]"
+			}
+		]
+	},
+	{
+		"messages": [
+			{
+				"role": "user",
+				"content": "A windmill standing alongside a grain silo."
+			},
+			{
+				"role": "assistant",
+				"content": "[grain silo][0,0,0,0,0,0,2.0][windmill][2fw,0,0,0,0,0,2.0]"
+			}
+		]
+	},
+	{
+		"messages": [
+			{
+				"role": "user",
+				"content": "A cat curled up beneath a wooden chair."
+			},
+			{
+				"role": "assistant",
+				"content": "[wooden chair][0,0,0,0,0,0,1.0][cat][0,0,-fh,0,0,0,0.3]"
+			}
+		]
+	},
+	{
+		"messages": [
+			{
+				"role": "user",
+				"content": "A chalkboard mounted on the rear wall behind a teacher's desk."
+			},
+			{
+				"role": "assistant",
+				"content": "[teacher desk][0,0,0,0,0,0,1.5][chalkboard][0,-fd,fh,0,0,0,1.5]"
+			}
+		]
+	},
+	{
+		"messages": [
+			{
+				"role": "user",
+				"content": "A coffee mug resting on the right edge of an office desk."
+			},
+			{
+				"role": "assistant",
+				"content": "[office desk][0,0,0,0,0,0,2.0][coffee mug][fw,0,fh,0,0,0,0.15]"
+			}
+		]
+	},
+	{
+		"messages": [
+			{
+				"role": "user",
+				"content": "A lifeguard chair way off to the left of a swimming pool."
+			},
+			{
+				"role": "assistant",
+				"content": "[swimming pool][0,0,0,0,0,0,[5,8,0.5]][lifeguard chair][-4fw,0,0,0,0,0,1.5]"
+			}
+		]
+	},
+	{
+		"messages": [
+			{
+				"role": "user",
+				"content": "A beach umbrella hovering over a lounge chair."
+			},
+			{
+				"role": "assistant",
+				"content": "[lounge chair][0,0,0,0,0,0,1.0][beach umbrella][0,0,2fh,0,0,0,1.2]"
+			}
+		]
+	},
+	{
+		"messages": [
+			{
+				"role": "user",
+				"content": "A seagull gliding far above a lighthouse."
+			},
+			{
+				"role": "assistant",
+				"content": "[lighthouse][0,0,0,0,0,0,3.0][seagull][0,0,4fh,0,0,0,0.3]"
+			}
+		]
+	},
+	{
+		"messages": [
+			{
+				"role": "user",
+				"content": "A backpack tucked slightly behind a camping tent."
+			},
+			{
+				"role": "assistant",
+				"content": "[camping tent][0,0,0,0,0,0,1.5][backpack][hw,-hd,hh,0,0,0,0.4]"
+			}
+		]
+	},
+	{
+		"messages": [
+			{
+				"role": "user",
+				"content": "A telescope standing diagonally back-left from an observatory dome."
+			},
+			{
+				"role": "assistant",
+				"content": "[observatory dome][0,0,0,0,0,0,2.5][telescope][-fw,-fd,0,0,0,0,1.0]"
+			}
+		]
+	},
+	{
+		"messages": [
+			{
+				"role": "user",
+				"content": "A knight statue guarding the forefront of a castle entrance."
+			},
+			{
+				"role": "assistant",
+				"content": "[castle entrance][0,0,0,0,0,0,3.0][knight statue][0,fd,0,0,0,0,1.2]"
+			}
+		]
+	},
+	{
+		"messages": [
+			{
+				"role": "user",
+				"content": "A treasure map spread out underneath a compass."
+			},
+			{
+				"role": "assistant",
+				"content": "[compass][0,0,0,0,0,0,0.3][treasure map][0,0,-fh,0,0,0,[1.5,1.5,0.05]]"
+			}
+		]
+	}
+]

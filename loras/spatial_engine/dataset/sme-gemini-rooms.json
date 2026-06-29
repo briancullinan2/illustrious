@@ -1,398 +1,398 @@
 [
-  {
-    "messages": [
-      {
-        "role": "user",
-        "content": "An elongated sphere with fuzzy stuff on top, with two smaller flat spheres on the side about 20% the size of the first sphere, and a rounded cone in the middle front, and a depressed skinny moon underneath about 15% tall and 50% wide for a mouth."
-      },
-      {
-        "role": "assistant",
-        "content": "[elongated sphere][0,0,0,0,0,0,[1,1,1.5]][fuzzy sphere][0,0,fh,0,0,0,[1,1,0.2],noise=0.3][flat sphere][sym(fw),0,hh,0,0,0,0.2][rounded cone][0,hd,hh,0,0,0,0.25][skinny crescent][0,hd+0.05,hh*0.5,0,0,0,[-0.5,1,-0.15]]"
-      }
-    ]
-  },
-  {
-    "messages": [
-      {
-        "role": "user",
-        "content": "A teddy bear where the torso is a bigger sphere, a slightly smaller head sphere on top, and the two feet capsules stick out straight from the bottom front profile like it is sitting down."
-      },
-      {
-        "role": "assistant",
-        "content": "[torso sphere][0,0,0,0,0,0,1.5][head sphere][0,0,fh,0,0,0,1.0][foot capsule][sym(hw*0.6),hd,-hh+0.2,90,0,0,0.4]"
-      }
-    ]
-  },
-  {
-    "messages": [
-      {
-        "role": "user",
-        "content": "A bathroom containing a bowl shape depressed into a counter block to serve as a sink, a tiny box soap dish tucked in the front right corner, and a cylinder pipe with a flat round shower head sticking out of three fourths up the wall."
-      },
-      {
-        "role": "assistant",
-        "content": "[sink counter][0,0,0,0,0,0,[3,2,1]][sink bowl][0,0,hh,0,0,0,[-0.6,0.6,-0.4]][tiny soap dish][fw-0.2,fd-0.2,hh,0,0,0,0.15][shower pipe][0,-bd,hh*1.5,0,0,0,[0.1,0.1,1.5]][shower head][0,-bd+0.3,fh*0.75,90,0,0,[0.4,0.4,0.05]]"
-      }
-    ]
-  },
-  {
-    "messages": [
-      {
-        "role": "user",
-        "content": "A bedroom setup with a large mattress block, and a stylized couch placed right in the back left corner of the room layout space."
-      },
-      {
-        "role": "assistant",
-        "content": "[large mattress][0,0,0,0,0,0,[2,2.5,0.4]][stylized couch][-4fw,-4fd,0,0,0,0,[1.5,0.8,0.6]]"
-      }
-    ]
-  },
-  {
-    "messages": [
-      {
-        "role": "user",
-        "content": "A standard computer desk with a flat monitor screen, and a keyboard arranged directly in front of the screen anchor profile."
-      },
-      {
-        "role": "assistant",
-        "content": "[computer desk][0,0,0,0,0,0,[3,1.5,1]][flat monitor screen][0,0,fh,0,0,0,[1.2,0.1,0.8]][computer keyboard][0,-fd,fh,0,0,0,[0.8,0.3,0.02]]"
-      }
-    ]
-  },
-  {
-    "messages": [
-      {
-        "role": "user",
-        "content": "A procedural tree with a cylinder trunk that tapers down by half along the vertical Z axis, topped by three separate overlapping foliage spheres."
-      },
-      {
-        "role": "assistant",
-        "content": "[cylinder trunk][0,0,0,0,0,0,[0.4,0.4,3.0],taper=(z,0.5)][foliage sphere][0,0,fh,0,0,0,1.5][foliage sphere][hw,0,fh-0.5,0,0,0,1.0][foliage sphere][-hw,0,fh-0.5,0,0,0,1.0]"
-      }
-    ]
-  },
-  {
-    "messages": [
-      {
-        "role": "user",
-        "content": "A medieval castle tower cylinder with a hollowed out doorway arch at its bottom front base, and a spiky cone roof capping the peak profile."
-      },
-      {
-        "role": "assistant",
-        "content": "[castle tower][0,0,0,0,0,0,[1.5,1.5,4.0]][doorway arch][0,hd,0,0,0,0,[-0.4,1,-0.8]][spiky roof cone][0,0,fh,0,0,0,1.7]"
-      }
-    ]
-  },
-  {
-    "messages": [
-      {
-        "role": "user",
-        "content": "A classical sword primitive assembly featuring a long thin blade box, a crossguard cylinder wrapped around its base, and a small sphere pommel underneath."
-      },
-      {
-        "role": "assistant",
-        "content": "[blade box][0,0,0,0,0,0,[0.1,0.02,3.0]][crossguard cylinder][0,0,-hh,90,0,0,[0.6,0.1,0.1]][sphere pommel][0,0,-hh-0.2,0,0,0,0.15]"
-      }
-    ]
-  },
-  {
-    "messages": [
-      {
-        "role": "user",
-        "content": "A dining room arrangement featuring a large flat table slab, four chair models arrayed on both sides, and a chandelier torus hanging far above the absolute center."
-      },
-      {
-        "role": "assistant",
-        "content": "[large table][0,0,0,0,0,0,[3,1.5,0.1]][dining chair][sym(hw),hd,0,0,0,0,1.0][dining chair][sym(hw),-hd,0,0,0,0,1.0][chandelier torus][abs][0,0,4.0,0,0,0,1.2]"
-      }
-    ]
-  },
-  {
-    "messages": [
-      {
-        "role": "user",
-        "content": "A stylized corkscrew cylinder twisted forty five degrees along the primary Z axis footprint."
-      },
-      {
-        "role": "assistant",
-        "content": "[corkscrew cylinder][0,0,0,0,0,0,[0.3,0.3,2.5],twist=(z,45)]"
-      }
-    ]
-  },
-  {
-    "messages": [
-      {
-        "role": "user",
-        "content": "A desktop desk lamp with a base disc cylinder, a long slender neck capsule, and a cone spotlight shell perched on the top forward edge facing down."
-      },
-      {
-        "role": "assistant",
-        "content": "[base disc][0,0,0,0,0,0,[0.4,0.4,0.05]][neck capsule][0,0,fh,0,15,0,[0.08,0.08,1.2]][cone spotlight][0,hd,fh,45,0,0,0.3]"
-      }
-    ]
-  },
-  {
-    "messages": [
-      {
-        "role": "user",
-        "content": "A rowboat crescent shell containing two flat box bench slabs encased completely within its interior longitudinal layout."
-      },
-      {
-        "role": "assistant",
-        "content": "[rowboat crescent][0,0,0,90,0,0,[1,3,0.5]][flat bench][0,hd*0.3,0,0,0,0,[0.8,0.2,0.1]][flat bench][0,-hd*0.3,0,0,0,0,[0.8,0.2,0.1]]"
-      }
-    ]
-  },
-  {
-    "messages": [
-      {
-        "role": "user",
-        "content": "A modular campfire layout with three logs arranged in a row, and a spiky conical fire primitive sprouting from the crest of the center log structure."
-      },
-      {
-        "role": "assistant",
-        "content": "[campfire log][0,0,0,90,0,0,[0.15,0.15,1]][campfire log][fw*@idx,0,0,90,0,0,[0.15,0.15,1]][campfire log][fw*@idx,0,0,90,0,0,[0.15,0.15,1]][spiky fire][@1][0,0,fh,0,0,0,0.8,noise=0.5]"
-      }
-    ]
-  },
-  {
-    "messages": [
-      {
-        "role": "user",
-        "content": "A low poly sci fi gun barrel cylinder that tapers sharply at the muzzle end, with a laser box scope sitting directly on top of the rear framework."
-      },
-      {
-        "role": "assistant",
-        "content": "[gun barrel][0,0,0,0,90,0,[0.2,0.2,2.0],taper=(y,0.3)][laser scope][0,-hd*0.5,fh,0,0,0,[0.1,0.4,0.1]]"
-      }
-    ]
-  },
-  {
-    "messages": [
-      {
-        "role": "user",
-        "content": "A backyard playground kit containing a swing set frame, and an absolute space sandbox platform shifted 5 units up on a structural deck mountain profile."
-      },
-      {
-        "role": "assistant",
-        "content": "[playground frame][0,0,0,0,0,0,2.0][sandbox platform][abs][4.0,4.0,5.0,0,0,0,[3,3,0.2]]"
-      }
-    ]
-  },
-  {
-    "messages": [
-      {
-        "role": "user",
-        "content": "A laboratory flask bottle composed of a flat bottom cylinder, an elongated cone midsection stacked on top, and a narrow cylinder neck trailing out the peak."
-      },
-      {
-        "role": "assistant",
-        "content": "[bottom cylinder][0,0,0,0,0,0,[1,1,0.2]][cone midsection][0,0,fh,0,0,0,[0.8,0.8,1.2],taper=(z,0.1)][narrow neck][0,0,fh,0,0,0,[0.15,0.15,0.5]]"
-      }
-    ]
-  },
-  {
-    "messages": [
-      {
-        "role": "user",
-        "content": "A mechanical wheel capsule with a rough tread pattern noise map applied to its primary rotational contact edge."
-      },
-      {
-        "role": "assistant",
-        "content": "[wheel capsule][0,0,0,0,90,0,1.0,noise=0.25]"
-      }
-    ]
-  },
-  {
-    "messages": [
-      {
-        "role": "user",
-        "content": "A living room corner detailing a large television monitor screen block, flanked closely on both sides by tall skinny soundbars."
-      },
-      {
-        "role": "assistant",
-        "content": "[television panel][0,0,0,0,0,0,[2,0.1,1.2]][skinny soundbar][sym(fw+0.1),0,hh,0,0,0,[0.2,0.2,1.5]]"
-      }
-    ]
-  },
-  {
-    "messages": [
-      {
-        "role": "user",
-        "content": "A fountain array with a large circular torus pool base at world origin, and an elongated cone geyser shooting straight up out of the exact center midpoint layout space."
-      },
-      {
-        "role": "assistant",
-        "content": "[pool base][0,0,0,90,0,0,2.5][cone geyser][0,0,0,0,0,0,[0.3,0.3,4.0]]"
-      }
-    ]
-  },
-  {
-    "messages": [
-      {
-        "role": "user",
-        "content": "A small generic coffee cup cylinder resting near a sprawling office keyboard configuration block context."
-      },
-      {
-        "role": "assistant",
-        "content": "[office keyboard][0,0,0,0,0,0,[1.2,0.4,0.05]][coffee cup][2fw,0,0,0,0,0,0.25]"
-      }
-    ]
-  },
-  {
-    "messages": [
-      {
-        "role": "user",
-        "content": "A standard low-poly bedroom spatial layout featuring a blue-and-white striped platform mattress on the far right floor, an orange armchair next to it with a character sitting inside holding a small white sphere primitive, a tiny dark coffee table nearby, a green armchair, a dark gray armchair facing them, a tall wooden desk cabinet against the dark blue accent wall with a desk lamp resting on top, a large dark square dining or working table centered in the rear, an industrial radiator heater sitting on the left wall under a large window pane, and a secondary window on the left side wall."
-      },
-      {
-        "role": "assistant",
-        "content": "[striped mattress][abs,2.2,-0.5,0,0,0,-45,[1.0,1.8,0.3]][armchair orange][@0,0,0,fh,0,0,0,[0.9,0.9,0.8]][character][@1,0,0,hh,0,0,0,[0.4,0.4,0.6]][white sphere][@2,0,0,fh,0,0,0,0.15][dark coffee table][@1,-2fd,0,0,0,0,0,[0.5,0.5,0.3]][armchair green][@4,-2fw,0,0,0,0,45,[0.8,0.8,0.9]][armchair gray][@4,-2fw,-2fd,0,0,0,15,[0.8,0.8,0.9]][wooden desk cabinet][@5,0,-3fd,fh,0,0,0,[0.9,0.5,1.2]][desk lamp][@7,0,0,fh,0,0,0,[0.2,0.2,0.35]][dark dining table][@5,-3fw,3fd,0,0,0,0,[1.2,1.2,0.75]][industrial radiator heater][abs,-2.2,1.2,0,0,0,45,[0.2,1.0,0.6]][window pane][wall,left,0,2fh,0,0,0,[1.5,0.05,1.2]][secondary window][wall,back,0,2fh,0,0,0,[1.5,0.05,1.2]]"
-      }
-    ]
-  },
-  {
-    "messages": [
-      {
-        "role": "user",
-        "content": "A massive heavy wooden banquet table with a symmetrical pair of high-back dining chairs resting tightly packed against its left and right sides."
-      },
-      {
-        "role": "assistant",
-        "content": "[wooden banquet table][0,0,0,0,0,0,[2.4,1.2,0.75]][high back dining chair][sym(-fw),0,0,0,0,0,0,[0.5,0.5,1.1]]"
-      }
-    ]
-  },
-  {
-    "messages": [
-      {
-        "role": "user",
-        "content": "A high-tech cylindrical laboratory stasis pod standing on top of a square metallic ventilation platform base block."
-      },
-      {
-        "role": "assistant",
-        "content": "[ventilation platform base][0,0,0,0,0,0,[1.5,1.5,0.4]][high-tech stasis pod][0,0,fh,0,0,0,0,[0.5,0.5,2.0]]"
-      }
-    ]
-  },
-  {
-    "messages": [
-      {
-        "role": "user",
-        "content": "An industrial storage barrel container with an emergency warning cone sitting directly on top of its upper lid surface."
-      },
-      {
-        "role": "assistant",
-        "content": "[industrial barrel container][0,0,0,0,0,0,[0.6,0.6,1.0]][warning cone][0,0,fh,0,0,0,0,[0.4,0.4,0.6]]"
-      }
-    ]
-  },
-  {
-    "messages": [
-      {
-        "role": "user",
-        "content": "A rectangular stone structural pillars asset block context with a small decorative torus ring molding slightly overlapping inside its upper capital profile."
-      },
-      {
-        "role": "assistant",
-        "content": "[stone structural pillars][0,0,0,0,0,0,[0.4,0.4,3.0]][torus ring][0,0,hh,0,0,0,0,[0.5,0.5,0.1]]"
-      }
-    ]
-  },
-  {
-    "messages": [
-      {
-        "role": "user",
-        "content": "A plush living room sectional sofa block with a tiny square wooden drink coaster resting in the immediate vicinity of its right armrest."
-      },
-      {
-        "role": "assistant",
-        "content": "[plush sectional sofa][0,0,0,0,0,0,[2.2,0.9,0.75]][wooden drink coaster][2fw,0,0,0,0,0,0,[0.2,0.2,0.02]]"
-      }
-    ]
-  },
-  {
-    "messages": [
-      {
-        "role": "user",
-        "content": "A master bedroom king-size bed layout featuring a wooden nightstand table separated from the main frame off to its front-left side."
-      },
-      {
-        "role": "assistant",
-        "content": "[king size bed][0,0,0,0,0,0,[2.0,2.1,0.6]][wooden nightstand table][-fw,fd,0,0,0,0,0,[0.5,0.5,0.5]]"
-      }
-    ]
-  },
-  {
-    "messages": [
-      {
-        "role": "user",
-        "content": "A large rectangular wall-mounted widescreen television panel with a tiny remote control box tucked slightly behind its rear support tracking."
-      },
-      {
-        "role": "assistant",
-        "content": "[television panel][0,0,1.2,0,0,0,0,[1.4,0.1,0.8]][remote control][hw,-hd,hh,0,0,0,0.5,[0.2,0.1,0.05]]"
-      }
-    ]
-  },
-  {
-    "messages": [
-      {
-        "role": "user",
-        "content": "A heavy industrial metal workbench area featuring a tall vertical drill press assembly standing far away from its main working surface boundaries."
-      },
-      {
-        "role": "assistant",
-        "content": "[metal workbench][0,0,0,0,0,0,[1.8,0.8,0.85]][drill press][4fw,0,0,0,0,0,0,[0.5,0.5,1.8]]"
-      }
-    ]
-  },
-  {
-    "messages": [
-      {
-        "role": "user",
-        "content": "A wide brick backyard patio fireplace hearth with a decorative spherical stone ornament resting directly behind its primary flue column structure."
-      },
-      {
-        "role": "assistant",
-        "content": "[brick fireplace hearth][0,0,0,0,0,0,[1.5,0.8,2.2]][stone ornament][0,-fd,0,0,0,0,1,[0.3,0.3,0.3]]"
-      }
-    ]
-  },
-  {
-    "messages": [
-      {
-        "role": "user",
-        "content": "A square electronics workbench grid module with a long protective cylindrical fuse capsule capsule component buried deep under its lower grounding line plane."
-      },
-      {
-        "role": "assistant",
-        "content": "[workbench grid][0,0,0,0,0,0,[1.0,1.0,0.1]][fuse capsule][0,0,-4fh,0,0,0,1,[0.05,0.05,0.3]]"
-      }
-    ]
-  },
-  {
-    "messages": [
-      {
-        "role": "user",
-        "content": "A flat low-poly office desk assembly layout containing a compact rectangular smartphone unit sitting diagonally back-right from its primary keyboard chassis block."
-      },
-      {
-        "role": "assistant",
-        "content": "[keyboard chassis][0,0,0,0,0,0,[0.5,0.2,0.02]][smartphone unit][fw,-fd,0,0,0,0,0,[0.08,0.15,0.01]]"
-      }
-    ]
-  },
-  {
-    "messages": [
-      {
-        "role": "user",
-        "content": "A standard desktop monitor screen displaying complex CAD graphics with an external modular webcam sensor block hovering over its top bezel profile frame."
-      },
-      {
-        "role": "assistant",
-        "content": "[monitor screen][0,0,0.4,0,0,0,0,[0.6,0.05,0.4]][webcam sensor][0,0,2fh,0,0,0,1,[0.08,0.08,0.05]]"
-      }
-    ]
-  }
+	{
+		"messages": [
+			{
+				"role": "user",
+				"content": "An elongated sphere with fuzzy stuff on top, with two smaller flat spheres on the side about 20% the size of the first sphere, and a rounded cone in the middle front, and a depressed skinny moon underneath about 15% tall and 50% wide for a mouth."
+			},
+			{
+				"role": "assistant",
+				"content": "[elongated sphere][0,0,0,0,0,0,[1,1,1.5]][fuzzy sphere][0,0,fh,0,0,0,[1,1,0.2],noise=0.3][flat sphere][sym(fw),0,hh,0,0,0,0.2][rounded cone][0,hd,hh,0,0,0,0.25][skinny crescent][0,hd+0.05,hh*0.5,0,0,0,[-0.5,1,-0.15]]"
+			}
+		]
+	},
+	{
+		"messages": [
+			{
+				"role": "user",
+				"content": "A teddy bear where the torso is a bigger sphere, a slightly smaller head sphere on top, and the two feet capsules stick out straight from the bottom front profile like it is sitting down."
+			},
+			{
+				"role": "assistant",
+				"content": "[torso sphere][0,0,0,0,0,0,1.5][head sphere][0,0,fh,0,0,0,1.0][foot capsule][sym(hw*0.6),hd,-hh+0.2,90,0,0,0.4]"
+			}
+		]
+	},
+	{
+		"messages": [
+			{
+				"role": "user",
+				"content": "A bathroom containing a bowl shape depressed into a counter block to serve as a sink, a tiny box soap dish tucked in the front right corner, and a cylinder pipe with a flat round shower head sticking out of three fourths up the wall."
+			},
+			{
+				"role": "assistant",
+				"content": "[sink counter][0,0,0,0,0,0,[3,2,1]][sink bowl][0,0,hh,0,0,0,[-0.6,0.6,-0.4]][tiny soap dish][fw-0.2,fd-0.2,hh,0,0,0,0.15][shower pipe][0,-bd,hh*1.5,0,0,0,[0.1,0.1,1.5]][shower head][0,-bd+0.3,fh*0.75,90,0,0,[0.4,0.4,0.05]]"
+			}
+		]
+	},
+	{
+		"messages": [
+			{
+				"role": "user",
+				"content": "A bedroom setup with a large mattress block, and a stylized couch placed right in the back left corner of the room layout space."
+			},
+			{
+				"role": "assistant",
+				"content": "[large mattress][0,0,0,0,0,0,[2,2.5,0.4]][stylized couch][-4fw,-4fd,0,0,0,0,[1.5,0.8,0.6]]"
+			}
+		]
+	},
+	{
+		"messages": [
+			{
+				"role": "user",
+				"content": "A standard computer desk with a flat monitor screen, and a keyboard arranged directly in front of the screen anchor profile."
+			},
+			{
+				"role": "assistant",
+				"content": "[computer desk][0,0,0,0,0,0,[3,1.5,1]][flat monitor screen][0,0,fh,0,0,0,[1.2,0.1,0.8]][computer keyboard][0,-fd,fh,0,0,0,[0.8,0.3,0.02]]"
+			}
+		]
+	},
+	{
+		"messages": [
+			{
+				"role": "user",
+				"content": "A procedural tree with a cylinder trunk that tapers down by half along the vertical Z axis, topped by three separate overlapping foliage spheres."
+			},
+			{
+				"role": "assistant",
+				"content": "[cylinder trunk][0,0,0,0,0,0,[0.4,0.4,3.0],taper=(z,0.5)][foliage sphere][0,0,fh,0,0,0,1.5][foliage sphere][hw,0,fh-0.5,0,0,0,1.0][foliage sphere][-hw,0,fh-0.5,0,0,0,1.0]"
+			}
+		]
+	},
+	{
+		"messages": [
+			{
+				"role": "user",
+				"content": "A medieval castle tower cylinder with a hollowed out doorway arch at its bottom front base, and a spiky cone roof capping the peak profile."
+			},
+			{
+				"role": "assistant",
+				"content": "[castle tower][0,0,0,0,0,0,[1.5,1.5,4.0]][doorway arch][0,hd,0,0,0,0,[-0.4,1,-0.8]][spiky roof cone][0,0,fh,0,0,0,1.7]"
+			}
+		]
+	},
+	{
+		"messages": [
+			{
+				"role": "user",
+				"content": "A classical sword primitive assembly featuring a long thin blade box, a crossguard cylinder wrapped around its base, and a small sphere pommel underneath."
+			},
+			{
+				"role": "assistant",
+				"content": "[blade box][0,0,0,0,0,0,[0.1,0.02,3.0]][crossguard cylinder][0,0,-hh,90,0,0,[0.6,0.1,0.1]][sphere pommel][0,0,-hh-0.2,0,0,0,0.15]"
+			}
+		]
+	},
+	{
+		"messages": [
+			{
+				"role": "user",
+				"content": "A dining room arrangement featuring a large flat table slab, four chair models arrayed on both sides, and a chandelier torus hanging far above the absolute center."
+			},
+			{
+				"role": "assistant",
+				"content": "[large table][0,0,0,0,0,0,[3,1.5,0.1]][dining chair][sym(hw),hd,0,0,0,0,1.0][dining chair][sym(hw),-hd,0,0,0,0,1.0][chandelier torus][abs][0,0,4.0,0,0,0,1.2]"
+			}
+		]
+	},
+	{
+		"messages": [
+			{
+				"role": "user",
+				"content": "A stylized corkscrew cylinder twisted forty five degrees along the primary Z axis footprint."
+			},
+			{
+				"role": "assistant",
+				"content": "[corkscrew cylinder][0,0,0,0,0,0,[0.3,0.3,2.5],twist=(z,45)]"
+			}
+		]
+	},
+	{
+		"messages": [
+			{
+				"role": "user",
+				"content": "A desktop desk lamp with a base disc cylinder, a long slender neck capsule, and a cone spotlight shell perched on the top forward edge facing down."
+			},
+			{
+				"role": "assistant",
+				"content": "[base disc][0,0,0,0,0,0,[0.4,0.4,0.05]][neck capsule][0,0,fh,0,15,0,[0.08,0.08,1.2]][cone spotlight][0,hd,fh,45,0,0,0.3]"
+			}
+		]
+	},
+	{
+		"messages": [
+			{
+				"role": "user",
+				"content": "A rowboat crescent shell containing two flat box bench slabs encased completely within its interior longitudinal layout."
+			},
+			{
+				"role": "assistant",
+				"content": "[rowboat crescent][0,0,0,90,0,0,[1,3,0.5]][flat bench][0,hd*0.3,0,0,0,0,[0.8,0.2,0.1]][flat bench][0,-hd*0.3,0,0,0,0,[0.8,0.2,0.1]]"
+			}
+		]
+	},
+	{
+		"messages": [
+			{
+				"role": "user",
+				"content": "A modular campfire layout with three logs arranged in a row, and a spiky conical fire primitive sprouting from the crest of the center log structure."
+			},
+			{
+				"role": "assistant",
+				"content": "[campfire log][0,0,0,90,0,0,[0.15,0.15,1]][campfire log][fw*@idx,0,0,90,0,0,[0.15,0.15,1]][campfire log][fw*@idx,0,0,90,0,0,[0.15,0.15,1]][spiky fire][@1][0,0,fh,0,0,0,0.8,noise=0.5]"
+			}
+		]
+	},
+	{
+		"messages": [
+			{
+				"role": "user",
+				"content": "A low poly sci fi gun barrel cylinder that tapers sharply at the muzzle end, with a laser box scope sitting directly on top of the rear framework."
+			},
+			{
+				"role": "assistant",
+				"content": "[gun barrel][0,0,0,0,90,0,[0.2,0.2,2.0],taper=(y,0.3)][laser scope][0,-hd*0.5,fh,0,0,0,[0.1,0.4,0.1]]"
+			}
+		]
+	},
+	{
+		"messages": [
+			{
+				"role": "user",
+				"content": "A backyard playground kit containing a swing set frame, and an absolute space sandbox platform shifted 5 units up on a structural deck mountain profile."
+			},
+			{
+				"role": "assistant",
+				"content": "[playground frame][0,0,0,0,0,0,2.0][sandbox platform][abs][4.0,4.0,5.0,0,0,0,[3,3,0.2]]"
+			}
+		]
+	},
+	{
+		"messages": [
+			{
+				"role": "user",
+				"content": "A laboratory flask bottle composed of a flat bottom cylinder, an elongated cone midsection stacked on top, and a narrow cylinder neck trailing out the peak."
+			},
+			{
+				"role": "assistant",
+				"content": "[bottom cylinder][0,0,0,0,0,0,[1,1,0.2]][cone midsection][0,0,fh,0,0,0,[0.8,0.8,1.2],taper=(z,0.1)][narrow neck][0,0,fh,0,0,0,[0.15,0.15,0.5]]"
+			}
+		]
+	},
+	{
+		"messages": [
+			{
+				"role": "user",
+				"content": "A mechanical wheel capsule with a rough tread pattern noise map applied to its primary rotational contact edge."
+			},
+			{
+				"role": "assistant",
+				"content": "[wheel capsule][0,0,0,0,90,0,1.0,noise=0.25]"
+			}
+		]
+	},
+	{
+		"messages": [
+			{
+				"role": "user",
+				"content": "A living room corner detailing a large television monitor screen block, flanked closely on both sides by tall skinny soundbars."
+			},
+			{
+				"role": "assistant",
+				"content": "[television panel][0,0,0,0,0,0,[2,0.1,1.2]][skinny soundbar][sym(fw+0.1),0,hh,0,0,0,[0.2,0.2,1.5]]"
+			}
+		]
+	},
+	{
+		"messages": [
+			{
+				"role": "user",
+				"content": "A fountain array with a large circular torus pool base at world origin, and an elongated cone geyser shooting straight up out of the exact center midpoint layout space."
+			},
+			{
+				"role": "assistant",
+				"content": "[pool base][0,0,0,90,0,0,2.5][cone geyser][0,0,0,0,0,0,[0.3,0.3,4.0]]"
+			}
+		]
+	},
+	{
+		"messages": [
+			{
+				"role": "user",
+				"content": "A small generic coffee cup cylinder resting near a sprawling office keyboard configuration block context."
+			},
+			{
+				"role": "assistant",
+				"content": "[office keyboard][0,0,0,0,0,0,[1.2,0.4,0.05]][coffee cup][2fw,0,0,0,0,0,0.25]"
+			}
+		]
+	},
+	{
+		"messages": [
+			{
+				"role": "user",
+				"content": "A standard low-poly bedroom spatial layout featuring a blue-and-white striped platform mattress on the far right floor, an orange armchair next to it with a character sitting inside holding a small white sphere primitive, a tiny dark coffee table nearby, a green armchair, a dark gray armchair facing them, a tall wooden desk cabinet against the dark blue accent wall with a desk lamp resting on top, a large dark square dining or working table centered in the rear, an industrial radiator heater sitting on the left wall under a large window pane, and a secondary window on the left side wall."
+			},
+			{
+				"role": "assistant",
+				"content": "[striped mattress][abs,2.2,-0.5,0,0,0,-45,[1.0,1.8,0.3]][armchair orange][@0,0,0,fh,0,0,0,[0.9,0.9,0.8]][character][@1,0,0,hh,0,0,0,[0.4,0.4,0.6]][white sphere][@2,0,0,fh,0,0,0,0.15][dark coffee table][@1,-2fd,0,0,0,0,0,[0.5,0.5,0.3]][armchair green][@4,-2fw,0,0,0,0,45,[0.8,0.8,0.9]][armchair gray][@4,-2fw,-2fd,0,0,0,15,[0.8,0.8,0.9]][wooden desk cabinet][@5,0,-3fd,fh,0,0,0,[0.9,0.5,1.2]][desk lamp][@7,0,0,fh,0,0,0,[0.2,0.2,0.35]][dark dining table][@5,-3fw,3fd,0,0,0,0,[1.2,1.2,0.75]][industrial radiator heater][abs,-2.2,1.2,0,0,0,45,[0.2,1.0,0.6]][window pane][wall,left,0,2fh,0,0,0,[1.5,0.05,1.2]][secondary window][wall,back,0,2fh,0,0,0,[1.5,0.05,1.2]]"
+			}
+		]
+	},
+	{
+		"messages": [
+			{
+				"role": "user",
+				"content": "A massive heavy wooden banquet table with a symmetrical pair of high-back dining chairs resting tightly packed against its left and right sides."
+			},
+			{
+				"role": "assistant",
+				"content": "[wooden banquet table][0,0,0,0,0,0,[2.4,1.2,0.75]][high back dining chair][sym(-fw),0,0,0,0,0,0,[0.5,0.5,1.1]]"
+			}
+		]
+	},
+	{
+		"messages": [
+			{
+				"role": "user",
+				"content": "A high-tech cylindrical laboratory stasis pod standing on top of a square metallic ventilation platform base block."
+			},
+			{
+				"role": "assistant",
+				"content": "[ventilation platform base][0,0,0,0,0,0,[1.5,1.5,0.4]][high-tech stasis pod][0,0,fh,0,0,0,0,[0.5,0.5,2.0]]"
+			}
+		]
+	},
+	{
+		"messages": [
+			{
+				"role": "user",
+				"content": "An industrial storage barrel container with an emergency warning cone sitting directly on top of its upper lid surface."
+			},
+			{
+				"role": "assistant",
+				"content": "[industrial barrel container][0,0,0,0,0,0,[0.6,0.6,1.0]][warning cone][0,0,fh,0,0,0,0,[0.4,0.4,0.6]]"
+			}
+		]
+	},
+	{
+		"messages": [
+			{
+				"role": "user",
+				"content": "A rectangular stone structural pillars asset block context with a small decorative torus ring molding slightly overlapping inside its upper capital profile."
+			},
+			{
+				"role": "assistant",
+				"content": "[stone structural pillars][0,0,0,0,0,0,[0.4,0.4,3.0]][torus ring][0,0,hh,0,0,0,0,[0.5,0.5,0.1]]"
+			}
+		]
+	},
+	{
+		"messages": [
+			{
+				"role": "user",
+				"content": "A plush living room sectional sofa block with a tiny square wooden drink coaster resting in the immediate vicinity of its right armrest."
+			},
+			{
+				"role": "assistant",
+				"content": "[plush sectional sofa][0,0,0,0,0,0,[2.2,0.9,0.75]][wooden drink coaster][2fw,0,0,0,0,0,0,[0.2,0.2,0.02]]"
+			}
+		]
+	},
+	{
+		"messages": [
+			{
+				"role": "user",
+				"content": "A master bedroom king-size bed layout featuring a wooden nightstand table separated from the main frame off to its front-left side."
+			},
+			{
+				"role": "assistant",
+				"content": "[king size bed][0,0,0,0,0,0,[2.0,2.1,0.6]][wooden nightstand table][-fw,fd,0,0,0,0,0,[0.5,0.5,0.5]]"
+			}
+		]
+	},
+	{
+		"messages": [
+			{
+				"role": "user",
+				"content": "A large rectangular wall-mounted widescreen television panel with a tiny remote control box tucked slightly behind its rear support tracking."
+			},
+			{
+				"role": "assistant",
+				"content": "[television panel][0,0,1.2,0,0,0,0,[1.4,0.1,0.8]][remote control][hw,-hd,hh,0,0,0,0.5,[0.2,0.1,0.05]]"
+			}
+		]
+	},
+	{
+		"messages": [
+			{
+				"role": "user",
+				"content": "A heavy industrial metal workbench area featuring a tall vertical drill press assembly standing far away from its main working surface boundaries."
+			},
+			{
+				"role": "assistant",
+				"content": "[metal workbench][0,0,0,0,0,0,[1.8,0.8,0.85]][drill press][4fw,0,0,0,0,0,0,[0.5,0.5,1.8]]"
+			}
+		]
+	},
+	{
+		"messages": [
+			{
+				"role": "user",
+				"content": "A wide brick backyard patio fireplace hearth with a decorative spherical stone ornament resting directly behind its primary flue column structure."
+			},
+			{
+				"role": "assistant",
+				"content": "[brick fireplace hearth][0,0,0,0,0,0,[1.5,0.8,2.2]][stone ornament][0,-fd,0,0,0,0,1,[0.3,0.3,0.3]]"
+			}
+		]
+	},
+	{
+		"messages": [
+			{
+				"role": "user",
+				"content": "A square electronics workbench grid module with a long protective cylindrical fuse capsule capsule component buried deep under its lower grounding line plane."
+			},
+			{
+				"role": "assistant",
+				"content": "[workbench grid][0,0,0,0,0,0,[1.0,1.0,0.1]][fuse capsule][0,0,-4fh,0,0,0,1,[0.05,0.05,0.3]]"
+			}
+		]
+	},
+	{
+		"messages": [
+			{
+				"role": "user",
+				"content": "A flat low-poly office desk assembly layout containing a compact rectangular smartphone unit sitting diagonally back-right from its primary keyboard chassis block."
+			},
+			{
+				"role": "assistant",
+				"content": "[keyboard chassis][0,0,0,0,0,0,[0.5,0.2,0.02]][smartphone unit][fw,-fd,0,0,0,0,0,[0.08,0.15,0.01]]"
+			}
+		]
+	},
+	{
+		"messages": [
+			{
+				"role": "user",
+				"content": "A standard desktop monitor screen displaying complex CAD graphics with an external modular webcam sensor block hovering over its top bezel profile frame."
+			},
+			{
+				"role": "assistant",
+				"content": "[monitor screen][0,0,0.4,0,0,0,0,[0.6,0.05,0.4]][webcam sensor][0,0,2fh,0,0,0,1,[0.08,0.08,0.05]]"
+			}
+		]
+	}
 ]

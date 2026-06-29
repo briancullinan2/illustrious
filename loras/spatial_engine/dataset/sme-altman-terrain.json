@@ -1,0 +1,242 @@
+[
+	{
+		"messages": [
+			{
+				"role": "user",
+				"content": "A tranquil alpine meadow terrain with a crystal lake resting far ahead, and a solitary pine tree standing near the shoreline."
+			},
+			{
+				"role": "assistant",
+				"content": "[alpine meadow terrain][0,0,0,0,0,0,[25,25,0.2],noise=0.2][crystal lake][0,4fd,0,0,0,0,[8,6,0.1]][solitary pine tree][0,-fd,0,0,0,0,3.0]"
+			}
+		]
+	},
+	{
+		"messages": [
+			{
+				"role": "user",
+				"content": "A rolling hillside terrain with a winding dirt path leading toward the front, and a wooden fence running alongside the right edge of the trail."
+			},
+			{
+				"role": "assistant",
+				"content": "[rolling hillside terrain][0,0,0,0,0,0,[20,20,2],noise=0.5][dirt path][0,fd,0,0,0,0,[1,8,0.05]][wooden fence][fw,0,0,0,0,0,[0.2,8,0.8]]"
+			}
+		]
+	},
+	{
+		"messages": [
+			{
+				"role": "user",
+				"content": "A flowering valley terrain with a giant cherry blossom tree in the center and a small picnic blanket spread directly beneath it."
+			},
+			{
+				"role": "assistant",
+				"content": "[flowering valley terrain][0,0,0,0,0,0,[18,18,1],noise=0.3][giant cherry blossom tree][0,0,0,0,0,0,5.0][picnic blanket][0,0,-hh,0,0,0,[1.5,1.5,0.02]]"
+			}
+		]
+	},
+	{
+		"messages": [
+			{
+				"role": "user",
+				"content": "A coastal cliff terrain overlooking the sea with a lighthouse perched on the front-right edge and a seagull gliding high above it."
+			},
+			{
+				"role": "assistant",
+				"content": "[coastal cliff terrain][0,0,0,0,0,0,[25,20,4],noise=0.7][lighthouse][fw,fd,0,0,0,0,4.0][seagull][0,0,4fh,0,0,0,0.3]"
+			}
+		]
+	},
+	{
+		"messages": [
+			{
+				"role": "user",
+				"content": "A snowy tundra terrain with a frozen pond near the center and a wooden cabin tucked slightly behind it."
+			},
+			{
+				"role": "assistant",
+				"content": "[snowy tundra terrain][0,0,0,0,0,0,[20,20,0.3],noise=0.2][frozen pond][0,0,0,0,0,0,[5,4,0.05]][wooden cabin][hw,-hd,hh,0,0,0,2.0]"
+			}
+		]
+	},
+	{
+		"messages": [
+			{
+				"role": "user",
+				"content": "A lush rainforest terrain with a waterfall cascading from a rocky cliff far ahead and a pool resting directly underneath it."
+			},
+			{
+				"role": "assistant",
+				"content": "[rainforest terrain][0,0,0,0,0,0,[30,30,3],noise=0.8][rock cliff][0,4fd,0,0,0,0,[8,2,6]][waterfall][0,0,0,0,0,0,[2,0.2,5]][pool][0,0,-fh,0,0,0,[5,3,0.1]]"
+			}
+		]
+	},
+	{
+		"messages": [
+			{
+				"role": "user",
+				"content": "A golden wheat field terrain with a rustic windmill standing far to the left and a dirt road stretching toward it."
+			},
+			{
+				"role": "assistant",
+				"content": "[golden wheat field terrain][0,0,0,0,0,0,[25,25,0.1]][rustic windmill][-4fw,0,0,0,0,0,4.0][dirt road][-fd,0,0,0,0,0,[1,10,0.05]]"
+			}
+		]
+	},
+	{
+		"messages": [
+			{
+				"role": "user",
+				"content": "A tropical beach terrain with a curved palm tree near the shoreline and a hammock suspended beside it."
+			},
+			{
+				"role": "assistant",
+				"content": "[tropical beach terrain][0,0,0,0,0,0,[30,15,0.1]][curved palm tree][0,fd,0,0,0,15,3.5][hammock][fw,0,hh,0,0,0,[2,0.5,0.2]]"
+			}
+		]
+	},
+	{
+		"messages": [
+			{
+				"role": "user",
+				"content": "A canyon terrain with a narrow rope bridge spanning between two stone pillars and a traveler standing at one end."
+			},
+			{
+				"role": "assistant",
+				"content": "[canyon terrain][0,0,0,0,0,0,[30,30,5],noise=0.9][stone pillar][-3fw,0,0,0,0,0,3.0][stone pillar][3fw,0,0,0,0,0,3.0][rope bridge][@0,@1][0,0,fh,0,0,0,[6,0.3,0.1]][traveler][-fw,0,fh,0,0,0,0.4]"
+			}
+		]
+	},
+	{
+		"messages": [
+			{
+				"role": "user",
+				"content": "A lavender field terrain with a stone well in the center and a wooden bucket resting beside it."
+			},
+			{
+				"role": "assistant",
+				"content": "[lavender field terrain][0,0,0,0,0,0,[18,18,0.1]][stone well][0,0,0,0,0,0,1.5][wooden bucket][fw,0,0,0,0,0,0.3]"
+			}
+		]
+	},
+	{
+		"messages": [
+			{
+				"role": "user",
+				"content": "A river valley terrain with a small arched bridge crossing the water and wildflowers growing along both sides."
+			},
+			{
+				"role": "assistant",
+				"content": "[river valley terrain][0,0,0,0,0,0,[25,25,1],noise=0.4][river][0,0,0,0,0,0,[2,15,0.05]][arched bridge][0,0,fh,0,0,0,[3,1,0.5]][wildflowers][sym(fw),0,0,0,0,0,0.5]"
+			}
+		]
+	},
+	{
+		"messages": [
+			{
+				"role": "user",
+				"content": "A misty moor terrain with a lonely standing stone near the center and a raven perched on top."
+			},
+			{
+				"role": "assistant",
+				"content": "[misty moor terrain][0,0,0,0,0,0,[20,20,0.5],noise=0.3][standing stone][0,0,0,0,0,0,2.0][raven][0,0,fh,0,0,0,0.15]"
+			}
+		]
+	},
+	{
+		"messages": [
+			{
+				"role": "user",
+				"content": "A mountain lake terrain with a wooden dock extending out over the water and a canoe tied to its right side."
+			},
+			{
+				"role": "assistant",
+				"content": "[mountain lake terrain][0,0,0,0,0,0,[25,25,0.2]][wooden dock][0,fd,0,0,0,0,[1,5,0.1]][canoe][fw,0,0,0,0,0,0.8]"
+			}
+		]
+	},
+	{
+		"messages": [
+			{
+				"role": "user",
+				"content": "A sunflower field terrain with a scarecrow standing in the middle and a crow perched on its shoulder."
+			},
+			{
+				"role": "assistant",
+				"content": "[sunflower field terrain][0,0,0,0,0,0,[20,20,0.1]][scarecrow][0,0,0,0,0,0,2.0][crow][hw,0,fh*0.5,0,0,0,0.15]"
+			}
+		]
+	},
+	{
+		"messages": [
+			{
+				"role": "user",
+				"content": "A rugged volcanic terrain with a glowing lava pool near the front and a blackened rock arch rising behind it."
+			},
+			{
+				"role": "assistant",
+				"content": "[volcanic terrain][0,0,0,0,0,0,[30,30,3],noise=1.0][lava pool][0,fd,0,0,0,0,[6,4,0.1]][rock arch][0,-fd,0,0,0,0,[5,1,4]]"
+			}
+		]
+	},
+	{
+		"messages": [
+			{
+				"role": "user",
+				"content": "A peaceful orchard terrain with rows of fruit trees and a wooden cart parked along the front edge."
+			},
+			{
+				"role": "assistant",
+				"content": "[orchard terrain][0,0,0,0,0,0,[25,25,0.1]][fruit tree][-fw,0,0,0,0,0,2.5][fruit tree][0,0,0,0,0,0,2.5][fruit tree][fw,0,0,0,0,0,2.5][wooden cart][0,fd,0,0,0,0,1.0]"
+			}
+		]
+	},
+	{
+		"messages": [
+			{
+				"role": "user",
+				"content": "A forest clearing terrain with a stone campfire ring at the center and four log seats arranged around it."
+			},
+			{
+				"role": "assistant",
+				"content": "[forest clearing terrain][0,0,0,0,0,0,[18,18,0.2]][campfire ring][0,0,0,0,0,0,1.0][log seat][hw,0,0,0,0,0,0.8][log seat][-hw,0,0,0,0,0,0.8][log seat][0,hd,0,0,0,0,0.8][log seat][0,-hd,0,0,0,0,0.8]"
+			}
+		]
+	},
+	{
+		"messages": [
+			{
+				"role": "user",
+				"content": "A dramatic fjord terrain with steep cliffs on both sides and a sailing boat drifting through the center channel."
+			},
+			{
+				"role": "assistant",
+				"content": "[fjord terrain][0,0,0,0,0,0,[35,20,6],noise=0.9][cliff wall][-4fw,0,0,0,0,0,[3,20,6]][cliff wall][4fw,0,0,0,0,0,[3,20,6]][sailing boat][0,0,0,0,0,0,1.5]"
+			}
+		]
+	},
+	{
+		"messages": [
+			{
+				"role": "user",
+				"content": "A meadow terrain at sunset with a lone gazebo near the center and climbing vines wrapping around its posts."
+			},
+			{
+				"role": "assistant",
+				"content": "[sunset meadow terrain][0,0,0,0,0,0,[20,20,0.1]][gazebo][0,0,0,0,0,0,2.5][climbing vines][0,0,0,0,0,0,1.0,noise=0.4]"
+			}
+		]
+	},
+	{
+		"messages": [
+			{
+				"role": "user",
+				"content": "A serene garden terrain with a koi pond in the middle, a stone lantern along the shore, and a curved footbridge arching across the water."
+			},
+			{
+				"role": "assistant",
+				"content": "[garden terrain][0,0,0,0,0,0,[15,15,0.1]][koi pond][0,0,0,0,0,0,[5,4,0.1]][stone lantern][fw,0,0,0,0,0,0.8][curved footbridge][0,0,fh,0,0,0,[3,1,0.5]]"
+			}
+		]
+	}
+]

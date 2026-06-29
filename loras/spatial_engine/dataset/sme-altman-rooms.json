@@ -1,0 +1,242 @@
+[
+	{
+		"messages": [
+			{
+				"role": "user",
+				"content": "A grandfather clock consisting of a tall rectangular cabinet, a circular clock face mounted near the top front, and a pendulum sphere hanging beneath it inside the lower body."
+			},
+			{
+				"role": "assistant",
+				"content": "[clock cabinet][0,0,0,0,0,0,[1,1,4]][clock face][0,hd,fh*0.75,90,0,0,0.4][pendulum sphere][0,0,hh,0,0,0,0.2]"
+			}
+		]
+	},
+	{
+		"messages": [
+			{
+				"role": "user",
+				"content": "A pirate ship with a long hull, three vertical mast cylinders rising from the deck, and triangular sails attached midway up each mast."
+			},
+			{
+				"role": "assistant",
+				"content": "[ship hull][0,0,0,0,0,0,[5,1.5,1]][mast cylinder][0,0,fh,0,0,0,[0.15,0.15,3]][mast cylinder][fd,0,fh,0,0,0,[0.15,0.15,3]][mast cylinder][-fd,0,fh,0,0,0,[0.15,0.15,3]][sail mesh][0,0,fh*0.5,0,0,0,[1,0.1,1.5]][sail mesh][fd,0,fh*0.5,0,0,0,[1,0.1,1.5]][sail mesh][-fd,0,fh*0.5,0,0,0,[1,0.1,1.5]]"
+			}
+		]
+	},
+	{
+		"messages": [
+			{
+				"role": "user",
+				"content": "A gas station canopy supported by four corner pillars, with two fuel pumps directly underneath the center."
+			},
+			{
+				"role": "assistant",
+				"content": "[canopy roof][0,0,0,0,0,0,[6,4,0.2]][support pillar][sym(hw),sym(hd),-fh,0,0,0,[0.2,0.2,3]][fuel pump][-hw*0.4,0,-hh,0,0,0,0.5][fuel pump][hw*0.4,0,-hh,0,0,0,0.5]"
+			}
+		]
+	},
+	{
+		"messages": [
+			{
+				"role": "user",
+				"content": "A locomotive engine with a smokestack rising from the front top section, and two headlight spheres mounted on either side of the nose."
+			},
+			{
+				"role": "assistant",
+				"content": "[locomotive body][0,0,0,0,0,0,[4,1.5,2]][smokestack][0,hd,fh,0,0,0,[0.3,0.3,1]][headlight sphere][sym(hw*0.5),fd,hh,0,0,0,0.15]"
+			}
+		]
+	},
+	{
+		"messages": [
+			{
+				"role": "user",
+				"content": "A treasure chest with a rounded lid sitting on top, and two decorative metal handles attached to the left and right sides."
+			},
+			{
+				"role": "assistant",
+				"content": "[treasure chest base][0,0,0,0,0,0,[2,1.2,1]][rounded lid][0,0,fh,0,0,0,[1,1,0.5]][metal handle][sym(fw),0,hh,90,0,0,0.2]"
+			}
+		]
+	},
+	{
+		"messages": [
+			{
+				"role": "user",
+				"content": "A castle gatehouse with two guard towers standing on both outer sides and a banner hanging above the central entrance."
+			},
+			{
+				"role": "assistant",
+				"content": "[gatehouse][0,0,0,0,0,0,[3,2,3]][guard tower][sym(2fw),0,0,0,0,0,1.5][banner][0,hd,fh*0.6,0,0,0,[1.2,0.05,0.8]]"
+			}
+		]
+	},
+	{
+		"messages": [
+			{
+				"role": "user",
+				"content": "A laboratory workstation with a microscope positioned on the back left corner, and three sample vials lined up across the front edge."
+			},
+			{
+				"role": "assistant",
+				"content": "[lab workstation][0,0,0,0,0,0,[3,2,1]][microscope][-fw+0.3,-fd+0.3,fh,0,0,0,0.6][sample vial][-fw*0.5,fd,fh,0,0,0,0.1][sample vial][0,fd,fh,0,0,0,0.1][sample vial][fw*0.5,fd,fh,0,0,0,0.1]"
+			}
+		]
+	},
+	{
+		"messages": [
+			{
+				"role": "user",
+				"content": "A wizard hat cone with a circular brim torus wrapped around the bottom and a glowing jewel embedded on the front."
+			},
+			{
+				"role": "assistant",
+				"content": "[wizard hat cone][0,0,0,0,0,0,[1,1,2]][hat brim torus][0,0,-hh,90,0,0,1.2][glowing jewel][0,hd,hh,0,0,0,0.15]"
+			}
+		]
+	},
+	{
+		"messages": [
+			{
+				"role": "user",
+				"content": "A drawbridge platform with two heavy chains rising diagonally upward toward support points on either side."
+			},
+			{
+				"role": "assistant",
+				"content": "[drawbridge platform][0,0,0,0,0,0,[4,1,0.2]][chain cable][sym(hw),-fd,fh,45,0,0,[0.05,0.05,2.5]]"
+			}
+		]
+	},
+	{
+		"messages": [
+			{
+				"role": "user",
+				"content": "A snowman made from a large lower sphere, a medium sphere resting on top, a smaller head sphere above that, and a carrot cone sticking from the front."
+			},
+			{
+				"role": "assistant",
+				"content": "[lower snow sphere][0,0,0,0,0,0,1.5][middle snow sphere][0,0,fh,0,0,0,1.0][head snow sphere][0,0,2fh,0,0,0,0.7][carrot cone][0,hd,2fh,0,90,0,0.15]"
+			}
+		]
+	},
+	{
+		"messages": [
+			{
+				"role": "user",
+				"content": "A medieval battering ram with four wheels underneath and a peaked roof shelter centered above."
+			},
+			{
+				"role": "assistant",
+				"content": "[battering ram body][0,0,0,0,90,0,[4,1,1]][wheel][sym(hw),sym(hd),-hh,90,0,0,0.3][roof shelter][0,0,fh,0,0,0,[1.2,1.2,0.8]]"
+			}
+		]
+	},
+	{
+		"messages": [
+			{
+				"role": "user",
+				"content": "A vending machine with a transparent display window occupying the upper front half and a dispensing tray recessed near the bottom."
+			},
+			{
+				"role": "assistant",
+				"content": "[vending machine][0,0,0,0,0,0,[1.5,1,3]][display window][0,hd,fh*0.5,0,0,0,[0.8,0.05,1.2]][dispensing tray][0,hd,-hh*0.5,0,0,0,[-0.5,0.2,-0.2]]"
+			}
+		]
+	},
+	{
+		"messages": [
+			{
+				"role": "user",
+				"content": "A helicopter fuselage with a long tail boom extending behind it, a main rotor on top, and a tail rotor mounted at the rear end."
+			},
+			{
+				"role": "assistant",
+				"content": "[helicopter fuselage][0,0,0,0,0,0,[3,1.5,1.5]][tail boom][0,-fd*2,0,0,0,0,[0.2,3,0.2]][main rotor][0,0,fh,0,0,0,[3,0.1,0.1]][tail rotor][0,-fd*3,0,90,0,0,0.3]"
+			}
+		]
+	},
+	{
+		"messages": [
+			{
+				"role": "user",
+				"content": "A jukebox cabinet with a glowing arch mounted over the top front and two speaker circles embedded low on both sides."
+			},
+			{
+				"role": "assistant",
+				"content": "[jukebox cabinet][0,0,0,0,0,0,[2,1,3]][glowing arch][0,hd,fh,0,0,0,[1.2,0.1,0.8]][speaker circle][sym(hw*0.6),hd,-hh*0.3,90,0,0,0.2]"
+			}
+		]
+	},
+	{
+		"messages": [
+			{
+				"role": "user",
+				"content": "A fountain basin with a central statue rising from the middle and four water jets surrounding it at equal distances."
+			},
+			{
+				"role": "assistant",
+				"content": "[fountain basin][0,0,0,0,0,0,[4,4,0.5]][central statue][0,0,fh,0,0,0,1.2][water jet][hw,0,fh,0,0,0,0.1][water jet][-hw,0,fh,0,0,0,0.1][water jet][0,hd,fh,0,0,0,0.1][water jet][0,-hd,fh,0,0,0,0.1]"
+			}
+		]
+	},
+	{
+		"messages": [
+			{
+				"role": "user",
+				"content": "A king's throne with two lion sculptures sitting on the armrests and a crown emblem centered high on the backrest."
+			},
+			{
+				"role": "assistant",
+				"content": "[royal throne][0,0,0,0,0,0,[2,2,3]][lion sculpture][sym(hw),0,hh,0,0,0,0.4][crown emblem][0,0,fh,0,0,0,0.25]"
+			}
+		]
+	},
+	{
+		"messages": [
+			{
+				"role": "user",
+				"content": "A space capsule with three landing legs folded outward beneath the body and a communication antenna protruding from the top."
+			},
+			{
+				"role": "assistant",
+				"content": "[space capsule][0,0,0,0,0,0,1.5][landing leg][hw,0,-hh,30,0,0,0.5][landing leg][-hw,0,-hh,-30,0,0,0.5][landing leg][0,-hd,-hh,0,30,0,0.5][antenna][0,0,fh,0,0,0,[0.05,0.05,0.8]]"
+			}
+		]
+	},
+	{
+		"messages": [
+			{
+				"role": "user",
+				"content": "A record player base with a circular platter centered on top and a tonearm extending inward from the right side."
+			},
+			{
+				"role": "assistant",
+				"content": "[record player base][0,0,0,0,0,0,[3,2,0.5]][record platter][0,0,fh,90,0,0,0.8][tonearm][fw,0,fh,0,-45,0,[0.8,0.05,0.05]]"
+			}
+		]
+	},
+	{
+		"messages": [
+			{
+				"role": "user",
+				"content": "A giant mushroom with a thick stem cylinder supporting a wide cap overhead, and several tiny mushrooms clustered around the base."
+			},
+			{
+				"role": "assistant",
+				"content": "[mushroom stem][0,0,0,0,0,0,[0.8,0.8,3]][mushroom cap][0,0,fh,0,0,0,[3,3,1]][tiny mushroom][hw,0,0,0,0,0,0.2][tiny mushroom][-hw,0,0,0,0,0,0.2][tiny mushroom][0,hd,0,0,0,0,0.2]"
+			}
+		]
+	},
+	{
+		"messages": [
+			{
+				"role": "user",
+				"content": "A ceremonial altar block with two candles standing at the front corners, a sacred book resting in the center, and a floating halo ring suspended above."
+			},
+			{
+				"role": "assistant",
+				"content": "[ceremonial altar][0,0,0,0,0,0,[3,2,1]][candle][-hw,fd,fh,0,0,0,0.25][candle][hw,fd,fh,0,0,0,0.25][sacred book][0,0,fh,0,0,0,[0.8,0.6,0.1]][halo ring][0,0,2fh,90,0,0,0.8]"
+			}
+		]
+	}
+]

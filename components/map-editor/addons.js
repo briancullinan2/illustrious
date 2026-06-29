@@ -401,9 +401,93 @@
 			unitsPerMeter: 26.2467,    // 8 units per foot
 			defaultGridSize: 2.4384,   // 64 Quake Units (Standard Wall Height / 8 Feet)
 			minSnapIncrement: 0.3048   // 8 Quake Units (1 Foot)
+		},
+		QUAKE_STANDARD: {
+			unitsPerMeter: 26.2467,    // 8 units per foot (0.0381 meters per unit)
+			defaultGridSize: 2.4384,   // 64 Units (Standard room grid)
+			minSnapIncrement: 0.0381   // 1 Unit (Micro-brush detail snap)
+		},
+		QUAKE_VALVE_220: {
+			unitsPerMeter: 26.2467,    // Same scale, uses explicit texture coordinate axes
+			defaultGridSize: 2.4384,   // 64 Units
+			minSnapIncrement: 0.0381   // 1 Unit
+		},
+		QUAKE_II: {
+			unitsPerMeter: 26.2467,    // 8 units per foot
+			defaultGridSize: 2.4384,   // 64 Units
+			minSnapIncrement: 0.0381   // 1 Unit
+		},
+		QUAKE_III_ARENA: {
+			unitsPerMeter: 26.2467,    // 8 units per foot
+			defaultGridSize: 2.4384,   // 64 Units (Optimized for structural brush primitives)
+			minSnapIncrement: 0.1524   // 4 Units (Minimum clean snap for simple patches)
+		},
+		HEXEN_II: {
+			unitsPerMeter: 26.2467,    // Modified Quake engine scale
+			defaultGridSize: 2.4384,   // 64 Units
+			minSnapIncrement: 0.0381   // 1 Unit
+		},
+		DAIKATANA: {
+			unitsPerMeter: 26.2467,    // Heavily modified Quake II engine scale
+			defaultGridSize: 2.4384,   // 64 Units
+			minSnapIncrement: 0.0381   // 1 Unit
+		},
+		DOOM_3: {
+			unitsPerMeter: 39.3701,    // 1 unit = 1 inch (Id Tech 4 scale shift)
+			defaultGridSize: 2.032,    // 80 Units (Approx 2 meters / Door height)
+			minSnapIncrement: 0.0254   // 1 Unit (1 Inch precision)
+		},
+		HALF_LIFE_GOLDSRC: {
+			unitsPerMeter: 39.3701,    // 1 unit = 1 inch (GoldSrc standard player is 72 units tall)
+			defaultGridSize: 1.6256,   // 64 Units (Standard texture grid alignment)
+			minSnapIncrement: 0.0254   // 1 Unit (1 Inch)
+		},
+		D_DAY_NORMANDY: {
+			unitsPerMeter: 26.2467,    // Quake II total conversion scale
+			defaultGridSize: 2.4384,   // 64 Units
+			minSnapIncrement: 0.0381   // 1 Unit
+		},
+		HERETIC_II: {
+			unitsPerMeter: 26.2467,    // Quake II engine lineage
+			defaultGridSize: 2.4384,   // 64 Units
+			minSnapIncrement: 0.0381   // 1 Unit
+		},
+		NEVERBALL: {
+			unitsPerMeter: 1.0,        // Pure metric engine representation
+			defaultGridSize: 1.0,      // 1 Meter grid tile
+			minSnapIncrement: 0.125    // 1/8th Meter physics boundary snap
+		},
+		KINGPIN_LIFE_OF_CRIME: {
+			unitsPerMeter: 26.2467,    // Quake II architecture modification
+			defaultGridSize: 2.4384,   // 64 Units
+			minSnapIncrement: 0.0381   // 1 Unit
+		},
+		WRATH_AEON_OF_RUIN: {
+			unitsPerMeter: 26.2467,    // DarkPlaces engine (Classic Quake map architecture)
+			defaultGridSize: 2.4384,   // 64 Units
+			minSnapIncrement: 0.0381   // 1 Unit
+		},
+		GODOT_FUNC_GODOT: {
+			unitsPerMeter: 1.0,        // FuncGodot remaps 16 or 32 texture pixels out to 1 meter
+			defaultGridSize: 1.0,      // 1 Godot spatial unit
+			minSnapIncrement: 0.03125  // 1/32 Unit map grid snap
+		},
+		DEFOLD_TRENCHFOLD: {
+			unitsPerMeter: 1.0,        // Native 3D metric translation overlay
+			defaultGridSize: 1.0,      // 1 Game engine spatial node unit
+			minSnapIncrement: 0.01     // Centimeter-level structural precision alignment
+		},
+		CRUELTY_SQUAD: {
+			unitsPerMeter: 1.0,        // Custom Godot 3.x scale configuration
+			defaultGridSize: 2.0,      // Large structural blocks
+			minSnapIncrement: 0.25     // Coarse geometric cell stepping
+		},
+		GRAVEN: {
+			unitsPerMeter: 39.3701,    // Unreal Engine 4 core scaling factor (1 unit = 1 cm, map uses block factors)
+			defaultGridSize: 1.0,      // 100 Unreal Units (1 Meter)
+			minSnapIncrement: 0.01     // 1 Unreal Unit (1 Centimeter)
 		}
 	};
-
 
 
 
@@ -862,8 +946,6 @@
 		// We wrap or set the internal URL modifier hook natively supported by kh and Cu classes
 		manager.setURLModifier(function (url) {
 			// Drop a breakpoint here to guarantee catching every image/shader/binary fetch
-			debugger;
-
 			if(typeof window.onResolveRemoteAsset === 'function') {
 				// If it's a known resource or needs a GitHub/Shader redirect
 				// Because resolveURL must return a string synchronously, we pass back the candidate URL,

@@ -1,0 +1,242 @@
+[
+	{
+		"messages": [
+			{
+				"role": "user",
+				"content": "A wooden picnic table with two long benches running parallel on its left and right sides."
+			},
+			{
+				"role": "assistant",
+				"content": "[picnic table][0,0,0,0,0,0,[2.5,1.2,0.2]][bench][sym(fw),0,-hh,0,0,0,[1.8,0.4,0.3]]"
+			}
+		]
+	},
+	{
+		"messages": [
+			{
+				"role": "user",
+				"content": "A watchtower standing on top of a broad stone platform."
+			},
+			{
+				"role": "assistant",
+				"content": "[stone platform][0,0,0,0,0,0,[4,4,0.5]][watchtower][0,0,fh,0,0,0,2.0]"
+			}
+		]
+	},
+	{
+		"messages": [
+			{
+				"role": "user",
+				"content": "A small campfire directly in front of a wooden cabin."
+			},
+			{
+				"role": "assistant",
+				"content": "[wooden cabin][0,0,0,0,0,0,2.5][campfire][0,fd,0,0,0,0,0.4]"
+			}
+		]
+	},
+	{
+		"messages": [
+			{
+				"role": "user",
+				"content": "A lighthouse with a rotating beacon sphere hovering above its roof."
+			},
+			{
+				"role": "assistant",
+				"content": "[lighthouse][0,0,0,0,0,0,3.0][beacon sphere][0,0,2fh,0,0,0,0.3]"
+			}
+		]
+	},
+	{
+		"messages": [
+			{
+				"role": "user",
+				"content": "A castle gate flanked by two defensive towers positioned a moderate distance apart."
+			},
+			{
+				"role": "assistant",
+				"content": "[tower][-3fw,0,0,0,0,0,2.0][tower][3fw,0,0,0,0,0,2.0][castle gate][@0,@1][0,0,0,0,0,0,[2,0.5,2]]"
+			}
+		]
+	},
+	{
+		"messages": [
+			{
+				"role": "user",
+				"content": "A large boulder with a tiny bird perched on top of it."
+			},
+			{
+				"role": "assistant",
+				"content": "[boulder][0,0,0,0,0,0,2.0][bird][0,0,fh,0,0,0,0.15]"
+			}
+		]
+	},
+	{
+		"messages": [
+			{
+				"role": "user",
+				"content": "Three streetlights lined up along a road at equal spacing."
+			},
+			{
+				"role": "assistant",
+				"content": "[streetlight][0,0,0,0,0,0,1.0][streetlight][fd*@idx,0,0,0,0,0,1.0][streetlight][fd*@idx,0,0,0,0,0,1.0]"
+			}
+		]
+	},
+	{
+		"messages": [
+			{
+				"role": "user",
+				"content": "A satellite dish mounted on the right side of a communication building."
+			},
+			{
+				"role": "assistant",
+				"content": "[communication building][0,0,0,0,0,0,2.0][satellite dish][fw,0,hh,0,45,0,0.5]"
+			}
+		]
+	},
+	{
+		"messages": [
+			{
+				"role": "user",
+				"content": "A decorative fountain centered in a courtyard with four flower planters symmetrically placed around it."
+			},
+			{
+				"role": "assistant",
+				"content": "[fountain][0,0,0,0,0,0,1.5][flower planter][sym(2fw),0,0,0,0,0,0.5][flower planter][0,sym(2fd),0,0,0,0,0.5]"
+			}
+		]
+	},
+	{
+		"messages": [
+			{
+				"role": "user",
+				"content": "A cargo crate with a warning beacon attached to its upper left corner."
+			},
+			{
+				"role": "assistant",
+				"content": "[cargo crate][0,0,0,0,0,0,1.0][warning beacon][-hw,0,fh,0,0,0,0.2]"
+			}
+		]
+	},
+	{
+		"messages": [
+			{
+				"role": "user",
+				"content": "A suspension bridge supported by two massive towers with the roadway spanning between them."
+			},
+			{
+				"role": "assistant",
+				"content": "[bridge tower][-4fw,0,0,0,0,0,3.0][bridge tower][4fw,0,0,0,0,0,3.0][bridge roadway][@0,@1][0,0,hh,0,0,0,[8,0.5,0.2]]"
+			}
+		]
+	},
+	{
+		"messages": [
+			{
+				"role": "user",
+				"content": "A treasure chest partially hidden behind a giant rock."
+			},
+			{
+				"role": "assistant",
+				"content": "[giant rock][0,0,0,0,0,0,2.5][treasure chest][hw,-hd,hh,0,0,0,0.5]"
+			}
+		]
+	},
+	{
+		"messages": [
+			{
+				"role": "user",
+				"content": "A floating crystal hovering high above an ancient pedestal."
+			},
+			{
+				"role": "assistant",
+				"content": "[ancient pedestal][0,0,0,0,0,0,1.2][floating crystal][0,0,2fh,0,0,0,0.4]"
+			}
+		]
+	},
+	{
+		"messages": [
+			{
+				"role": "user",
+				"content": "A train engine with two passenger cars directly behind it."
+			},
+			{
+				"role": "assistant",
+				"content": "[train engine][0,0,0,0,90,0,1.5][passenger car][0,-fd,0,0,90,0,1.2][passenger car][0,-fd*@idx,0,0,90,0,1.2]"
+			}
+		]
+	},
+	{
+		"messages": [
+			{
+				"role": "user",
+				"content": "A giant tree with a wooden treehouse attached halfway up its trunk."
+			},
+			{
+				"role": "assistant",
+				"content": "[giant tree][0,0,0,0,0,0,4.0][treehouse][fw,0,hh,0,0,0,0.8]"
+			}
+		]
+	},
+	{
+		"messages": [
+			{
+				"role": "user",
+				"content": "A stone altar with two torches standing on either side."
+			},
+			{
+				"role": "assistant",
+				"content": "[stone altar][0,0,0,0,0,0,[2,1,1]][torch][sym(fw),0,fh,0,0,0,0.4]"
+			}
+		]
+	},
+	{
+		"messages": [
+			{
+				"role": "user",
+				"content": "A submarine resting beneath the ocean surface with a buoy floating directly above it."
+			},
+			{
+				"role": "assistant",
+				"content": "[submarine][0,0,0,0,90,0,2.0][buoy][0,0,2fh,0,0,0,0.3]"
+			}
+		]
+	},
+	{
+		"messages": [
+			{
+				"role": "user",
+				"content": "A large warehouse and a security booth positioned near its front-left corner."
+			},
+			{
+				"role": "assistant",
+				"content": "[warehouse][0,0,0,0,0,0,4.0][security booth][-fw,fd,0,0,0,0,0.4]"
+			}
+		]
+	},
+	{
+		"messages": [
+			{
+				"role": "user",
+				"content": "A radar tower with four antenna dishes mounted around its upper section."
+			},
+			{
+				"role": "assistant",
+				"content": "[radar tower][0,0,0,0,0,0,3.0][antenna dish][sym(fw),0,fh,0,0,0,0.3][antenna dish][0,sym(fd),fh,0,90,0,0.3]"
+			}
+		]
+	},
+	{
+		"messages": [
+			{
+				"role": "user",
+				"content": "A ceremonial stone circle with a glowing crystal suspended exactly in the middle above the stones."
+			},
+			{
+				"role": "assistant",
+				"content": "[stone pillar][-fw,0,0,0,0,0,1.0][stone pillar][fw,0,0,0,0,0,1.0][stone pillar][0,-fd,0,0,0,0,1.0][stone pillar][0,fd,0,0,0,0,1.0][glowing crystal][@0,@1][0,0,2fh,0,0,0,0.4]"
+			}
+		]
+	}
+]

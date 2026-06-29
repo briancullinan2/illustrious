@@ -1,122 +1,146 @@
 [
-  {
-    "messages": [
-      {
-        "role": "user", "content": "Two stone pillars holding up a heavy steel crossbeam mesh across the top."
-      },
-      {
-        "role": "assistant", "content": "[stone pillar][-3fw,0,0,0,0,0,1.5][stone pillar][3fw,0,0,0,0,0,1.5][heavy steel crossbeam][@0,@1][0,0,fh,0,0,0,[6.2,0.4,0.2]]"
-      }
-    ]
-  },
-  {
-    "messages": [
-      {
-        "role": "user", "content": "A row of five stone columns spaced out evenly along the platform layout using an iteration counter."
-      },
-      {
-        "role": "assistant", "content": "[stone column][0,0,0,0,0,0,2.0][stone column][fw*@idx,0,0,0,0,0,2.0][stone column][fw*@idx,0,0,0,0,0,2.0][stone column][fw*@idx,0,0,0,0,0,2.0][stone column][fw*@idx,0,0,0,0,0,2.0]"
-      }
-    ]
-  },
-  {
-    "messages": [
-      {
-        "role": "user", "content": "A brick archway bridging a left obelisk and a right obelisk frame."
-      },
-      {
-        "role": "assistant", "content": "[left obelisk][-4fw,0,0,0,0,0,[0.8,0.8,3.0]][right obelisk][4fw,0,0,0,0,0,[0.8,0.8,3.0]][brick archway][@0,@1][0,0,fh,0,0,0,1.2]"
-      }
-    ]
-  },
-  {
-    "messages": [
-      {
-        "role": "user", "content": "A high-fidelity mechanical component featuring a cylinder shaft that has a sharp uniform taper along its vertical tracking axis."
-      },
-      {
-        "role": "assistant", "content": "[cylinder shaft][0,0,0,0,0,0,[0.5,0.5,3.0],taper=(z,0.2)]"
-      }
-    ]
-  },
-  {
-    "messages": [
-      {
-        "role": "user", "content": "A stone pedestal block at world center with a generic artifact sphere snapped flush to its top outer crust surface profile."
-      },
-      {
-        "role": "assistant", "content": "[stone pedestal][abs][0,0,0,0,0,0,[1,1,1.5]][artifact sphere][0,0,0,0,0,0,0.4,surf]"
-      }
-    ]
-  },
-  {
-    "messages": [
-      {
-        "role": "user", "content": "A carved marble pillar detailing an ornate structural helix layout twisted ninety degrees around the primary vertical footprint."
-      },
-      {
-        "role": "assistant", "content": "[marble pillar][0,0,0,0,0,0,[0.6,0.6,4.0],twist=(z,90)]"
-      }
-    ]
-  },
-  {
-    "messages": [
-      {
-        "role": "user", "content": "A massive foundation layout block with two small decorative capsules symmetrically mirrored along its outer flank walls."
-      },
-      {
-        "role": "assistant", "content": "[massive foundation][0,0,0,0,0,0,[4,2,1]][decorative capsule][sym(fw+0.2),0,hh,0,90,0,0.3]"
-      }
-    ]
-  },
-  {
-    "messages": [
-      {
-        "role": "user", "content": "A hollowed circular concrete drainage pipe carved directly out of a solid bedrock masonry cube segment using an explicit subtraction layer."
-      },
-      {
-        "role": "assistant", "content": "[solid bedrock][0,0,0,0,0,0,[2,2,2]][drainage pipe][0,0,0,90,0,0,[0.8,0.8,2.2],-%]"
-      }
-    ]
-  },
-  {
-    "messages": [
-      {
-        "role": "user", "content": "A defensive parapet wall assembly flanking a central guard tower cylinder node layout."
-      },
-      {
-        "role": "assistant", "content": "[guard tower][0,0,0,0,0,0,[1.5,1.5,4.0]][parapet wall][sym(fw+1.5),0,0,0,0,0,[2,0.4,2]]"
-      }
-    ]
-  },
-  {
-    "messages": [
-      {
-        "role": "user", "content": "A custom weapon handle shaft featuring a parallel capsule segment wrapped cleanly in a high-amplitude grip displacement texture mapping."
-      },
-      {
-        "role": "assistant", "content": "[weapon handle][0,0,0,0,0,0,[0.2,0.2,1.2],noise=0.15]"
-      }
-    ]
-  },
-  {
-    "messages": [
-      {
-        "role": "user", "content": "An absolute coordinate beacon sphere positioned 12 units high away from a sprawling procedural canyon field layout canvas edge."
-      },
-      {
-        "role": "assistant", "content": "[canyon terrain][0,0,0,0,0,0,[30,30,3],noise=0.65][beacon sphere][abs][0,0,12.0,0,0,0,0.5]"
-      }
-    ]
-  },
-  {
-    "messages": [
-      {
-        "role": "user", "content": "A target bullseye board setup with a smaller concentric target cylinder loop encased completely inside its volume median vector tracker."
-      },
-      {
-        "role": "assistant", "content": "[target board][0,0,0,90,0,0,[1.5,1.5,0.1]][target loop][0,0,0,90,0,0,[0.5,0.5,0.12]]"
-      }
-    ]
-  }
+	{
+		"messages": [
+			{
+				"role": "user",
+				"content": "Two stone pillars holding up a heavy steel crossbeam mesh across the top."
+			},
+			{
+				"role": "assistant",
+				"content": "[stone pillar][-3fw,0,0,0,0,0,1.5][stone pillar][3fw,0,0,0,0,0,1.5][heavy steel crossbeam][@0,@1][0,0,fh,0,0,0,[6.2,0.4,0.2]]"
+			}
+		]
+	},
+	{
+		"messages": [
+			{
+				"role": "user",
+				"content": "A row of five stone columns spaced out evenly along the platform layout using an iteration counter."
+			},
+			{
+				"role": "assistant",
+				"content": "[stone column][0,0,0,0,0,0,2.0][stone column][fw*@idx,0,0,0,0,0,2.0][stone column][fw*@idx,0,0,0,0,0,2.0][stone column][fw*@idx,0,0,0,0,0,2.0][stone column][fw*@idx,0,0,0,0,0,2.0]"
+			}
+		]
+	},
+	{
+		"messages": [
+			{
+				"role": "user",
+				"content": "A brick archway bridging a left obelisk and a right obelisk frame."
+			},
+			{
+				"role": "assistant",
+				"content": "[left obelisk][-4fw,0,0,0,0,0,[0.8,0.8,3.0]][right obelisk][4fw,0,0,0,0,0,[0.8,0.8,3.0]][brick archway][@0,@1][0,0,fh,0,0,0,1.2]"
+			}
+		]
+	},
+	{
+		"messages": [
+			{
+				"role": "user",
+				"content": "A high-fidelity mechanical component featuring a cylinder shaft that has a sharp uniform taper along its vertical tracking axis."
+			},
+			{
+				"role": "assistant",
+				"content": "[cylinder shaft][0,0,0,0,0,0,[0.5,0.5,3.0],taper=(z,0.2)]"
+			}
+		]
+	},
+	{
+		"messages": [
+			{
+				"role": "user",
+				"content": "A stone pedestal block at world center with a generic artifact sphere snapped flush to its top outer crust surface profile."
+			},
+			{
+				"role": "assistant",
+				"content": "[stone pedestal][abs][0,0,0,0,0,0,[1,1,1.5]][artifact sphere][0,0,0,0,0,0,0.4,surf]"
+			}
+		]
+	},
+	{
+		"messages": [
+			{
+				"role": "user",
+				"content": "A carved marble pillar detailing an ornate structural helix layout twisted ninety degrees around the primary vertical footprint."
+			},
+			{
+				"role": "assistant",
+				"content": "[marble pillar][0,0,0,0,0,0,[0.6,0.6,4.0],twist=(z,90)]"
+			}
+		]
+	},
+	{
+		"messages": [
+			{
+				"role": "user",
+				"content": "A massive foundation layout block with two small decorative capsules symmetrically mirrored along its outer flank walls."
+			},
+			{
+				"role": "assistant",
+				"content": "[massive foundation][0,0,0,0,0,0,[4,2,1]][decorative capsule][sym(fw+0.2),0,hh,0,90,0,0.3]"
+			}
+		]
+	},
+	{
+		"messages": [
+			{
+				"role": "user",
+				"content": "A hollowed circular concrete drainage pipe carved directly out of a solid bedrock masonry cube segment using an explicit subtraction layer."
+			},
+			{
+				"role": "assistant",
+				"content": "[solid bedrock][0,0,0,0,0,0,[2,2,2]][drainage pipe][0,0,0,90,0,0,[0.8,0.8,2.2],-%]"
+			}
+		]
+	},
+	{
+		"messages": [
+			{
+				"role": "user",
+				"content": "A defensive parapet wall assembly flanking a central guard tower cylinder node layout."
+			},
+			{
+				"role": "assistant",
+				"content": "[guard tower][0,0,0,0,0,0,[1.5,1.5,4.0]][parapet wall][sym(fw+1.5),0,0,0,0,0,[2,0.4,2]]"
+			}
+		]
+	},
+	{
+		"messages": [
+			{
+				"role": "user",
+				"content": "A custom weapon handle shaft featuring a parallel capsule segment wrapped cleanly in a high-amplitude grip displacement texture mapping."
+			},
+			{
+				"role": "assistant",
+				"content": "[weapon handle][0,0,0,0,0,0,[0.2,0.2,1.2],noise=0.15]"
+			}
+		]
+	},
+	{
+		"messages": [
+			{
+				"role": "user",
+				"content": "An absolute coordinate beacon sphere positioned 12 units high away from a sprawling procedural canyon field layout canvas edge."
+			},
+			{
+				"role": "assistant",
+				"content": "[canyon terrain][0,0,0,0,0,0,[30,30,3],noise=0.65][beacon sphere][abs][0,0,12.0,0,0,0,0.5]"
+			}
+		]
+	},
+	{
+		"messages": [
+			{
+				"role": "user",
+				"content": "A target bullseye board setup with a smaller concentric target cylinder loop encased completely inside its volume median vector tracker."
+			},
+			{
+				"role": "assistant",
+				"content": "[target board][0,0,0,90,0,0,[1.5,1.5,0.1]][target loop][0,0,0,90,0,0,[0.5,0.5,0.12]]"
+			}
+		]
+	}
 ]
