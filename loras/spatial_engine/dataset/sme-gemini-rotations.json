@@ -1,0 +1,122 @@
+[
+  {
+    "messages": [
+      {"role": "user", "content": "rotate this bag laying on the side to be standing upright on a desk. Asset ID: handbag_94f. Source bounds: X: 0.82m, Y: 0.35m, Z: 0.41m. Native orientation: Tipped on its side along the X-axis."},
+      {"role": "assistant", "content": "[handbag_94f][0,0,0,0,0,90,1.0]"}
+    ]
+  },
+  {
+    "messages": [
+      {"role": "user", "content": "place this laptop flat on the kitchen island. Asset ID: laptop_77a. Source bounds: X: 0.03m, Y: 0.32m, Z: 0.24m. Native orientation: Modeled standing completely vertical like a book."},
+      {"role": "assistant", "content": "[laptop_77a][0,0,0,-90,0,0,0.35]"}
+    ]
+  },
+  {
+    "messages": [
+      {"role": "user", "content": "put this soda can upright near the keyboard. Asset ID: can_cola_02. Source bounds: X: 0.12m, Y: 0.06m, Z: 0.06m. Native orientation: Tipped backward, pointing horizontally along the Z-axis."},
+      {"role": "assistant", "content": "[can_cola_02][0,0,0,90,0,0,0.12]"}
+    ]
+  },
+  {
+    "messages": [
+      {"role": "user", "content": "drop the desk lamp onto the side table. Asset ID: lamp_office_x. Source bounds: X: 15.0m, Y: 45.0m, Z: 20.0m. Native orientation: Model is upside down with base pointing to sky, scaled in centimeters."},
+      {"role": "assistant", "content": "[lamp_office_x][0,0,0,180,0,0,0.45]"}
+    ]
+  },
+  {
+    "messages": [
+      {"role": "user", "content": "slide the acoustic guitar into the corner stand. Asset ID: guitar_gibson. Source bounds: X: 0.15m, Y: 1.05m, Z: 0.42m. Native orientation: Intentionally modeled flat on its back like a floor asset."},
+      {"role": "assistant", "content": "[guitar_gibson][0,0,0,-90,0,0,1.05]"}
+    ]
+  },
+  {
+    "messages": [
+      {"role": "user", "content": "stand the tall floor vase up next to the armchair. Asset ID: vase_ceramic_h. Source bounds: X: 0.88m, Y: 0.32m, Z: 0.31m. Native orientation: Tipped horizontally along the main X-axis."},
+      {"role": "assistant", "content": "[vase_ceramic_h][0,0,0,0,0,-90,0.88]"}
+    ]
+  },
+  {
+    "messages": [
+      {"role": "user", "content": "place this coffee mug facing handle-right onto the saucer. Asset ID: mug_porcelain. Source bounds: X: 0.09m, Y: 0.12m, Z: 0.09m. Native orientation: Inverted upside down."},
+      {"role": "assistant", "content": "[mug_porcelain][0,0,0,180,90,0,0.12]"}
+    ]
+  },
+  {
+    "messages": [
+      {"role": "user", "content": "mount this flat screen TV flush against the living room wall. Asset ID: tv_samsung_65. Source bounds: X: 1.45m, Y: 0.08m, Z: 0.83m. Native orientation: Laying flat face-up like a coffee table."},
+      {"role": "assistant", "content": "[tv_samsung_65][0,0,0,90,0,0,1.45]"}
+    ]
+  },
+  {
+    "messages": [
+      {"role": "user", "content": "stand this computer tower up under the workstation. Asset ID: pc_case_atx. Source bounds: X: 480.0m, Y: 210.0m, Z: 500.0m. Native orientation: Tipped on its right panel face down, modeled in raw millimeters."},
+      {"role": "assistant", "content": "[pc_case_atx][0,0,0,0,0,-90,0.5]"}
+    ]
+  },
+  {
+    "messages": [
+      {"role": "user", "content": "put the water bottle straight up in the cup holder. Asset ID: hydro_flask_32. Source bounds: X: 0.09m, Y: 0.25m, Z: 0.09m. Native orientation: Tipped at an odd forward 45 degree angle."},
+      {"role": "assistant", "content": "[hydro_flask_32][0,0,0,-45,0,0,0.25]"}
+    ]
+  },
+  {
+    "messages": [
+      {"role": "user", "content": "set this office chair down facing away from the wall. Asset ID: chair_herman_m. Source bounds: X: 0.65m, Y: 0.65m, Z: 1.05m. Native orientation: Perfectly oriented upright but needs a turn."},
+      {"role": "assistant", "content": "[chair_herman_m][0,0,0,0,180,0,1.05]"}
+    ]
+  },
+  {
+    "messages": [
+      {"role": "user", "content": "align this keyboard straight on the desk mat. Asset ID: kbd_mechanical. Source bounds: X: 0.14m, Y: 0.44m, Z: 0.04m. Native orientation: Rotated weirdly at a diagonal 45 degrees on the Z-axis baseline."},
+      {"role": "assistant", "content": "[kbd_mechanical][0,0,0,0,-45,0,0.44]"}
+    ]
+  },
+  {
+    "messages": [
+      {"role": "user", "content": "place this modern bookshelf flush against the master wall. Asset ID: shelf_ikea_bil. Source bounds: X: 0.28m, Y: 0.80m, Z: 2.02m. Native orientation: Spined horizontally on its back side like a low bench."},
+      {"role": "assistant", "content": "[shelf_ikea_bil][0,0,0,90,0,0,2.02]"}
+    ]
+  },
+  {
+    "messages": [
+      {"role": "user", "content": "stand this skateboard up on its tail wheel against the garage wall. Asset ID: skateboard_deck. Source bounds: X: 0.78m, Y: 0.20m, Z: 0.10m. Native orientation: Dropped entirely flat on its wheels parallel to ground."},
+      {"role": "assistant", "content": "[skateboard_deck][0,0,0,90,0,0,0.78]"}
+    ]
+  },
+  {
+    "messages": [
+      {"role": "user", "content": "set this picture frame upright on the shelf mantlepiece. Asset ID: frame_photo_8x10. Source bounds: X: 0.25m, Y: 0.20m, Z: 0.02m. Native orientation: Face down flat on the canvas surface."},
+      {"role": "assistant", "content": "[frame_photo_8x10][0,0,0,-90,0,0,0.25]"}
+    ]
+  },
+  {
+    "messages": [
+      {"role": "user", "content": "stand this tall cleaning broom up inside the storage closet. Asset ID: broom_bristle. Source bounds: X: 1.42m, Y: 0.25m, Z: 0.08m. Native orientation: Spread horizontally across the deck floor surface."},
+      {"role": "assistant", "content": "[broom_bristle][0,0,0,0,0,90,1.42]"}
+    ]
+  },
+  {
+    "messages": [
+      {"role": "user", "content": "put the heavy dumbbell rack flat on the gym gym mat floor. Asset ID: rack_weights. Source bounds: X: 0.65m, Y: 1.20m, Z: 0.85m. Native orientation: Tipped cleanly onto its back frame profile."},
+      {"role": "assistant", "content": "[rack_weights][0,0,0,-90,0,0,1.20]"}
+    ]
+  },
+  {
+    "messages": [
+      {"role": "user", "content": "place this desktop microphone upright right next to the screen setup. Asset ID: mic_yeti. Source bounds: X: 0.12m, Y: 0.12m, Z: 0.25m. Native orientation: Perfectly positioned straight vertically inside source file data."},
+      {"role": "assistant", "content": "[mic_yeti][0,0,0,0,0,0,0.25]"}
+    ]
+  },
+  {
+    "messages": [
+      {"role": "user", "content": "stand the long surf board straight up against the patio beam structure. Asset ID: surfboard_long. Source bounds: X: 2.45m, Y: 0.55m, Z: 0.07m. Native orientation: Floating completely horizontal like it is running on a wave crest."},
+      {"role": "assistant", "content": "[surfboard_long][0,0,0,90,0,0,2.45]"}
+    ]
+  },
+  {
+    "messages": [
+      {"role": "user", "content": "set this speaker monitor up right side up on the desktop stands. Asset ID: speaker_studio_monitor. Source bounds: X: 0.18m, Y: 0.30m, Z: 0.22m. Native orientation: Flipped exactly upside down inside the export layer."},
+      {"role": "assistant", "content": "[speaker_studio_monitor][0,0,0,180,0,0,0.30]"}
+    ]
+  }
+]
