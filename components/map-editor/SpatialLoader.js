@@ -123,7 +123,7 @@ function evaluateSpatialFormula(expr, currentIdxValue) {
 async function parseSpatialCommands(inputStr, currentIdxValue = 0) {
     const THREE = require('three');
     const parsedSequence = parseTokens(inputStr);
-    const activeScene = window.nunu.getScene();
+    const activeScene = window.Nunu.getScene();
 
     let lastNouns = null;
     let defaultSpec = ["0", "0", "0", "0", "0", "0", "0"];
@@ -165,7 +165,7 @@ async function parseSpatialCommands(inputStr, currentIdxValue = 0) {
                 targetObject = createSpatialObject(primaryNoun, nunuClasses, THREE);
                 targetObject.name = primaryNoun.replace('@idx', currentIdxValue);
 
-                window.nunu.addObject(targetObject, activeScene);
+                window.Nunu.addObject(targetObject, activeScene);
 
                 applyTransformations(targetObject, activeSpec, currentIdxValue, relativeObject);
                 currentIdxValue++;
@@ -173,7 +173,7 @@ async function parseSpatialCommands(inputStr, currentIdxValue = 0) {
                 applyTransformations(targetObject, activeSpec, currentIdxValue, relativeObject);
             }
 
-            window.nunu.gui.updateInterface();
+            window.Nunu.gui.updateInterface();
         }
     }
 }

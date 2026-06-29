@@ -4,7 +4,7 @@
     // =========================================================================
     // DUAL-PURPOSE MODULE (front-end + worker)
     // -------------------------------------------------------------------------
-    // Extracts raw block geometry from native .blend files asynchronously 
+    // Extracts raw block geometry from native .blend files asynchronously
     // inside worker context loops, streaming extracted surface payloads back to
     // the UI frame context without main-thread blocking bottlenecks.
     // =========================================================================
@@ -337,7 +337,7 @@
     // =========================================================================
     async function importBlendFile(filePath, arrayBufferContent) {
         let blendLoader = new THREE.BlendImporter();
-        let activeScene = window.nunu && window.nunu.getScene ? window.nunu.getScene() : window.scene;
+        let activeScene = window.Nunu && window.Nunu.getScene ? window.Nunu.getScene() : window.scene;
 
         if (!activeScene) {
             console.error("BlendLoader: Visual execution container context path missing from stack loop.");
@@ -359,8 +359,8 @@
 
             blendGroup.children = [];
 
-            if (window.nunu && window.nunu.addObject) {
-                window.nunu.addObject(blendGroup, activeScene);
+            if (window.Nunu && window.Nunu.addObject) {
+                window.Nunu.addObject(blendGroup, activeScene);
             } else {
                 activeScene.add(blendGroup);
             }
@@ -370,25 +370,25 @@
                 if (index < surfaceChildren.length) {
                     const surfaceMesh = surfaceChildren[index];
 
-                    if (window.nunu && window.nunu.addObject) {
-                        window.nunu.addObject(surfaceMesh, blendGroup);
+                    if (window.Nunu && window.Nunu.addObject) {
+                        window.Nunu.addObject(surfaceMesh, blendGroup);
                     } else {
                         blendGroup.add(surfaceMesh);
                     }
                     index++;
 
-                    if (window.nunu && window.nunu.gui && window.nunu.gui.updateInterface) {
-                        window.nunu.gui.updateInterface();
+                    if (window.Nunu && window.Nunu.gui && window.Nunu.gui.updateInterface) {
+                        window.Nunu.gui.updateInterface();
                     }
                     requestAnimationFrame(processBatchQueue);
                     return;
                 }
 
-                if (window.nunu && window.nunu.selectObject) {
-                    window.nunu.selectObject(blendGroup.children[0] || blendGroup);
+                if (window.Nunu && window.Nunu.selectObject) {
+                    window.Nunu.selectObject(blendGroup.children[0] || blendGroup);
                 }
-                if (window.nunu && window.nunu.gui && window.nunu.gui.updateInterface) {
-                    window.nunu.gui.updateInterface();
+                if (window.Nunu && window.Nunu.gui && window.Nunu.gui.updateInterface) {
+                    window.Nunu.gui.updateInterface();
                 }
 
                 console.log(`Successfully parsed and loaded ${surfaceChildren.length} meshes incrementally.`);

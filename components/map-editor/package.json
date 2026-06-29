@@ -1,0 +1,45 @@
+{
+	"name": "illustrious",
+	"version": "1.0.0",
+	"main": "index.js",
+	"scripts": {
+		"start": "node server/index.js",
+		"setup": "node setup/setup.js",
+		"chat": "python .\\cloud-functions\\boot-gpu\\chat-agent.py",
+		"build-editor": "webpack --config webpack.prod.js"
+	},
+	"dependencies": {
+		"@google-cloud/compute": "^6.13.0",
+		"@google-cloud/resource-manager": "^6.3.0",
+		"canvas": "^3.2.3",
+		"express": "^4.19.2",
+		"express-session": "^1.19.0",
+		"googleapis": "^173.0.0",
+		"open": "^10.1.0",
+		"png-to-ico": "^3.0.1",
+		"session-file-store": "^1.5.0",
+		"three": "^0.163.0",
+		"ws": "^8.21.0"
+	},
+	"devDependencies": {
+		"@babel/core": "^8.0.1",
+		"@babel/plugin-transform-classes": "^8.0.1",
+		"@babel/preset-env": "^8.0.2",
+		"@babel/runtime": "7.29.7",
+		"@shoutem/webpack-prepend-append": "1.0.1",
+		"@types/node": "^26.0.1",
+		"@types/webpack": "^5.28.5",
+		"circular-dependency-plugin": "^5.2.2",
+		"copy-webpack-plugin": "^14.0.0",
+		"expose-loader": "^5.0.1",
+		"git-revision-webpack-plugin": "5.0.0",
+		"html-webpack-plugin": "^5.6.7",
+		"webpack": "^5.108.1",
+		"webpack-cleanup-plugin": "0.5.1",
+		"webpack-cli": "^7.1.0",
+		"webpack-dev-server": "^5.2.5",
+		"webpack-merge": "^6.0.1",
+		"webpack-merge-and-include-globally": "2.3.4",
+		"webpack-node-externals": "3.0.0"
+	}
+}

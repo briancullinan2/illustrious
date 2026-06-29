@@ -395,7 +395,8 @@ ws_or_nl ::= [ \t\r\n]+
 
 #### H. Camera Coordination for Scene Changes
 
-*(No corresponding file match found in the current raw file list)*
+* [sme-gemini-scenes.json](https://github.com/briancullinan2/illustrious/blob/main/loras/spatial_engine/dataset/sme-gemini-scenes.json)
+
 
 
 ---
