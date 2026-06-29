@@ -7,163 +7,163 @@
  * @returns {ArrayBuffer} - The modified, atomic-ready Wasm binary byte array.
  */
 function patchWasmToSharedImport(wasmBytes) {
-    const view = new Uint8Array(wasmBytes);
+	const view = new Uint8Array(wasmBytes);
 
-    // 1. Validate WebAssembly Magic Number (\0asm) and Version 1
-    if (view[0] !== 0x00 || view[1] !== 0x61 || view[2] !== 0x73 || view[3] !== 0x6d) {
-        throw new Error("Invalid WebAssembly magic number");
-    }
+	// 1. Validate WebAssembly Magic Number (\0asm) and Version 1
+	if(view[0] !== 0x00 || view[1] !== 0x61 || view[2] !== 0x73 || view[3] !== 0x6d) {
+		throw new Error("Invalid WebAssembly magic number");
+	}
 
-    let offset = 8; // Skip magic (4 bytes) and version (4 bytes)
-    let memorySectionOffset = -1;
-    let memorySectionLength = 0;
+	let offset = 8; // Skip magic (4 bytes) and version (4 bytes)
+	let memorySectionOffset = -1;
+	let memorySectionLength = 0;
 
-    // 2. Scan through Wasm binary sections to locate Section 5 (Memory)
-    while (offset < view.length) {
-        const sectionId = view[offset];
+	// 2. Scan through Wasm binary sections to locate Section 5 (Memory)
+	while(offset < view.length) {
+		const sectionId = view[offset];
 
-        // Read LEB128 variable-length integer for section payload length
-        let bytesRead = 0;
-        let sectionLength = 0;
-        let shift = 0;
-        while (true) {
-            const byte = view[offset + 1 + bytesRead];
-            sectionLength |= (byte & 0x7f) << shift;
-            bytesRead++;
-            if ((byte & 0x80) === 0) break;
-            shift += 7;
-        }
+		// Read LEB128 variable-length integer for section payload length
+		let bytesRead = 0;
+		let sectionLength = 0;
+		let shift = 0;
+		while(true) {
+			const byte = view[offset + 1 + bytesRead];
+			sectionLength |= (byte & 0x7f) << shift;
+			bytesRead++;
+			if((byte & 0x80) === 0) break;
+			shift += 7;
+		}
 
-        const totalSectionHeaderBytes = 1 + bytesRead; // ID byte + length bytes
+		const totalSectionHeaderBytes = 1 + bytesRead; // ID byte + length bytes
 
-        if (sectionId === 5) { // Section 5 is the Memory Section
-            memorySectionOffset = offset;
-            memorySectionLength = sectionLength + totalSectionHeaderBytes;
-            break;
-        }
+		if(sectionId === 5) { // Section 5 is the Memory Section
+			memorySectionOffset = offset;
+			memorySectionLength = sectionLength + totalSectionHeaderBytes;
+			break;
+		}
 
-        // Skip to next section
-        offset += totalSectionHeaderBytes + sectionLength;
-    }
+		// Skip to next section
+		offset += totalSectionHeaderBytes + sectionLength;
+	}
 
-    if (memorySectionOffset === -1) {
-        throw new Error("Memory Section (5) not found in Wasm binary. It might already be imported.");
-    }
+	if(memorySectionOffset === -1) {
+		throw new Error("Memory Section (5) not found in Wasm binary. It might already be imported.");
+	}
 
-    console.log(`[Wasm-Patcher] Found Memory Section at byte offset ${memorySectionOffset}`);
+	console.log(`[Wasm-Patcher] Found Memory Section at byte offset ${memorySectionOffset}`);
 
-    // 3. Construct a brand new Imported Shared Memory definition
-    // Wasm Flags: 0x01 = Has Maximum Page Cap, 0x03 = Has Maximum Page Cap + Shared
-    // We explicitly transform it to use an imported type definition block.
+	// 3. Construct a brand new Imported Shared Memory definition
+	// Wasm Flags: 0x01 = Has Maximum Page Cap, 0x03 = Has Maximum Page Cap + Shared
+	// We explicitly transform it to use an imported type definition block.
 
-    // For a typical single memory Wasm, the plain export section block is replaced 
-    // by removing Section 5 entirely and inserting its definition into Section 2 (Import Section)
-    // To keep it dead simple without rebuilding the entire index map, we rewrite the local flags:
+	// For a typical single memory Wasm, the plain export section block is replaced
+	// by removing Section 5 entirely and inserting its definition into Section 2 (Import Section)
+	// To keep it dead simple without rebuilding the entire index map, we rewrite the local flags:
 
-    // Find the limit flag inside the memory section payload
-    // Typical payload: [Count of memories (usually 1), Limit Flags (0x00 or 0x01), Initial Pages, (Optional Max Pages)]
-    let payloadPtr = memorySectionOffset + 2; // Pass ID and length estimation
-    while (view[payloadPtr] & 0x80) { payloadPtr++; } // Skip length bytes if multi-byte
-    payloadPtr++; // Skip count of memories
+	// Find the limit flag inside the memory section payload
+	// Typical payload: [Count of memories (usually 1), Limit Flags (0x00 or 0x01), Initial Pages, (Optional Max Pages)]
+	let payloadPtr = memorySectionOffset + 2; // Pass ID and length estimation
+	while(view[payloadPtr] & 0x80) { payloadPtr++; } // Skip length bytes if multi-byte
+	payloadPtr++; // Skip count of memories
 
-    // Update the flag byte: Force it to 0x03 (Has Maximum + Shared)
-    const oldFlags = view[payloadPtr];
+	// Update the flag byte: Force it to 0x03 (Has Maximum + Shared)
+	const oldFlags = view[payloadPtr];
 
-    // Create a clean layout clone with expanded/rewritten descriptor properties
-    // To strictly turn an EXPORT into an IMPORT, we change the section sequence mapping:
-    console.log(`[Wasm-Patcher] Old memory flag was 0x0${oldFlags.toString(16)}. Forcing atomic/shared flags...`);
+	// Create a clean layout clone with expanded/rewritten descriptor properties
+	// To strictly turn an EXPORT into an IMPORT, we change the section sequence mapping:
+	console.log(`[Wasm-Patcher] Old memory flag was 0x0${oldFlags.toString(16)}. Forcing atomic/shared flags...`);
 
-    // Splatting the updated byte signatures directly back into a clean buffer
-    const patchedView = new Uint8Array(view.length);
-    patchedView.set(view);
+	// Splatting the updated byte signatures directly back into a clean buffer
+	const patchedView = new Uint8Array(view.length);
+	patchedView.set(view);
 
-    // Flag 0x03 tells the engine: Memory is Shared and demands a SharedArrayBuffer
-    patchedView[payloadPtr] = 0x03;
+	// Flag 0x03 tells the engine: Memory is Shared and demands a SharedArrayBuffer
+	patchedView[payloadPtr] = 0x03;
 
-    return patchedView.buffer;
+	return patchedView.buffer;
 }
 
 // =========================================================================
 // RUNTIME IMPLEMENTATION / APPLICATION
 // =========================================================================
 async function loadAndBootSharedWasm(wasmUrl, initialPages = 256, maxPages = 512) {
-    // 1. Fetch your plain un-modified Wasm asset binary array
-    const response = await fetch(wasmUrl);
-    const plainBuffer = await response.arrayBuffer();
+	// 1. Fetch your plain un-modified Wasm asset binary array
+	const response = await fetch(wasmUrl);
+	const plainBuffer = await response.arrayBuffer();
 
-    // 2. Binary hack the byte payload to accept atomics/shared layout contracts
-    const sharedReadyBuffer = patchWasmToSharedImport(plainBuffer);
+	// 2. Binary hack the byte payload to accept atomics/shared layout contracts
+	const sharedReadyBuffer = patchWasmToSharedImport(plainBuffer);
 
-    // 3. Allocate your real physical SharedArrayBuffer wrapper container
-    const memory = new WebAssembly.Memory({
-        initial: initialPages,
-        maximum: maxPages,
-        shared: true // Native browser flag backing it with a SharedArrayBuffer
-    });
+	// 3. Allocate your real physical SharedArrayBuffer wrapper container
+	const memory = new WebAssembly.Memory({
+		initial: initialPages,
+		maximum: maxPages,
+		shared: true // Native browser flag backing it with a SharedArrayBuffer
+	});
 
-    // 4. Instantiate the patched bytecode passing your explicit multi-thread pointer mesh
-    const { instance } = await WebAssembly.instantiate(sharedReadyBuffer, {
-        env: {
-            memory: memory // Direct mapping linkage
-        }
-    });
+	// 4. Instantiate the patched bytecode passing your explicit multi-thread pointer mesh
+	const { instance } = await WebAssembly.instantiate(sharedReadyBuffer, {
+		env: {
+			memory: memory // Direct mapping linkage
+		}
+	});
 
-    return { instance, memory };
+	return { instance, memory };
 }
 
 
 
 
 function createFrameRater(targetFps, callback) {
-    const fpsInterval = 1000 / targetFps;
+	const fpsInterval = 1000 / targetFps;
 
-    const startTime = performance.now();
-    let frameCount = 0;
+	const startTime = performance.now();
+	let frameCount = 0;
 
-    const eventStack = [];
-    let isFlushing = false; // The single logic protector
+	const eventStack = [];
+	let isFlushing = false; // The single logic protector
 
-    // Permanent heartbeat interval running from startup
-    setInterval(() => {
-        // Only trigger if items are waiting AND we aren't currently inside a paint cycle
-        if (eventStack.length > 0 && !isFlushing) {
+	// Permanent heartbeat interval running from startup
+	setInterval(() => {
+		// Only trigger if items are waiting AND we aren't currently inside a paint cycle
+		if(eventStack.length > 0 && !isFlushing) {
 
-            // Shallow copy and clear the stack immediately
-            const currentBatch = [...eventStack];
-            eventStack.length = 0;
+			// Shallow copy and clear the stack immediately
+			const currentBatch = [...eventStack];
+			eventStack.length = 0;
 
-            requestAnimationFrame((paintTime) => {
-                isFlushing = true; // Lock out the interval thread during execution
+			requestAnimationFrame((paintTime) => {
+				isFlushing = true; // Lock out the interval thread during execution
 
-                frameCount++;
-                const t = paintTime - startTime;
+				frameCount++;
+				const t = paintTime - startTime;
 
-                try {
-                    if (typeof callback === 'function') {
-                        // Drain the batch execution. Isolate each callback so a
-                        // single throw can't drop the rest of the batch.
-                        for (let i = 0; i < currentBatch.length; i++) {
-                            try {
-                                callback(currentBatch[i], t, frameCount);
-                            } catch (e) {
-                                console.error('frame callback failed', e);
-                            }
-                        }
-                    }
-                } finally {
-                    // Always release the lock, even if a callback throws, so the
-                    // limiter can never freeze permanently.
-                    isFlushing = false;
-                }
-            });
-        }
-    }, fpsInterval);
+				try {
+					if(typeof callback === 'function') {
+						// Drain the batch execution. Isolate each callback so a
+						// single throw can't drop the rest of the batch.
+						for(let i = 0; i < currentBatch.length; i++) {
+							try {
+								callback(currentBatch[i], t, frameCount);
+							} catch(e) {
+								console.error('frame callback failed', e);
+							}
+						}
+					}
+				} finally {
+					// Always release the lock, even if a callback throws, so the
+					// limiter can never freeze permanently.
+					isFlushing = false;
+				}
+			});
+		}
+	}, fpsInterval);
 
-    return {
-        requestFrameUpdate(e) {
-            eventStack.push(e);
-        }
-    };
+	return {
+		requestFrameUpdate(e) {
+			eventStack.push(e);
+		}
+	};
 }
 
 
@@ -173,97 +173,97 @@ function createFrameRater(targetFps, callback) {
  * Render Action: Snaps viewport frames and multicasts prompt vectors to Juggernaut-Z
  */
 async function renderMulticastScene() {
-    if (!activeWorkerEndpoint) {
-        alert("Inference vector blocked: No hot Juggernaut-Z nodes currently exposed in the active pool.");
-        return;
-    }
+	if(!activeWorkerEndpoint) {
+		alert("Inference vector blocked: No hot Juggernaut-Z nodes currently exposed in the active pool.");
+		return;
+	}
 
-    const stage = document.getElementById('canvas-stage');
-    const promptStr = document.getElementById('prompt-input').value;
-    const coordsRaw = document.getElementById('coords-input').value;
+	const stage = document.getElementById('canvas-stage');
+	const promptStr = document.getElementById('prompt-input').value;
+	const coordsRaw = document.getElementById('coords-input').value;
 
-    // Parse out string percentages: "70, 0, 30, 30" -> [70, 0, 30, 30]
-    const coords = coordsRaw.split(',').map(num => parseInt(num.trim(), 10));
-    if (coords.length !== 4 || coords.some(isNaN)) {
-        alert("Invalid spatial structure layout window mapping coordinates.");
-        return;
-    }
+	// Parse out string percentages: "70, 0, 30, 30" -> [70, 0, 30, 30]
+	const coords = coordsRaw.split(',').map(num => parseInt(num.trim(), 10));
+	if(coords.length !== 4 || coords.some(isNaN)) {
+		alert("Invalid spatial structure layout window mapping coordinates.");
+		return;
+	}
 
-    // Visual loading response state handling
-    const processingIndicator = document.createElement('div');
-    processingIndicator.style.position = 'absolute';
-    processingIndicator.style.background = 'rgba(16, 16, 20, 0.85)';
-    processingIndicator.style.inset = '0';
-    processingIndicator.style.display = 'flex';
-    processingIndicator.style.alignItems = 'center';
-    processingIndicator.style.justifyContent = 'center';
-    processingIndicator.style.fontFamily = 'monospace';
-    processingIndicator.style.color = 'var(--accent)';
-    processingIndicator.innerHTML = `<span>⚡ Multicasting Spatial Dream Matrix... [${promptStr}]</span>`;
-    stage.appendChild(processingIndicator);
+	// Visual loading response state handling
+	const processingIndicator = document.createElement('div');
+	processingIndicator.style.position = 'absolute';
+	processingIndicator.style.background = 'rgba(16, 16, 20, 0.85)';
+	processingIndicator.style.inset = '0';
+	processingIndicator.style.display = 'flex';
+	processingIndicator.style.alignItems = 'center';
+	processingIndicator.style.justifyContent = 'center';
+	processingIndicator.style.fontFamily = 'monospace';
+	processingIndicator.style.color = 'var(--accent)';
+	processingIndicator.innerHTML = `<span>⚡ Multicasting Spatial Dream Matrix... [${promptStr}]</span>`;
+	stage.appendChild(processingIndicator);
 
-    try {
-        // 1. Generate an instant runtime image canvas blob frame from your stage viewport context
-        const canvasBlob = await captureStageSnapshotBlob(stage);
+	try {
+		// 1. Generate an instant runtime image canvas blob frame from your stage viewport context
+		const canvasBlob = await captureStageSnapshotBlob(stage);
 
-        // 2. Wrap payloads tightly inside a multi-part form layout map
-        let formData = new FormData();
-        formData.append("prompt", promptStr);
-        formData.append("x", coords[0]);
-        formData.append("y", coords[1]);
-        formData.append("w", coords[2]);
-        formData.append("h", coords[3]);
-        formData.append("file", canvasBlob, "stage-frame.jpg");
+		// 2. Wrap payloads tightly inside a multi-part form layout map
+		let formData = new FormData();
+		formData.append("prompt", promptStr);
+		formData.append("x", coords[0]);
+		formData.append("y", coords[1]);
+		formData.append("w", coords[2]);
+		formData.append("h", coords[3]);
+		formData.append("file", canvasBlob, "stage-frame.jpg");
 
-        console.log(`📡 Shipping binary canvas packet directly to GPU engine: ${activeWorkerEndpoint}`);
+		console.log(`📡 Shipping binary canvas packet directly to GPU engine: ${activeWorkerEndpoint}`);
 
-        const RELAY_MANAGER_URL = projectConfig.ACTIVE_PROJECT_ID
-            ? `https://${projectConfig.REGION}-${projectConfig.ACTIVE_PROJECT_ID}.cloudfunctions.net/spatialRelay`
-            : '/api/spatial/relay'
-        // 3. Fire payload across the private data network boundary straight into Python FastAPI
-        const response = await fetch(`${RELAY_MANAGER_URL}?t=${Date.now()}`, {
-            method: 'POST',
-            headers: {
-                // Tell the Cloud Function where to forward the payload!
-                'x-target-endpoint': `${activeWorkerEndpoint}/api/spatial/multicast`
-            },
-            body: formData
-        });
+		const RELAY_MANAGER_URL = projectConfig.ACTIVE_PROJECT_ID
+			? `https://${projectConfig.REGION}-${projectConfig.ACTIVE_PROJECT_ID}.cloudfunctions.net/spatialRelay`
+			: '/api/spatial/relay';
+		// 3. Fire payload across the private data network boundary straight into Python FastAPI
+		const response = await fetch(`${RELAY_MANAGER_URL}?t=${Date.now()}`, {
+			method: 'POST',
+			headers: {
+				// Tell the Cloud Function where to forward the payload!
+				'x-target-endpoint': `${activeWorkerEndpoint}/api/spatial/multicast`
+			},
+			body: formData
+		});
 
-        if (!response.ok) throw new Error(`Inference loop collapsed with status code: ${response.status}`);
+		if(!response.ok) throw new Error(`Inference loop collapsed with status code: ${response.status}`);
 
-        // 4. Ingest raw binary array map directly back into image sources
-        const freshImageBlob = await response.blob();
-        const outputImageUrl = URL.createObjectURL(freshImageBlob);
+		// 4. Ingest raw binary array map directly back into image sources
+		const freshImageBlob = await response.blob();
+		const outputImageUrl = URL.createObjectURL(freshImageBlob);
 
-        // 5. Render freshly infected composition frame cleanly inside viewport
-        stage.innerHTML = `<img src="${outputImageUrl}" style="width:100%; height:100%; object-fit:contain;" />`;
+		// 5. Render freshly infected composition frame cleanly inside viewport
+		stage.innerHTML = `<img src="${outputImageUrl}" style="width:100%; height:100%; object-fit:contain;" />`;
 
-    } catch (err) {
-        console.error("❌ Computational generation array dropped:", err);
-        alert(`Generation Loop Interrupted: ${err.message}`);
-        processingIndicator.remove();
-    }
+	} catch(err) {
+		console.error("❌ Computational generation array dropped:", err);
+		alert(`Generation Loop Interrupted: ${err.message}`);
+		processingIndicator.remove();
+	}
 }
 
 /**
  * UTILITY: Extracted vector frame compiler loops
  */
 function captureStageSnapshotBlob(stageElement) {
-    return new Promise((resolve) => {
-        // Fallback generation framework block for instant local environment testing:
-        const mockCanvas = document.createElement('canvas');
-        mockCanvas.width = 512;
-        mockCanvas.height = 512;
-        const ctx = mockCanvas.getContext('2d');
-        ctx.fillStyle = '#16161e';
-        ctx.fillRect(0, 0, 512, 512);
-        ctx.fillStyle = '#00ffcc';
-        ctx.font = '14px monospace';
-        ctx.fillText('Illustrious Base Canvas Frame Reference', 40, 250);
+	return new Promise((resolve) => {
+		// Fallback generation framework block for instant local environment testing:
+		const mockCanvas = document.createElement('canvas');
+		mockCanvas.width = 512;
+		mockCanvas.height = 512;
+		const ctx = mockCanvas.getContext('2d');
+		ctx.fillStyle = '#16161e';
+		ctx.fillRect(0, 0, 512, 512);
+		ctx.fillStyle = '#00ffcc';
+		ctx.font = '14px monospace';
+		ctx.fillText('Illustrious Base Canvas Frame Reference', 40, 250);
 
-        mockCanvas.toBlob((blob) => resolve(blob), 'image/jpeg', 0.90);
-    });
+		mockCanvas.toBlob((blob) => resolve(blob), 'image/jpeg', 0.90);
+	});
 }
 
 
@@ -275,90 +275,157 @@ function captureStageSnapshotBlob(stageElement) {
  * Mimics token-stream parsing to format tightly compressed/minified JS.
  */
 function prettifyJavaScript(sourceCode) {
-    // Regular expression matching distinct JS tokens: strings, regexes, comments, numbers, identifiers/keywords, and symbols
-    const tokenRegex = /\s*(?:\/\/.*|\/\*[\s\S]*?\*\/|'(?:\\.|[^'])*'|"(?:\\.|[^"])*"|`(?:\\.|[^`])*`|\/(?:\\.|[^\/])+\/[gimy]*|\b\d+(?:\.\d+)?\b|\b[a-zA-Z_$][a-zA-Z0-9_$]*\b|[{}\[\]();,.:?]|[^\s\w])/g;
+	// Regular expression matching distinct JS tokens: strings, regexes, comments, numbers, identifiers/keywords, and symbols
+	const tokenRegex = /\s*(?:\/\/.*|\/\*[\s\S]*?\*\/|'(?:\\.|[^'])*'|"(?:\\.|[^"])*"|`(?:\\.|[^`])*`|\/(?:\\.|[^\/])+\/[gimy]*|\b\d+(?:\.\d+)?\b|\b[a-zA-Z_$][a-zA-Z0-9_$]*\b|[{}\[\]();,.:?]|[^\s\w])/g;
 
-    let match;
-    let tokens = [];
+	let match;
+	let tokens = [];
 
-    // Tokenize input string
-    while ((match = tokenRegex.exec(sourceCode)) !== null) {
-        tokens.push(match[0].trim());
-    }
+	// Tokenize input string
+	while((match = tokenRegex.exec(sourceCode)) !== null) {
+		tokens.push(match[0].trim());
+	}
 
-    let output = "";
-    let indentLevel = 0;
-    const indentStr = "    "; // 4 spaces configuration
-    let inForLoopParentheses = 0;
+	let output = "";
+	let indentLevel = 0;
+	const indentStr = "    "; // 4 spaces configuration
+	let inForLoopParentheses = 0;
 
-    const addNewline = () => {
-        output += "\n" + indentStr.repeat(indentLevel);
-    };
+	const addNewline = () => {
+		output += "\n" + indentStr.repeat(indentLevel);
+	};
 
-    for (let i = 0; i < tokens.length; i++) {
-        const token = tokens[i];
-        const nextToken = tokens[i + 1];
+	for(let i = 0; i < tokens.length; i++) {
+		const token = tokens[i];
+		const nextToken = tokens[i + 1];
 
-        // Track 'for' loop context to avoid breaking lines on semicolons inside the loop header
-        if (token === "for" && nextToken === "(") {
-            inForLoopParentheses++;
-        }
+		// Track 'for' loop context to avoid breaking lines on semicolons inside the loop header
+		if(token === "for" && nextToken === "(") {
+			inForLoopParentheses++;
+		}
 
-        if (token === "}") {
-            indentLevel = Math.max(0, indentLevel - 1);
-            // If the output doesn't already end with a newline, break before the closing brace
-            if (!output.endsWith("\n" + indentStr.repeat(indentLevel)) && !output.endsWith("\n")) {
-                addNewline();
-            } else if (output.endsWith(indentStr)) {
-                // Adjust existing trailing indentation if needed
-                output = output.slice(0, -indentStr.length);
-            }
-            output += token;
-            addNewline();
-            continue;
-        }
+		if(token === "}") {
+			indentLevel = Math.max(0, indentLevel - 1);
+			// If the output doesn't already end with a newline, break before the closing brace
+			if(!output.endsWith("\n" + indentStr.repeat(indentLevel)) && !output.endsWith("\n")) {
+				addNewline();
+			} else if(output.endsWith(indentStr)) {
+				// Adjust existing trailing indentation if needed
+				output = output.slice(0, -indentStr.length);
+			}
+			output += token;
+			addNewline();
+			continue;
+		}
 
-        output += token;
+		output += token;
 
-        // Context-aware spacing and line break rules
-        if (token === "{") {
-            indentLevel++;
-            addNewline();
-        } else if (token === ";") {
-            if (inForLoopParentheses > 0) {
-                output += " "; // Just space inside for loops: for(let i=0; i<10; i++)
-            } else {
-                addNewline();
-            }
-        }
-        else if (token === ",") {
-            // Space out parameters or object items; webpacked sequences stay on newlines if preferred, 
-            // but standard spacing handles broad legibility
-            output += " ";
-        } else if (token === ")") {
-            if (inForLoopParentheses > 0) {
-                // If closing a for loop header, decrement loop tracking context
-                if (tokens.slice(0, i).filter(t => t === "(").length === tokens.slice(0, i).filter(t => t === ")").length + 1) {
-                    inForLoopParentheses--;
-                }
-            }
-            if (nextToken === "{") {
-                output += " ";
-            }
-        } else if (["=", "+", "-", "*", "/", "&&", "||", "?", ":"].includes(token)) {
-            // Add clean padding around common expressions and ternary operators
-            output += " ";
-        } else if (["return", "const", "let", "var", "function", "typeof", "instanceof", "case"].includes(token)) {
-            output += " ";
-        } else if (nextToken && /^[a-zA-Z_$0-9]/.test(nextToken) && /^[a-zA-Z_$0-9]/.test(token)) {
-            // Guarantee separation between plain identifiers/keywords if no syntax tokens split them
-            output += " ";
-        }
-    }
+		// Context-aware spacing and line break rules
+		if(token === "{") {
+			indentLevel++;
+			addNewline();
+		} else if(token === ";") {
+			if(inForLoopParentheses > 0) {
+				output += " "; // Just space inside for loops: for(let i=0; i<10; i++)
+			} else {
+				addNewline();
+			}
+		}
+		else if(token === ",") {
+			// Space out parameters or object items; webpacked sequences stay on newlines if preferred,
+			// but standard spacing handles broad legibility
+			output += " ";
+		} else if(token === ")") {
+			if(inForLoopParentheses > 0) {
+				// If closing a for loop header, decrement loop tracking context
+				if(tokens.slice(0, i).filter(t => t === "(").length === tokens.slice(0, i).filter(t => t === ")").length + 1) {
+					inForLoopParentheses--;
+				}
+			}
+			if(nextToken === "{") {
+				output += " ";
+			}
+		} else if(["=", "+", "-", "*", "/", "&&", "||", "?", ":"].includes(token)) {
+			// Add clean padding around common expressions and ternary operators
+			output += " ";
+		} else if(["return", "const", "let", "var", "function", "typeof", "instanceof", "case"].includes(token)) {
+			output += " ";
+		} else if(nextToken && /^[a-zA-Z_$0-9]/.test(nextToken) && /^[a-zA-Z_$0-9]/.test(token)) {
+			// Guarantee separation between plain identifiers/keywords if no syntax tokens split them
+			output += " ";
+		}
+	}
 
-    // Clean up any remaining trailing whitespace or extra empty lines
-    return output.trim();
+	// Clean up any remaining trailing whitespace or extra empty lines
+	return output.trim();
 }
 
 // Example usage:
+
+
+
+/**
+ * Safely inspects and extracts properties from complex engine objects,
+ * walking up prototype chains without invoking dangerous getters.
+ */
+function rebuildComplexObjectAsText(obj, maxDepth = 3, currentDepth = 0, cache = new Set()) {
+	if(obj === null || obj === undefined) return String(obj);
+	if(typeof obj !== 'object' && typeof obj !== 'function') return String(obj);
+
+	// Prevent infinite cyclic loops
+	if(cache.has(obj)) return '[Circular]';
+	cache.add(obj);
+
+	if(currentDepth >= maxDepth) return '[Max Depth Reached]';
+
+	// Handle array configurations immediately
+	if(Array.isArray(obj)) {
+		if(obj.length === 0) return '[]';
+		return '[' + obj.map(item => rebuildComplexObjectAsText(item, maxDepth, currentDepth + 1, cache)).join(', ') + ']';
+	}
+
+	const lines = [];
+	const className = obj.constructor ? obj.constructor.name : 'Object';
+
+	// Walk up the prototype chain to catch inherited settings, stopping at base Object
+	let currentTarget = obj;
+	const visitedProps = new Set();
+
+	while(currentTarget && currentTarget !== Object.prototype) {
+		const props = Object.getOwnPropertyNames(currentTarget);
+
+		for(const prop of props) {
+			if(visitedProps.has(prop)) continue;
+			visitedProps.add(prop);
+
+			try {
+				const descriptor = Object.getOwnPropertyDescriptor(currentTarget, prop);
+
+				// CRITICAL: If it's an active getter, do NOT invoke it (could trigger errors)
+				if(descriptor && descriptor.get && !descriptor.value) {
+					lines.push(`${'  '.repeat(currentDepth + 1)}${prop}: [Getter]`);
+					continue;
+				}
+
+				const val = obj[prop]; // Safe to read raw values if it's a standard descriptor field
+
+				if(typeof val === 'function') {
+					//lines.push(`${'  '.repeat(currentDepth + 1)}${prop}(): [Function]`);
+				} else if(typeof val === 'object' && val !== null) {
+					lines.push(`${'  '.repeat(currentDepth + 1)}${prop}: ${rebuildComplexObjectAsText(val, maxDepth, currentDepth + 1, cache)}`);
+				} else {
+					lines.push(`${'  '.repeat(currentDepth + 1)}${prop}: ${String(val)}`);
+				}
+			} catch(e) {
+				lines.push(`${'  '.repeat(currentDepth + 1)}${prop}: [Unreadable Property: ${e.message}]`);
+			}
+		}
+		currentTarget = Object.getPrototypeOf(currentTarget);
+	}
+
+	cache.delete(obj); // Allow sibling branches to evaluate correctly
+
+	if(lines.length === 0) return `${className} {}`;
+	return `${className} {\n${lines.join('\n')}\n${'  '.repeat(currentDepth)}}`;
+}
 

@@ -79,7 +79,6 @@ function updateMainStatusView(element, color, text) {
 
 
 
-const multicastButton = document.getElementById('multicast-scene')
 
 document.getElementById('observer-panel').addEventListener('click', e => {
     e.preventDefault();

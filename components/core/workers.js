@@ -8,11 +8,13 @@ let searchResults = [];
 
 let converterReady = false;
 
+const multicastButton = document.getElementById('multicast-scene');
+const modelUpdateButton = document.getElementById('model-update');
 
 async function bootAvailableWorkers() {
 
+	bootWllamaWorker();
 	if(toggleCheckbox.checked) {
-		bootWllamaWorker();
 	} else {
 		const treeStatus = document.getElementById('tree-status');
 		if(treeStatus) {
@@ -206,6 +208,31 @@ async function workerResponseInterface(e) {
 		progressText.textContent = 'Compiling GPU pipelines...';
 		generalProgressText.textContent = 'Compiling GPU pipelines...';
 	}
+	else if(type === 'MODEL_VERSION') {
+		if(payload.needsUpdate) {
+			modelUpdateButton.classList.add('visible');
+		}
+	}
+	else if(type === 'DOWNLOAD_READY') {
+		if(fakeLoadingInterval) {
+			clearInterval(fakeLoadingInterval);
+		}
+		progressText.textContent = 'Downloaded';
+		progressElement.value = 100;
+		generalProgressText.textContent = 'Downloaded';
+		generalProgressElement.value = 100;
+
+		const statusElement = document.getElementById('tree-status');
+		if(statusElement) {
+			statusElement.textContent = 'Downloaded...';
+			statusElement.className = 'tree-val tree-status-ready';
+		}
+
+		multicastButton.removeAttribute('disabled', 'disabled');
+		if(payload.needsUpdate) {
+			modelUpdateButton.classList.add('visible');
+		}
+	}
 	else if(type === 'MODEL_READY') {
 		if(fakeLoadingInterval) {
 			clearInterval(fakeLoadingInterval);
@@ -222,7 +249,9 @@ async function workerResponseInterface(e) {
 		}
 
 		multicastButton.removeAttribute('disabled', 'disabled');
-
+		if(payload.needsUpdate) {
+			modelUpdateButton.classList.add('visible');
+		}
 	}
 	else if(type === 'ERROR') {
 		console.error('Worker Engine Error:', payload.message);
@@ -291,18 +320,6 @@ async function workerResponseInterface(e) {
 		progressElement.value = 0;
 		generalProgressElement.value = 0;
 
-		fakeLoadingInterval = setInterval(() => {
-			if(progressElement.value < 90) {
-				progressElement.value++;
-				generalProgressElement.value++;
-			} else {
-				progressElement.value = 100;
-				generalProgressElement.value = 100;
-				clearInterval(fakeLoadingInterval);
-				fakeLoadingInterval = null;
-			}
-		}, 100);
-
 		const statusElement = document.getElementById('tree-status');
 		if(statusElement) {
 			statusElement.textContent = 'Loading model...';
@@ -320,10 +337,37 @@ async function workerResponseInterface(e) {
 		}
 
 		if(toggle?.checked) {
+
+			fakeLoadingInterval = setInterval(() => {
+				if(progressElement.value < 90) {
+					progressElement.value++;
+					generalProgressElement.value++;
+				} else {
+					progressElement.value = 100;
+					generalProgressElement.value = 100;
+					clearInterval(fakeLoadingInterval);
+					fakeLoadingInterval = null;
+				}
+			}, 100);
+
+
 			worker.postMessage({
 				type: 'LOAD_MODEL',
 				baseURI: window.location.origin + '/',
 				payload: {
+					forceUpdate: false,
+					modelUrl: DEFAULT_MODEL,
+					loraUrl: DEFAULT_LORA,
+					chatTemplate: jinjaText,
+					gbnfGrammar: grammerText
+				}
+			});
+		} else {
+			worker.postMessage({
+				type: 'VERSION_CHECK',
+				baseURI: window.location.origin + '/',
+				payload: {
+					forceUpdate: false,
 					modelUrl: DEFAULT_MODEL,
 					loraUrl: DEFAULT_LORA,
 					chatTemplate: jinjaText,
@@ -391,6 +435,19 @@ async function handleGenerate() {
 }
 
 
-multicastButton.addEventListener('click', handleGenerate)
+async function updateModels() {
+	worker.postMessage({
+		type: 'DOWNLOAD_MODELS',
+		baseURI: window.location.origin + '/',
+		payload: {
+			forceUpdate: true,
+			modelUrl: DEFAULT_MODEL,
+			loraUrl: DEFAULT_LORA,
+		}
+	});
+}
 
+
+multicastButton.addEventListener('click', handleGenerate);
+modelUpdateButton.addEventListener('click', updateModels)
 

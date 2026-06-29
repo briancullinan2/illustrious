@@ -1,205 +1,210 @@
 <!DOCTYPE html>
 <html lang="en">
 
-<head>
-    <meta charset="UTF-8">
-    <title>Illustrious Studio</title>
-    <link rel="stylesheet" href="/main.css" />
-    <link rel="stylesheet" href="/components/theme/theme.css" />
+	<head>
+		<meta charset="UTF-8">
+		<title>Illustrious Studio</title>
+		<link rel="stylesheet" href="/main.css" />
+		<link rel="stylesheet" href="/components/theme/theme.css" />
 
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-</head>
+		<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	</head>
 
-<body class="theme-monokai">
+	<body class="theme-monokai">
 
-    <div id="control-panel" class="active">
-        <h2>
-            <span class="header-title">Illustrious Spatial Engine</span>
+		<div id="control-panel" class="active">
+			<h2>
+				<span class="header-title">Illustrious Spatial Engine</span>
 
-            <span class="header-spacer">&nbsp;</span>
+				<span class="header-spacer">&nbsp;</span>
 
-            <a id="toggle-canvas" href="#" title="Swtich to canvas" class="header-icon-btn">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke-linecap="round"
-                    stroke-linejoin="round">
-                    <path d="M 12 3 L 21 8 L 21 16 L 12 21 L 3 16 L 3 8 Z" stroke="#00e5ff" stroke-width="2.5"></path>
+				<a id="toggle-canvas" href="#" title="Swtich to canvas" class="header-icon-btn">
+					<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke-linecap="round"
+						stroke-linejoin="round">
+						<path d="M 12 3 L 21 8 L 21 16 L 12 21 L 3 16 L 3 8 Z" stroke="#00e5ff" stroke-width="2.5">
+						</path>
 
-                    <path d="M 12 12 L 12 3 M 12 12 L 3 16 M 12 12 L 21 16" stroke="#ff007f" stroke-width="2.5"></path>
-                </svg>
-            </a>
+						<path d="M 12 12 L 12 3 M 12 12 L 3 16 M 12 12 L 21 16" stroke="#ff007f" stroke-width="2.5">
+						</path>
+					</svg>
+				</a>
 
-            <a href="/privacy" target="_blank" title="About Matrix" class="header-icon-btn">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
-                    stroke-linecap="round" stroke-linejoin="round">
-                    <circle cx="12" cy="12" r="10"></circle>
-                    <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path>
-                    <line x1="12" y1="17" x2="12.01" y2="17"></line>
-                </svg>
-            </a>
+				<a href="/privacy" target="_blank" title="About Matrix" class="header-icon-btn">
+					<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+						stroke-linecap="round" stroke-linejoin="round">
+						<circle cx="12" cy="12" r="10"></circle>
+						<path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path>
+						<line x1="12" y1="17" x2="12.01" y2="17"></line>
+					</svg>
+				</a>
 
-            <a id="observer-panel" href="#" title="Cloud Status" class="header-icon-btn">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
-                    stroke-linecap="round" stroke-linejoin="round">
-                    <rect x="4" y="4" width="16" height="16" rx="2" ry="2"></rect>
-                    <rect x="9" y="9" width="6" height="6"></rect>
-                    <path d="M9 1 v3M15 1 v3M9 20 v3M15 20 v3M1 9 h3M1 15 h3M20 9 h3M20 15 h3"></path>
-                </svg>
-            </a>
+				<a id="observer-panel" href="#" title="Cloud Status" class="header-icon-btn">
+					<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+						stroke-linecap="round" stroke-linejoin="round">
+						<rect x="4" y="4" width="16" height="16" rx="2" ry="2"></rect>
+						<rect x="9" y="9" width="6" height="6"></rect>
+						<path d="M9 1 v3M15 1 v3M9 20 v3M15 20 v3M1 9 h3M1 15 h3M20 9 h3M20 15 h3"></path>
+					</svg>
+				</a>
 
-        </h2>
-        {{USER}}
-        <div id="project-selector">Connecting to Google Cloud...</div>
-        <h3 id="scene-builder-toggle">
-            <span>Scene Construction</span>
-            <span id="scene-builder-chevron">▼</span>
-        </h3>
-        <div id="scene-builder" class="">
-            <label>Prompt Slice:</label>
-            <textarea id="prompt-input">An elephant on a red balloon</textarea>
-            <label>Position Box (X, Y, W, H %):</label>
-            <input type="text" id="coords-input" value="70, 0, 30, 30">
-            <button id="add-layer">Add Layer Slice</button>
-        </div>
-        <div id="output-display-container">
-            <div class="tree-container">
-                <div class="tree-root">🛰️ PIPELINE ROOT</div>
-                <div class="tree-branch">
-                    <div class="tree-line">├── <span class="tree-folder">inputs</span></div>
-                    <div class="tree-branch nested">
-                        <div class="tree-line">│ ├── <span class="tree-key">prompt:</span> <span id="tree-prompt"
-                                class="tree-val">"An elephant on a red balloon"</span></div>
-                        <div class="tree-line">│ └── <span class="tree-key">coords:</span> <span id="tree-coords"
-                                class="tree-val">"70, 0, 30, 30"</span></div>
-                    </div>
-                </div>
-                <div class="tree-branch">
-                    <div class="tree-line">├── <span class="tree-folder status-folder">status</span></div>
-                    <div class="tree-branch nested">
-                        <div class="tree-line">│ └── <span class="tree-key">stage:</span> <span id="tree-status"
-                                class="tree-val tree-status-thinking">Thinking...</span></div>
-                    </div>
-                </div>
-                <div class="tree-branch">
-                    <div class="tree-line">└── <span class="tree-folder">callbacks</span></div>
-                    <div class="tree-branch nested">
-                        <div class="tree-line"> ├── <span class="tree-key">on_chunk:</span> <span
-                                class="tree-val tree-callback-func">renderOrIndexChunk()</span></div>
-                        <div class="tree-branch nested callback-response-branch">
-                            <div class="tree-line"> │ └── <span class="tree-arrow">↳</span> <span
-                                    class="tree-response-type">Response:</span> <span id="tree-chunk-status"
-                                    class="tree-val text-muted">Ready</span></div>
-                        </div>
-                        <div class="tree-line"> ├── <span class="tree-key">on_token:</span> <span
-                                class="tree-val tree-callback-func">streamToken()</span></div>
-                        <div class="tree-branch nested callback-response-branch">
-                            <div class="tree-line"> │ └── <span class="tree-arrow">↳</span> <span
-                                    class="tree-response-type">Response:</span> <span id="tree-token-status"
-                                    class="tree-val text-muted">Idle</span></div>
-                        </div>
-                        <div class="tree-line"> └── <span class="tree-key">on_complete:</span> <span
-                                class="tree-val tree-callback-func">completePipeline()</span></div>
-                        <div class="tree-branch nested callback-response-branch">
-                            <div class="tree-line"> └── <span class="tree-arrow">↳</span> <span
-                                    class="tree-response-type">Response:</span> <span id="tree-complete-status"
-                                    class="tree-val text-muted">Waiting</span></div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-        <div class="download-progress-container">
-            <progress id="general-progress" value="0" max="100"></progress>
-            <span id="general-progress-text">0%</span>
-        </div>
+			</h2>
+			{{USER}}
+			<div id="project-selector">Connecting to Google Cloud...</div>
+			<h3 id="scene-builder-toggle">
+				<span>Scene Construction</span>
+				<span id="scene-builder-chevron">▼</span>
+			</h3>
+			<div id="scene-builder" class="">
+				<label>Prompt Slice:</label>
+				<textarea id="prompt-input">An elephant on a red balloon</textarea>
+				<label>Position Box (X, Y, W, H %):</label>
+				<input type="text" id="coords-input" value="70, 0, 30, 30">
+				<button id="add-layer">Add Layer Slice</button>
+			</div>
+			<div id="output-display-container">
+				<div class="tree-container">
+					<div class="tree-root">🛰️ PIPELINE ROOT</div>
+					<div class="tree-branch">
+						<div class="tree-line">├── <span class="tree-folder">inputs</span></div>
+						<div class="tree-branch nested">
+							<div class="tree-line">│ ├── <span class="tree-key">prompt:</span> <span id="tree-prompt"
+									class="tree-val">"An elephant on a red balloon"</span></div>
+							<div class="tree-line">│ └── <span class="tree-key">coords:</span> <span id="tree-coords"
+									class="tree-val">"70, 0, 30, 30"</span></div>
+						</div>
+					</div>
+					<div class="tree-branch">
+						<div class="tree-line">├── <span class="tree-folder status-folder">status</span></div>
+						<div class="tree-branch nested">
+							<div class="tree-line">│ └── <span class="tree-key">stage:</span> <span id="tree-status"
+									class="tree-val tree-status-thinking">Thinking...</span></div>
+						</div>
+					</div>
+					<div class="tree-branch">
+						<div class="tree-line">└── <span class="tree-folder">callbacks</span></div>
+						<div class="tree-branch nested">
+							<div class="tree-line"> ├── <span class="tree-key">on_chunk:</span> <span
+									class="tree-val tree-callback-func">renderOrIndexChunk()</span></div>
+							<div class="tree-branch nested callback-response-branch">
+								<div class="tree-line"> │ └── <span class="tree-arrow">↳</span> <span
+										class="tree-response-type">Response:</span> <span id="tree-chunk-status"
+										class="tree-val text-muted">Ready</span></div>
+							</div>
+							<div class="tree-line"> ├── <span class="tree-key">on_token:</span> <span
+									class="tree-val tree-callback-func">streamToken()</span></div>
+							<div class="tree-branch nested callback-response-branch">
+								<div class="tree-line"> │ └── <span class="tree-arrow">↳</span> <span
+										class="tree-response-type">Response:</span> <span id="tree-token-status"
+										class="tree-val text-muted">Idle</span></div>
+							</div>
+							<div class="tree-line"> └── <span class="tree-key">on_complete:</span> <span
+									class="tree-val tree-callback-func">completePipeline()</span></div>
+							<div class="tree-branch nested callback-response-branch">
+								<div class="tree-line"> └── <span class="tree-arrow">↳</span> <span
+										class="tree-response-type">Response:</span> <span id="tree-complete-status"
+										class="tree-val text-muted">Waiting</span></div>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+			<div class="download-progress-container">
+				<progress id="general-progress" value="0" max="100"></progress>
+				<span id="general-progress-text">0%</span>
+			</div>
 
-        <button disabled id="multicast-scene">Multicast Image Pipeline</button>
-    </div>
-
-
-    <div id="cloud-observer">
-        <h2 class="observer-header">
-
-            <a id="control-switch" href="#" title="Prompt Controls" class="header-icon-btn">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
-                    stroke-linecap="round" stroke-linejoin="round">
-                    <line x1="19" y1="12" x2="5" y2="12"></line>
-                    <polyline points="12 19 5 12 12 5"></polyline>
-                </svg>
-            </a>
+			<button disabled id="multicast-scene">Multicast Image Pipeline</button>
+		</div>
 
 
-            <span>Cloud Observer Console</span>
+		<div id="cloud-observer">
+			<h2 class="observer-header">
 
-            <span class="header-spacer">&nbsp;</span>
+				<a id="control-switch" href="#" title="Prompt Controls" class="header-icon-btn">
+					<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+						stroke-linecap="round" stroke-linejoin="round">
+						<line x1="19" y1="12" x2="5" y2="12"></line>
+						<polyline points="12 19 5 12 12 5"></polyline>
+					</svg>
+				</a>
 
-            <span id="observer-pulse"></span>
-        </h2>
 
-        <div class="observer-section-item border-bottom">
-            <h3>COMPUTE REALM</h3>
-            <span>Target Zone:</span>
-            <span id="obs-zone" class="value-highlight">--</span>
-        </div>
+				<span>Cloud Observer Console</span>
 
-        <h3 class="margin-bottom-sm">PROJECT ACCOUNT QUOTAS</h3>
-        <div id="quota-list">
-            <table class="quota-table">
-                <thead>
-                    <tr class="table-header-row">
-                        <th>Metric Name</th>
-                        <th class="text-right">In Use</th>
-                        <th class="text-right">Limit</th>
-                        <th class="text-right">Available</th>
-                    </tr>
-                </thead>
-                <tbody id="quota-telemetry-rows">
-                    <tr>
-                        <td colspan="4" class="table-waiting-state">Waiting for pipeline stream entries...</td>
-                    </tr>
-                </tbody>
-            </table>
-        </div>
+				<span class="header-spacer">&nbsp;</span>
 
-        <div class="vm-pool-section">
-            <h3>ACTIVE HORIZON NODE ARRAY</h3>
-            <div id="vm-pool-container">
-                <div class="vm-empty-state">No instances discovered in active tracking slot.</div>
-            </div>
-        </div>
+				<span id="observer-pulse"></span>
+			</h2>
 
-        <div class="local-model-section">
-            <label class="local-model-label">
-                <!-- TODO: <input type="checkbox" checked id="local-model-toggle"> -->
-                <input type="checkbox" id="local-model-toggle">
-                <span>Run your own local model</span>
-            </label>
-            <div class="download-progress-container">
-                <progress id="local-model-progress" value="0" max="100"></progress>
-                <span id="local-model-progress-text">0%</span>
-            </div>
-        </div>
+			<div class="observer-section-item border-bottom">
+				<h3>COMPUTE REALM</h3>
+				<span>Target Zone:</span>
+				<span id="obs-zone" class="value-highlight">--</span>
+			</div>
 
-        <div id="manual-allocation-tray">
-            <button id="claim-instance">
-                Claim A GPU Instance
-            </button>
-        </div>
-    </div>
+			<h3 class="margin-bottom-sm">PROJECT ACCOUNT QUOTAS</h3>
+			<div id="quota-list">
+				<table class="quota-table">
+					<thead>
+						<tr class="table-header-row">
+							<th>Metric Name</th>
+							<th class="text-right">In Use</th>
+							<th class="text-right">Limit</th>
+							<th class="text-right">Available</th>
+						</tr>
+					</thead>
+					<tbody id="quota-telemetry-rows">
+						<tr>
+							<td colspan="4" class="table-waiting-state">Waiting for pipeline stream entries...</td>
+						</tr>
+					</tbody>
+				</table>
+			</div>
 
-    <div id="sfm-processor"></div>
+			<div class="vm-pool-section">
+				<h3>ACTIVE HORIZON NODE ARRAY</h3>
+				<div id="vm-pool-container">
+					<div class="vm-empty-state">No instances discovered in active tracking slot.</div>
+				</div>
+			</div>
 
-    <!--<div id="canvas-stage">
+			<div class="local-model-section">
+				<label class="local-model-label">
+					<!-- TODO: <input type="checkbox" checked id="local-model-toggle"> -->
+					<input type="checkbox" id="local-model-toggle">
+					<span>Run your own local model</span>
+				</label>
+				<div class="download-progress-container">
+					<progress id="local-model-progress" value="0" max="100"></progress>
+					<span id="local-model-progress-text">0%</span>
+				</div>
+			</div>
+			<button id="model-update">
+				Update Local Models
+			</button>
+
+			<div id="manual-allocation-tray">
+				<button id="claim-instance">
+					Claim A GPU Instance
+				</button>
+			</div>
+		</div>
+
+		<div id="sfm-processor"></div>
+
+		<!--<div id="canvas-stage">
         <span class="canvas-stage-ready-text">🌌 [Spatial Render Stage Context Ready]</span>
     </div>-->
 
-    <nav aria-label="Main Menu" class="main_menu" id="main_menu"></nav>
+		<nav aria-label="Main Menu" class="main_menu" id="main_menu"></nav>
 
-    <div id="nunu"></div>
+		<div id="nunu"></div>
 
 
-    <script src="/client.js"></script>
-    <script src="/components/core/extensions.js" type="text/javascript" defer></script>
-    <script src="/components/core/events.js" type="text/javascript" defer></script>
-    <script src="/components/core/modules.js" type="text/javascript" defer></script>
-</body>
+		<script src="/client.js"></script>
+		<script src="/components/core/extensions.js" type="text/javascript" defer></script>
+		<script src="/components/core/events.js" type="text/javascript" defer></script>
+		<script src="/components/core/modules.js" type="text/javascript" defer></script>
+	</body>
 
 </html>
