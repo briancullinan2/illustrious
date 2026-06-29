@@ -2,16 +2,16 @@
 
 
 ## 🚀 Overview
-This repository contains the dynamic, fault-tolerant Google Cloud orchestration matrix for the Illustrious Studio Engine's spatial rendering workers. It completely automates the lifecycle of headless, GPU-accelerated (Nvidia Tesla T4) Spot instances running the Lumina2/Juggernaut-Z diffusion pipeline. 
+This repository contains the dynamic, fault-tolerant Google Cloud orchestration matrix for the Illustrious Studio Engine's spatial rendering workers. It completely automates the lifecycle of headless, GPU-accelerated (Nvidia Tesla T4) Spot instances running the Lumina2/Juggernaut-Z diffusion pipeline.
 
 Instead of burning cash on idle compute, this system implements **Zero-to-One Auto-Scaling**. It tracks hardware availability, dynamically hops across geographic zones to find cheap Spot capacity, seeds persistent model storage on-the-fly, and securely proxies frontend HTTPs traffic down to raw backend worker sockets.
 
-![alt text](<Screenshot 2026-06-22 133059.png>) 
-![alt text](<Screenshot 2026-06-22 133929.png>) 
+![alt text](<Screenshot 2026-06-22 133059.png>)
+![alt text](<Screenshot 2026-06-22 133929.png>)
 
-![alt text](<Screenshot 2026-06-14 225931.png>) 
-![alt text](<Screenshot 2026-06-14 230112.png>) 
-![alt text](<Screenshot 2026-06-14 230126.png>) 
+![alt text](<Screenshot 2026-06-14 225931.png>)
+![alt text](<Screenshot 2026-06-14 230112.png>)
+![alt text](<Screenshot 2026-06-14 230126.png>)
 ![alt text](<Screenshot 2026-06-14 230132.png>)
 ![alt text](<Screenshot 2026-06-14 230144.png>)
 
@@ -31,6 +31,26 @@ Instead of burning cash on idle compute, this system implements **Zero-to-One Au
 
 
 ## So Far
+
+
+### 06/29/26
+
+Need to figure out why empty boxes are coming up from "house" search instead of the models. Need to test freshly trained LoRa model because i added scaling and volumetric rotation.
+
+```javascript
+searchWorker.postMessage({
+	type: 'SEARCH_QUERY',
+	baseURI: window.location.origin + '/',
+	parquetFiles: [DEFAULT_PARQUET],
+	payload: "house"
+});
+```
+
+and
+
+```javascript
+window.Editor.addVisualModelToNunuAssets(conversionResults[4]);
+```
 
 
 ### 06/17/26
@@ -80,7 +100,7 @@ These represent the dynamic dimensions, global overrides, syntax hooks, and prim
 parseSpatialCommands('[red balloon][0,0,0,0,0,0,1][elephant][0,fd*@idx,0,0,0,0,1]')
 ```
 
-Its an implied `1fw*@idx` would be adding 1 full width of the previous, as opposed to `-/+@idx` or `@idx-fw` precise translations would be the same as subtracting a full width just like the scalar, but it also allows for exact values like @idx-100 would be the previous object `x - 100` units 
+Its an implied `1fw*@idx` would be adding 1 full width of the previous, as opposed to `-/+@idx` or `@idx-fw` precise translations would be the same as subtracting a full width just like the scalar, but it also allows for exact values like @idx-100 would be the previous object `x - 100` units
 
 
 
@@ -318,7 +338,7 @@ These handle terms indicating posture, direction faced, or sizing variations rel
 ---
 
 
-### 4. Response Fitting Grammar:  Gerganov Backus-Naur Form 
+### 4. Response Fitting Grammar:  Gerganov Backus-Naur Form
 
 ```ebnf
 # Root: one or more spatial blocks, optional trailing whitespace
@@ -477,7 +497,7 @@ The backend is decoupled into three distinct microservice routes (runnable local
 
 ##### 1. `clusterManager` (The Brain)
 * **Endpoint:** `/api/cluster/status`
-* **Role:** Tracks the live state of the compute horizon. 
+* **Role:** Tracks the live state of the compute horizon.
 * **Mechanics:** * Queries GCP for running or staging worker instances (`illustrious-juggernaut-worker-node`).
   * If the pool is empty, it triggers the `bootGpu` service to scale up.
   * **Failover Engine:** If the default zone (`us-central1-a`) is exhausted of Spot GPUs, it automatically pivots the entire infrastructure pool to backup zones (e.g., `us-central1-f`, `us-east1-c`).
