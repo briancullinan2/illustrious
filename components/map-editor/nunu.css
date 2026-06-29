@@ -264,12 +264,14 @@
 	background-color: transparent !important;
 }
 
+/*
 #nunu>div:nth-child(1)>div>div:nth-child(3)>div:nth-child(3)>div:nth-child(2)>div>div>* {
 	position: relative !important;
 	top: 0 !important;
 	bottom: auto !important;
 	right: auto !important;
 }
+*/
 
 #nunu>div:nth-child(1)>div>div:nth-child(2)>div:nth-child(2)>div:nth-child(2)>div:nth-child(1)>div {
 	width: 100% !important;
@@ -301,6 +303,7 @@
 	height: calc(100% - var(--global-height)) !important;
 }
 
+/*
 #nunu>div:nth-child(1)>div>div:nth-child(3)>div:nth-child(3)>div:nth-child(2)>div>div:not([style*="overflow: hidden"]) {
 	flex-shrink: 0;
 	position: relative !important;
@@ -313,6 +316,7 @@
 	height: var(--global-height);
 	align-items: center;
 }
+*/
 
 #nunu>div:nth-child(1)>div>div:nth-child(3)>div:nth-child(3)>div:nth-child(2)>div,
 #nunu>div:nth-child(1)>div>div:nth-child(3)>div:nth-child(2)>div:nth-child(2)>div {

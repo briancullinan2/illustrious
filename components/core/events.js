@@ -19,9 +19,9 @@ const IMPORT_MODULES = {
 		panelId: 'nunu',
 		js: IMPORT_JS['nunu'],
 		css: IMPORT_CSS['nunu'],
-		onLoad: () => {
+		onLoad: async () => {
 			if(!document.querySelector('#nunu input[placeholder="Search"]')) {
-				window.Nunu = window.Editor.initialize();
+				window.Nunu = await window.Editor.initialize();
 				let loadDetectorInterval;
 
 				loadDetectorInterval = setInterval(() => {

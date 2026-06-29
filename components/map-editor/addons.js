@@ -542,15 +542,9 @@
 
 
 
-	let switchAssetLoaderBack = null;
-
-
 	async function addVisualModelToNunuAssets(payload, classes) {
 		const THREE = require('three');
 		classes ||= THREE.resolveNunuClasses();
-		if(switchAssetLoaderBack) {
-			clearTimeout(switchAssetLoaderBack);
-		}
 		try {
 			if(!payload.success) return;
 
@@ -567,36 +561,18 @@
 			});
 
 
-			// Ensure we can access the panel tracking structures
-			const program = window.Nunu?.program;
-			const assetsPanel = window.Nunu?.gui?.tab?.group?.elementA?.elementB;
-
-			if(window.Nunu && typeof window.Nunu.addObject === 'function') {
-
-				// 1. Store the authentic scene-injection method safely
-				const originalAddObject = window.Nunu.addObject;
-
-				// 2. Override it temporarily to steal assets before they hit the viewport
-				window.Nunu.addObject = loadAssetObject.bind(window.Nunu, assetsPanel, program);
+			if(window.Editor && typeof window.Editor.addAsset === 'function') {
 
 				try {
 					// 4. Pass the custom file binary layout straight into the native engine pipelines
-					window.Nunu.addAsset.call(window.Nunu, fileReference);
-					console.log(`Dispatched ${decodedFileName} directly to window.Nunu.Loader.loadModel`);
+					window.Editor.addAsset.call(window.Editor, fileReference);
+					console.log(`Dispatched ${decodedFileName} directly to window.Editor.addAsset`);
 				} finally {
-					// 5. Restore core engine loop immediately via queueMicrotask to ensure asynchronous loop completion finishes cleanly
-					if(switchAssetLoaderBack) {
-						clearTimeout(switchAssetLoaderBack);
-					}
-					switchAssetLoaderBack = setTimeout(() => {
-						window.Nunu.addObject = originalAddObject;
-						console.log("[Restored] window.Nunu.addObject pipeline returned to normal scene injection mode.");
-						switchAssetLoaderBack = null;
-					}, 1000);
+
 				}
 
 			} else {
-				console.error("nunuStudio loader tracking endpoint is missing at window.Nunu.Loader.loadModel");
+				console.error("nunuStudio loader tracking endpoint is missing at window.Editor.addAsset");
 			}
 
 
@@ -629,7 +605,7 @@
 		}
 	}
 
-	window.Nunu.addVisualModelToNunuAssets = addVisualModelToNunuAssets;
+	window.Editor.addVisualModelToNunuAssets = addVisualModelToNunuAssets;
 
 	/**
 	 * Intercepts a drag event on a corner gripper, applies grid snapping,

@@ -144,7 +144,7 @@ async function convertResponseInterface(e) {
     if (type === 'DOWNLOAD_FINISHED') {
         for (let item of payload || []) {
             if (item.success)
-                window.Nunu.addVisualModelToNunuAssets(item)
+                window.Editor.addVisualModelToNunuAssets(item)
         }
     }
 }
