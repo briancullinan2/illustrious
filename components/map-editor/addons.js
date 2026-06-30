@@ -819,6 +819,7 @@
 	}
 
 
+	/*
 
 	// Register these callbacks externally to handle your remote lookups/shaders
 	window.onResolveRemoteAsset = async function (assetName, assetType) {
@@ -1013,7 +1014,6 @@
 			const originalLoad = LoaderClass.prototype.load;
 			LoaderClass.prototype.load = function (url, onLoad, onProgress, onError) {
 				// Guaranteed fallback breakpoint at the instance method boundary
-				debugger;
 
 				const scope = this;
 				if(typeof window.onResolveRemoteAsset === 'function') {
@@ -1031,7 +1031,7 @@
 		}
 	});
 
-
+	*/
 
 
 

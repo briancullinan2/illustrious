@@ -83,6 +83,8 @@ async function downloadVisionModel(payload, forceUpdate = false) {
 }
 
 
+let objectDetectorInstance = null;
+let imageSegmenterInstance = null;
 
 async function initModel(payload) {
 	const visionBuf = await downloadVisionModel(payload);
@@ -92,13 +94,14 @@ async function initModel(payload) {
 	}
 
 	// Import the dedicated vision tasks bundle
-	const visionModule = await import("https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision/vision_bundle.js");
+	const visionModule = await import("./vision_bundle.js");
 
 	// Resolve constructors whether exported natively or attached to the global/module namespace
 	const FilesetResolver = visionModule.FilesetResolver || self.FilesetResolver;
 	const ObjectDetector = visionModule.ObjectDetector || self.ObjectDetector;
+	const ImageSegmenter = visionModule.ImageSegmenter || self.ImageSegmenter;
 
-	if(!FilesetResolver || !ObjectDetector) {
+	if(!FilesetResolver || !ObjectDetector || !ImageSegmenter) {
 		throw new Error("Failed to extract MediaPipe Vision constructors from the imported module bundle.");
 	}
 
@@ -110,18 +113,66 @@ async function initModel(payload) {
 	// Convert cached IndexedDB tflite buffer into a transient local object URL
 	const visionBlobUrl = URL.createObjectURL(new Blob([visionBuf], { type: 'application/octet-stream' }));
 
-	// Initialize the specific Object Detection task engine instance
-	objectDetectorInstance = await ObjectDetector.createFromOptions(visionFileset, {
-		baseOptions: {
-			modelAssetPath: visionBlobUrl,
-			delegate: payload.visionDelegate || "GPU"
-		},
-		scoreThreshold: payload.visionScoreThreshold || 0.5,
-		runningMode: "IMAGE"
-	});
+	// Conditional initialization based on task mode request parameters
+	if(payload.visionTaskType === "SEGMENTER") {
+		imageSegmenterInstance = await ImageSegmenter.createFromOptions(visionFileset, {
+			baseOptions: {
+				modelAssetPath: visionBlobUrl,
+				delegate: payload.visionDelegate || "GPU"
+			},
+			runningMode: "IMAGE",
+			outputCategoryMask: payload.outputCategoryMask !== undefined ? payload.outputCategoryMask : true,
+			outputConfidenceMasks: payload.outputConfidenceMasks !== undefined ? payload.outputConfidenceMasks : false
+		});
+	} else {
+		// Fallback default: Object Detection
+		objectDetectorInstance = await ObjectDetector.createFromOptions(visionFileset, {
+			baseOptions: {
+				modelAssetPath: visionBlobUrl,
+				delegate: payload.visionDelegate || "GPU"
+			},
+			scoreThreshold: payload.visionScoreThreshold || 0.5,
+			runningMode: "IMAGE"
+		});
+	}
 }
 
+// Complementary execution handler to route segmentation processing tasks
+async function runVisionSegmentation(payload) {
+	if(!imageSegmenterInstance) {
+		self.postMessage({ type: 'ERROR', payload: { message: 'Vision image segmenter model layer not initialized.' } });
+		return;
+	}
 
+	try {
+		const { imageBitmap, uuid } = payload;
+		if(!imageBitmap) {
+			throw new Error("Missing structural input source parameter: imageBitmap");
+		}
+
+		// Segmentation runs synchronously over the bitmap array
+		const segmentationResult = imageSegmenterInstance.segment(imageBitmap);
+
+		// Extract category or confidence masks from the result payload structure
+		const mask = segmentationResult.categoryMask || segmentationResult.confidenceMasks;
+
+		self.postMessage({
+			type: 'VISION_SEGMENTATION_COMPLETE',
+			payload: {
+				uuid,
+				result: {
+					width: mask.width,
+					height: mask.height,
+					// The mask data uses a Uint8Array where each item maps to a category index
+					maskData: mask.getAsUint8Array()
+				}
+			}
+		});
+	} catch(err) {
+		console.error(err);
+		self.postMessage({ type: 'ERROR', payload: { message: 'Segmentation execution failed: ' + err.message } });
+	}
+}
 
 async function checkVersion(payload) {
 	if(!payload.visionModelUrl) return false;
@@ -191,6 +242,10 @@ self.onmessage = async (e) => {
 			console.error(err);
 			self.postMessage({ type: 'ERROR', payload: { message: err.message + '\n' + (err.stack || err.stacktrace) } });
 		}
+	}
+
+	if(type === "RUN_VISION_SEGMENTATION") {
+		await runVisionSegmentation(payload);
 	}
 
 	if(type === 'RUN_VISION_DETECTION') {
