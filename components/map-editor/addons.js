@@ -709,9 +709,10 @@
 	async function queryAssetScalingFromLLM(event) {
 		// TODO: find orginal dblclick
 		let originalDblClick;
+		let container = event.target?.closest('div') || event.target;
 		if(window.Editor && window.Editor.gui?.assetExplorer?.files) {
 			for(let file of window.Editor.gui?.assetExplorer?.files) {
-				if(file.element === event.target) {
+				if(file.element === container) {
 					originalDblClick = file.originalClick;
 				}
 			}
