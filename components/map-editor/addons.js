@@ -643,6 +643,7 @@
 			const fileReference = new File([record.contents], decodedFileName, {
 				type: "application/octet-stream"
 			});
+			fileReference.source = payload.source;
 
 
 			if(window.Editor && typeof window.Editor.addAsset === 'function') {
@@ -721,7 +722,7 @@
 			return;
 		}
 
-
+		debugger;
 	}
 
 

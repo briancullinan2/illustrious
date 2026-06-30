@@ -47,12 +47,20 @@ async function downloadAndStoreModel(item, selectedDb) {
 	try {
 		urlObj = new URL(item.originalUrl);
 	} catch(e) {
-		return { success: false, path: item.originalUrl, db: dbName, reason: 'Invalid URL format: ' + e.message + ' for ' + item.originalUrl };
+		return {
+			success: false, path: item.originalUrl,
+			db: dbName, source: item.originalUrl,
+			reason: 'Invalid URL format: ' + e.message + ' for ' + item.originalUrl
+		};
 	}
 	const pathSegments = urlObj.pathname.split('/').filter(Boolean);
 
 	if(pathSegments.length < 2) {
-		return { success: false, path: urlObj.pathname, db: dbName, reason: 'Invalid URL format: ' + item.originalUrl };
+		return {
+			success: false, path: urlObj.pathname,
+			db: dbName, source: item.originalUrl,
+			reason: 'Invalid URL format: ' + item.originalUrl
+		};
 	}
 
 	const owner = pathSegments[0];
@@ -84,7 +92,7 @@ async function downloadAndStoreModel(item, selectedDb) {
 
 		const existingEntity = await getRecord(DB_STORE_NAME, fileName, selectedDb || dbName);
 		if(existingEntity) {
-			return { success: true, path: fileName, db: dbName };
+			return { success: true, path: fileName, db: dbName, source: item.originalUrl };
 		}
 
 		// 3. Fetch the file data
@@ -113,7 +121,7 @@ async function downloadAndStoreModel(item, selectedDb) {
 			sha: item.sha256 || null
 		}, selectedDb || dbName);
 
-		return { success: true, path: fileName, db: dbName };
+		return { success: true, path: fileName, db: dbName, source: item.originalUrl };
 
 	} catch(error) {
 		if(error.message.includes('UNAUTHORIZED_ACCESS')) {
@@ -121,7 +129,7 @@ async function downloadAndStoreModel(item, selectedDb) {
 			self.postMessage({ type: 'UNAUTHORIZED' });
 		}
 		console.error("Worker Model Downloader Error:", error);
-		return { success: false, path: fileName, db: dbName };
+		return { success: false, path: fileName, db: dbName, source: item.originalUrl };
 	}
 }
 
