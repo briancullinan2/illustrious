@@ -649,8 +649,13 @@
 
 				try {
 					// 4. Pass the custom file binary layout straight into the native engine pipelines
-					window.Editor.addAsset.call(window.Editor, fileReference);
+					await window.Editor.addAsset.call(window.Editor, fileReference);
 					console.log(`Dispatched ${decodedFileName} directly to window.Editor.addAsset`);
+
+
+					// TODO: find the asset and override the dblclick insert feature to query our
+					// LLM for the proper scale for the type of object
+
 				} finally {
 
 				}

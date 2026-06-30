@@ -202,6 +202,9 @@ async function searchResponseInterface(e) {
 let jinjaText;
 let grammerText;
 let fakeLoadingInterval;
+const UUIDCallbacks = {
+
+};
 
 
 async function workerResponseInterface(e) {
@@ -320,8 +323,12 @@ async function workerResponseInterface(e) {
 			completeStatus.className = 'tree-val status-optimal-text';
 		}
 
-		parseSpatialCommands(document.getElementById('tree-token-status').textContent);
 		multicastButton.removeAttribute('disabled', 'disabled');
+
+		if(payload.uuid && typeof UUIDCallbacks[payload.uuid] === 'function') {
+			UUIDCallbacks[payload.uuid](payload.result);
+		}
+
 	} else if(type === 'WORKER_READY') {
 		const toggle = document.getElementById('local-model-toggle');
 		if(toggle?.checked) {
@@ -397,9 +404,9 @@ async function workerResponseInterface(e) {
 
 
 
-async function handleGenerate() {
+async function handleGenerate(promptText) {
 	document.getElementById('scene-builder').classList.add('collapsed');
-	const promptText = document.getElementById('prompt-input').value;
+	promptText ||= document.getElementById('prompt-input').value;
 	const coordsText = document.getElementById('coords-input').value;
 
 	const treePrompt = document.getElementById('tree-prompt');
@@ -430,6 +437,8 @@ async function handleGenerate() {
 
 	multicastButton.setAttribute('disabled', 'disabled');
 
+	const uuid = generateUUID();
+	UUIDCallbacks[uuid] = parseSpatialCommands;
 	worker.postMessage({
 		type: 'RUN_INFERENCE',
 		payload: {
@@ -438,7 +447,8 @@ async function handleGenerate() {
 			temperature: 0.8,
 			top_k: 40,
 			chatTemplate: jinjaText,
-			gbnfGrammar: grammerText
+			gbnfGrammar: grammerText,
+			uuid: uuid
 		}
 	});
 }

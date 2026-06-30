@@ -85,6 +85,10 @@ let loraRecord;
 let mmprojRecord;
 let ggufRecord;
 
+//"Goekdeniz-Guelmez/Josiefied-Qwen2.5-0.5B-Instruct-abliterated-v1/josiefied-qwen-spatial-engine.gguf"
+//"Goekdeniz-Guelmez/Josiefied-Qwen2.5-0.5B-Instruct-abliterated-v1/josiefied-qwen-spatial-engine.gguf"
+
+
 async function downloadModels(payload, forceUpdate = false) {
 	// Helper to abstract the resolve/fetch/cache logic per layer
 	async function resolveAsset(url, globalRecordKey, label) {
@@ -220,7 +224,7 @@ async function checkVersion(payload) {
 	} catch { }
 
 	try {
-		if(payload.lora) {
+		if(payload.loraUrl) {
 			const loraModelPath = getGGUFModel(payload.loraUrl);
 			loraRecord = await getRecord(DB_STORE_NAME, loraModelPath, GGUF_DATABASE);
 		}
@@ -300,6 +304,9 @@ self.onmessage = async (e) => {
 };
 
 
+let inferenceRunning = false;
+const inferenceQueue = [];
+
 async function runInference(payload) {
 	if(!wllama) {
 		self.postMessage({ type: 'ERROR', payload: { message: 'Model not loaded' } });
@@ -307,6 +314,12 @@ async function runInference(payload) {
 	}
 
 	try {
+		if(inferenceRunning) {
+			inferenceQueue.push(payload);
+			return;
+		}
+		inferenceRunning = true;
+
 		const promptText = payload.input_text || payload.prompt || "";
 		const messages = [
 			{ role: 'system', content: payload.systemPrompt || '' },
@@ -321,6 +334,7 @@ async function runInference(payload) {
 			wllama.chatTemplate = wllama.model.metadata['tokenizer.chat_template'];
 		}
 
+		let totalCharacters = '';
 		const formattedPrompt = applySimpleChatTemplate(messages, payload.chatTemplate);
 		const completion = await wllama.createCompletion({
 			prompt: formattedPrompt,
@@ -338,6 +352,7 @@ async function runInference(payload) {
 
 			onData: (chunk) => {   // or however the stream callback works in your version
 				const tokenText = chunk.choices?.[0]?.delta?.content || chunk.choices?.[0]?.text || "";
+				totalCharacters += tokenText;
 				if(tokenText) {
 					self.postMessage({
 						type: 'TOKEN_STREAM',
@@ -347,7 +362,11 @@ async function runInference(payload) {
 			}
 		});
 
-		self.postMessage({ type: 'GENERATION_COMPLETE' });
+		inferenceRunning = false;
+		self.postMessage({ type: 'GENERATION_COMPLETE', payload: { uuid: payload.uuid, result: totalCharacters } });
+		if(inferenceQueue.length > 0) {
+			runInference(inferenceQueue.shift());
+		}
 	} catch(err) {
 		console.error(err);
 		self.postMessage({ type: 'ERROR', payload: { message: err.message + '\n' + (err.stack || '') } });

@@ -429,3 +429,15 @@ function rebuildComplexObjectAsText(obj, maxDepth = 3, currentDepth = 0, cache =
 	return `${className} {\n${lines.join('\n')}\n${'  '.repeat(currentDepth)}}`;
 }
 
+
+const ki = [];
+for(let t = 0; t < 256; t++)
+	ki[t] = (t < 16 ? "0" : "") + t.toString(16);
+function generateUUID() {
+	const t = 4294967295 * Math.random() | 0
+		, e = 4294967295 * Math.random() | 0
+		, i = 4294967295 * Math.random() | 0
+		, n = 4294967295 * Math.random() | 0;
+	return (ki[255 & t] + ki[t >> 8 & 255] + ki[t >> 16 & 255] + ki[t >> 24 & 255] + "-" + ki[255 & e] + ki[e >> 8 & 255] + "-" + ki[e >> 16 & 15 | 64] + ki[e >> 24 & 255] + "-" + ki[63 & i | 128] + ki[i >> 8 & 255] + "-" + ki[i >> 16 & 255] + ki[i >> 24 & 255] + ki[255 & n] + ki[n >> 8 & 255] + ki[n >> 16 & 255] + ki[n >> 24 & 255]).toUpperCase();
+}
+
