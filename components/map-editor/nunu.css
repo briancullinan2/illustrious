@@ -378,8 +378,8 @@
 	filter: invert(0.5) sepia(1) saturate(5) hue-rotate(calc(var(--ace-blue-hue) - 40deg)) brightness(0.8);
 }
 
-#nunu img[src*="arrow_down"] {
-	/*display: none !important;*/
+#nunu select+img[src*="arrow_down"] {
+	display: none !important;
 }
 
 #nunu div:has(>select) {

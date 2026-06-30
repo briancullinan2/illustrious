@@ -655,7 +655,16 @@
 
 					// TODO: find the asset and override the dblclick insert feature to query our
 					// LLM for the proper scale for the type of object
-
+					if(window.Editor && window.Editor.gui?.assetExplorer?.files) {
+						for(let file of window.Editor.gui?.assetExplorer?.files) {
+							if(file.element.ondblclick !== queryAssetScalingFromLLM
+								&& file.asset.insertable
+							) {
+								file.originalClick = file.element.ondblclick;
+								file.element.ondblclick = queryAssetScalingFromLLM;
+							}
+						}
+					}
 				} finally {
 
 				}
@@ -667,6 +676,7 @@
 
 
 			// this is turning into a giant fucking pain in the ass
+			// leaving this here because this was my breaking point to compile nunuStudio
 			/*
 			const ext = getFileExtension(fileReference).toLowerCase();
 			const readMode = window.Nunu.LoaderReadModes[ext] || "arraybuffer"; // fallback to safe default
@@ -693,6 +703,27 @@
 			console.error("Failed executing visual model asset load assignment pipeline:", error);
 		}
 	}
+
+
+	async function queryAssetScalingFromLLM(event) {
+		// TODO: find orginal dblclick
+		let originalDblClick;
+		if(window.Editor && window.Editor.gui?.assetExplorer?.files) {
+			for(let file of window.Editor.gui?.assetExplorer?.files) {
+				if(file.element === event.target) {
+					originalDblClick = file.originalClick;
+				}
+			}
+		}
+
+		if(!originalDblClick) {
+			// sorry can't do anything
+			return;
+		}
+
+
+	}
+
 
 	window.Editor.addVisualModelToNunuAssets = addVisualModelToNunuAssets;
 
