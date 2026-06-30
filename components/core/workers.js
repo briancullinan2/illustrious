@@ -42,6 +42,13 @@ async function bootAvailableWorkers() {
 		event.preventDefault();
 	};
 	convertWorker.onmessage = convertResponseInterface;
+
+
+	mediaPipeWorker = new Worker(MEDIAPIPE_WORKER, { type: 'module' });
+	mediaPipeWorker.onerror = (err) => {
+		console.error("Worker error:", err);
+	};
+	mediaPipeWorker.onmessage = mediapipeResponseInterface;
 }
 
 
@@ -136,6 +143,7 @@ async function convertResponseInterface(e) {
 
 	}
 	if(type === 'CONVERT_LOADED') {
+		// search for anything queued up already
 		converterReady = true;
 		const currentSearch = searchResults;
 		searchResults = [];
@@ -163,6 +171,29 @@ async function convertResponseInterface(e) {
 
 
 
+
+
+async function mediapipeResponseInterface(e) {
+	const { type, payload } = e.data;
+
+	if(type === 'WORKER_READY') {
+		convertWorker.postMessage({
+			type: 'LOAD_MODEL',
+			baseURI: window.location.origin + '/',
+			payload: {
+			}
+		});
+	}
+
+	if(type === 'UNAUTHORIZED') {
+
+	}
+
+	if(type === 'MODEL_READY') {
+
+	}
+
+}
 
 
 

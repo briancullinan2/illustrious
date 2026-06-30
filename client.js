@@ -10,7 +10,7 @@ const DEFAULT_PARQUET = 'https://storage.googleapis.com/quake-games/models/githu
 const SEARCH_WORKER = '/components/llm-workers/objaverse/catalog-worker.js';
 
 const CONVERT_WORKER = '/components/llm-workers/convert/convert-worker.js';
-
+const MEDIAPIPE_WORKER = '/components/llm-workers/media-pipe/media-worker.js';
 
 const WLLAMA_WORKER = '/components/llm-workers/wllama/worker.js';   // direct path
 const ONNX_WORKER = '/components/llm-workers/onnx/worker.js';   // direct path

@@ -335,7 +335,32 @@
 
 #nunu>div:nth-child(1)>div>div:nth-child(3)>div:nth-child(3)>div:nth-child(2)>div {
 	flex-direction: column;
+}
 
+/* Apply this to your main sidebar wrapper to make its contents stretch and contain themselves */
+#nunu>div:nth-child(1)>div>div:nth-child(3)>div:nth-child(3)>div:nth-child(2)>div {
+	display: flex !important;
+	flex-direction: column !important;
+	height: 100% !important;
+	/* Force it to calculate against the viewport/parent wrapper */
+	max-height: 100vh !important;
+	overflow-y: auto !important;
+	/* Forces the tree to scroll when items go off-screen */
+	overflow-x: hidden !important;
+	position: relative !important;
+}
+
+#nunu>div:nth-child(1)>div>div:nth-child(3)>div:nth-child(2)>div:nth-child(2)>div>div>div a {
+	color: var(--ace-blue)
+}
+
+/* This is the inner container matching your raw HTML block */
+#nunu>div:nth-child(1)>div>div:nth-child(3)>div:nth-child(3)>div:nth-child(2)>div>div:first-child {
+	position: relative !important;
+	/* Stop position: absolute from bypassing bounds */
+	width: 100% !important;
+	height: 100% !important;
+	overflow-y: auto !important;
 }
 
 #nunu>div:nth-child(1)>div>div:nth-child(3)>div:nth-child(2)>div:nth-child(2)>div>div {

@@ -254,6 +254,7 @@ async function fetchWithFallbackChain(rawFilePath, type) {
 		fetchWithFallbackChain,
 		getFallbackUrls,
 		getGGUFModel,
+		getTfUrl,
 		getModelUrl,
 		getExternalDataUrl,
 		getTokenizerJsonUrl,

@@ -53,7 +53,7 @@ const FS_FILE = (ST_FILE << 12) + FS_DEFAULT;
 const FS_DIR = (ST_DIR << 12) + FS_DEFAULT;
 
 let visionRecord;
-let objectDetectorInstance = null;
+
 
 async function downloadVisionModel(payload, forceUpdate = false) {
 	const url = payload.visionModelUrl;
@@ -107,7 +107,7 @@ async function initModel(payload) {
 
 	// Locate the underlying core WASM task filesets
 	const visionFileset = await FilesetResolver.forVisionTasks(
-		"https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision/wasm"
+		"./vision_wasm_module_internal.wasm"
 	);
 
 	// Convert cached IndexedDB tflite buffer into a transient local object URL
