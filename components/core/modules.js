@@ -81,7 +81,7 @@ const DependencyLoader = {
 
 		// Injects stylesheet links concurrently
 		if(module.css) {
-			await Promise.all(module.css.map(href => this.loadStyle(href)));
+			await Promise.all(module.css.map(async href => await this.loadStyle(href)));
 		}
 
 		// Evaluates script tags sequentially
