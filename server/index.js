@@ -1,6 +1,10 @@
 
 const express = require('express');
-const { requireReactiveCredentials } = require('../cloud-functions/cluster-manager/host-google.js');
+const {
+	requireReactiveCredentials,
+	fetchAndValidateIdentity,
+	saveUserToDictionary
+} = require('../cloud-functions/cluster-manager/host-google.js');
 const { app, server, PORT, serveErrorScreen } = require('./server.js');
 require('../setup/setup.js'); // Mounts setup wizard routes cleanly
 require('./generate-favicon.js');
@@ -43,23 +47,7 @@ function loadAllUsersDictionary() {
 	return {};
 }
 
-// Helper to write the updated dictionary back to disk
-function saveUserToDictionary(email, tokens) {
-	if(!email) return;
-	try {
-		if(!fs.existsSync(CREDENTIALS_DIR)) {
-			fs.mkdirSync(CREDENTIALS_DIR, { recursive: true });
-		}
 
-		const dictionary = loadAllUsersDictionary();
-		dictionary[email] = tokens;
-
-		fs.writeFileSync(DUAL_STORE_PATH, JSON.stringify(dictionary, null, 2), 'utf8');
-		console.log(`🔒 Storage synced. Updated credentials dictionary key for: ${email}`);
-	} catch(err) {
-		console.error(`Failed to write tokens to dictionary for ${email}:`, err);
-	}
-}
 
 class IllustriousJsonStore extends session.Store {
 	constructor() {
@@ -191,44 +179,6 @@ app.get('/auth', requireReactiveCredentials, (req, res) => {
 	res.redirect(authUrl);
 });
 
-
-// Helper Function: Extracts user identity and enforces expiration/refresh validation
-function fetchAndValidateIdentity(req, callback) {
-	const tokens = req.session.tokens;
-
-	if(!tokens || !tokens.access_token) {
-		return callback(new Error('Missing session tokens context'), null);
-	}
-
-	// Check if the access token has expired based on its timestamp boundary
-	const isExpired = tokens.expiry_date && Date.now() >= tokens.expiry_date;
-
-	if(isExpired) {
-		// If expired and we don't have a refresh token to fix it silently, it's a hard dead-end
-		if(!tokens.refresh_token) {
-			return callback(new Error('Token completely expired without offline renewal capacity'), null);
-		}
-		console.log("⏳ Current access token expired. Relying on background offline refresh loops...");
-	}
-
-	// Mount tokens statefully onto the request's client wrapper
-	req.oauth2Client.setCredentials(tokens);
-	const oauth2 = google.oauth2({ version: 'v2', auth: req.oauth2Client });
-
-	oauth2.userinfo.get((err, userInfo) => {
-		if(err) {
-			// If the API call fails explicitly because the token is invalid, bubble up the failure
-			return callback(err, null);
-		}
-
-		if(!userInfo.data || !userInfo.data.email) {
-			return callback(new Error('Could not extract user email profile from Google context'), null);
-		}
-
-		// Return the clean profile information
-		return callback(null, userInfo.data);
-	});
-}
 
 // 1. Root Gateway Route with dynamic string template replacement
 app.get('/', requireReactiveCredentials, (req, res) => {

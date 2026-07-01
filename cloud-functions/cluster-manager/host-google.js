@@ -523,23 +523,85 @@ function getGcpClientOptions(req, targetProjectId) {
 	return options;
 }
 
+// Helper to write the updated dictionary back to disk
+function saveUserToDictionary(email, tokens) {
+	if(!email) return;
+	try {
+		if(!fs.existsSync(CREDENTIALS_DIR)) {
+			fs.mkdirSync(CREDENTIALS_DIR, { recursive: true });
+		}
+
+		const dictionary = loadAllUsersDictionary();
+		dictionary[email] = tokens;
+
+		fs.writeFileSync(DUAL_STORE_PATH, JSON.stringify(dictionary, null, 2), 'utf8');
+		console.log(`🔒 Storage synced. Updated credentials dictionary key for: ${email}`);
+	} catch(err) {
+		console.error(`Failed to write tokens to dictionary for ${email}:`, err);
+	}
+}
+
+
+// Helper Function: Extracts user identity and enforces expiration/refresh validation
+function fetchAndValidateIdentity(req, callback) {
+	const tokens = req.session.tokens;
+
+	if(!tokens || !tokens.access_token) {
+		return callback(new Error('Missing session tokens context'), null);
+	}
+
+	// Check if the access token has expired based on its timestamp boundary
+	const isExpired = tokens.expiry_date && Date.now() >= tokens.expiry_date;
+
+	if(isExpired) {
+		// If expired and we don't have a refresh token to fix it silently, it's a hard dead-end
+		if(!tokens.refresh_token) {
+			return callback(new Error('Token completely expired without offline renewal capacity'), null);
+		}
+		console.log("⏳ Current access token expired. Relying on background offline refresh loops...");
+	}
+
+	// Mount tokens statefully onto the request's client wrapper
+	req.oauth2Client.setCredentials(tokens);
+	const oauth2 = google.oauth2({ version: 'v2', auth: req.oauth2Client });
+
+	oauth2.userinfo.get((err, userInfo) => {
+		if(err) {
+			// If the API call fails explicitly because the token is invalid, bubble up the failure
+			return callback(err, null);
+		}
+
+		if(!userInfo.data || !userInfo.data.email) {
+			return callback(new Error('Could not extract user email profile from Google context'), null);
+		}
+
+		// Return the clean profile information
+		return callback(null, userInfo.data);
+	});
+}
 
 function requireReactiveCredentials(req, res, next) {
 	const context = resolveActiveProjectContext();
 	let credentials = null;
+
+	console.log(`\n\x1b[36m[OAuth Debug]\x1b0m Checking credentials for route: ${req.originalUrl}`);
 
 	// Load structure payload data safely
 	try {
 		const realConfigFile = path.join(GLOBAL_CRED_DIR, context.fileName || `${context.projectId}.json`);
 		if(fs.existsSync(realConfigFile)) {
 			credentials = JSON.parse(fs.readFileSync(realConfigFile, 'utf8'));
+			console.log(`\x1b[32m[OAuth Debug]\x1b0m Loaded GCP client secrets from file: ${realConfigFile}`);
+		} else {
+			console.warn(`\x1b[33m[OAuth Debug]\x1b0m Client secrets configuration file not found at: ${realConfigFile}`);
 		}
 	} catch(e) {
-		console.error("Failed downstream file load profile read logic:", e.message);
+		console.error("\x1b[31m[OAuth Debug]\x1b0m Failed downstream file load profile read logic:", e.message);
 	}
 
 	// Reject processing if credentials cannot be derived from local contexts
 	if(!credentials && context.source === 'HARDCODED_FALLBACK') {
+		console.error(`\x1b[31m[OAuth Debug]\x1b0m Halting: No credentials parsed and context source is HARDCODED_FALLBACK.`);
 		return serveErrorScreen(
 			res,
 			"GCP Credentials Missing",
@@ -551,13 +613,16 @@ function requireReactiveCredentials(req, res, next) {
 	const clientSecret = credentials?.GCP_CLIENT_SECRET || credentials?.private_key;
 	let endpoint = process.env.REDIRECT_URI || DEFAULT_ENDPOINT;
 	try {
-		endpoint = JSON.parse(fs.readFileSync(GLOBAL_SETTINGS))?.REDIRECT_URI;
+		if(fs.existsSync(GLOBAL_SETTINGS)) {
+			endpoint = JSON.parse(fs.readFileSync(GLOBAL_SETTINGS))?.REDIRECT_URI || endpoint;
+		}
 	} catch(e) {
-		console.error(e);
+		console.error("\x1b[31m[OAuth Debug]\x1b0m Failed reading GLOBAL_SETTINGS redirect URI:", e.message);
 	}
 
 	// Instantiate OAuth application client state safely if flags require modification
 	if(clientId && clientSecret && (!oauth2ClientInstance || clientId !== cachedClientId)) {
+		console.log(`\x1b[35m[OAuth Debug]\x1b0m Initializing fresh Google OAuth2 client instance for client ID: ${clientId.substring(0, 15)}...`);
 		oauth2ClientInstance = new google.auth.OAuth2(
 			clientId,
 			clientSecret,
@@ -567,16 +632,39 @@ function requireReactiveCredentials(req, res, next) {
 		cachedClientSecret = clientSecret;
 	}
 
+	// SESSION VERIFICATION LOGGING
+	if(!req.session) {
+		console.warn("\x1b[33m[OAuth Debug]\x1b0m WARNING: req.session is completely undefined. Check session store middleware execution order.");
+	} else if(!req.session.tokens) {
+		console.warn("\x1b[33m[OAuth Debug]\x1b0m WARNING: req.session.tokens is completely empty. Stored token was missing or cleared.");
+	} else {
+		const t = req.session.tokens;
+		const isExpired = t.expiry_date ? Date.now() >= t.expiry_date : true;
+		const timeRemaining = t.expiry_date ? Math.round((t.expiry_date - Date.now()) / 1000) : 0;
+
+		console.log(`\x1b[32m[OAuth Debug]\x1b0m Session tokens located:`);
+		console.log(`   - Access Token:  ${t.access_token ? '✓ Present' : '✗ Missing'}`);
+		console.log(`   - Refresh Token: ${t.refresh_token ? '✓ Present (Can auto-refresh)' : '✗ Missing (WILL force re-login upon expiration)'}`);
+		console.log(`   - Expiration:    ${t.expiry_date ? new Date(t.expiry_date).toISOString() : 'Unknown'} (${timeRemaining}s remaining) [Expired: ${isExpired}]`);
+	}
+
 	if(req.session && req.session.tokens && oauth2ClientInstance) {
 		oauth2ClientInstance.setCredentials(req.session.tokens);
 
 		// Listen for internal token updates (like auto-refresh)
 		oauth2ClientInstance.removeAllListeners('tokens');
 		oauth2ClientInstance.on('tokens', (newTokens) => {
+			console.log("\x1b[35m[OAuth Debug]\x1b0m ⚡ oauth2Client triggered a automatic 'tokens' refresh event:");
+			console.log(`   - New Access Token: ${newTokens.access_token ? '✓ Received' : '✗ Unchanged'}`);
+			console.log(`   - New Refresh Token: ${newTokens.refresh_token ? '✓ Received' : '✗ Unchanged (Using existing)'}`);
+
 			const updatedTokens = { ...req.session.tokens, ...newTokens };
 			req.session.tokens = updatedTokens;
 			if(req.session.userEmail) {
+				console.log(`\x1b[32m[OAuth Debug]\x1b0m Saving newly refreshed credentials back into user dictionary for: ${req.session.userEmail}`);
 				saveUserToDictionary(req.session.userEmail, updatedTokens);
+			} else {
+				console.warn("\x1b[33m[OAuth Debug]\x1b0m Cannot commit refreshed tokens to master dictionary: req.session.userEmail is missing.");
 			}
 		});
 	}
@@ -590,7 +678,6 @@ function requireReactiveCredentials(req, res, next) {
 }
 
 
-
 module.exports = {
 	requireReactiveCredentials,
 	getActiveAccountFromGoogle,
@@ -598,6 +685,8 @@ module.exports = {
 	evaluateWorkerPool,
 	verifyGpuQuota,
 	getGcpClientOptions,
-	fetchTelemetry
+	fetchTelemetry,
+	fetchAndValidateIdentity,
+	saveUserToDictionary
 };
 
