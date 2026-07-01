@@ -41,8 +41,8 @@ const SITE_MENU = [
                     { name: "PLY (Binary)", icon: "/components/map-editor/icons/misc/scene.png", target: "file/export/ply-binary" },
                     { name: "STL", icon: "/components/map-editor/icons/misc/scene.png", target: "file/export/stl" },
                     { name: "STL (Binary)", icon: "/components/map-editor/icons/misc/scene.png", target: "file/export/stl-binary" },
-					{ name: "Minecraft NBT (Binary)", icon: "/components/map-editor/icons/misc/scene.png", target: "file/export/nbt" },
-                    { name: "Minecraft ZIP (Binary)", icon: "/components/map-editor/icons/misc/scene.png", target: "file/export/nbt-zip" }
+					{ name: "NBT (Binary)", icon: "/components/map-editor/icons/misc/scene.png", target: "file/export/nbt" },
+                    { name: "Minecraft ZIP", icon: "/components/map-editor/icons/misc/scene.png", target: "file/export/nbt-zip" }
                 ]
             },
             { divider: true },
