@@ -5,7 +5,7 @@ const DEFAULT_MODEL = 'Goekdeniz-Guelmez/Josiefied-Qwen2.5-0.5B-Instruct-abliter
 const DEFAULT_LORA = 'Goekdeniz-Guelmez/Josiefied-Qwen2.5-0.5B-Instruct-abliterated-v1/josiefied-qwen-spatial-engine.gguf'
 const DEFAULT_JINJA = '/loras/spatial_engine/chat_template.jinja'
 const DEFAULT_GBNF = '/loras/spatial_engine/grammar.gbnf'
-const DEFAULT_DETECTOR = '/components/llm-workers/media-pipe/efficientdet_lite2.tflite'
+const DEFAULT_DETECTOR = '/components/llm-workers/media-pipe/ssd_mobilenet_v2.tflite'
 const DEFAULT_SEGMENTER = '/components/llm-workers/media-pipe/deeplab_v3.tflite'
 
 const DEFAULT_PARQUET = 'https://storage.googleapis.com/quake-games/models/github.parquet';

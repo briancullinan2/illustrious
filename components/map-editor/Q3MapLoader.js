@@ -583,17 +583,34 @@
 
 		// 2. Construct Convex Hulls out of Text Definitions via Constructive Solid Geometry
 		_buildGeometryFromBrushes(entities, rootNode) {
-			let masterVertices = [];
-			let masterIndices = [];
-			let parsedSurfaces = [];
+			for(const ent of entities) {
+				// Check if this entity defines a named group container
+				const isGroup = ent.classname === 'func_group' || ent._name;
+				let targetContainer = rootNode;
 
-			for(let ent of entities) {
-				for(let brush of ent.brushes) {
-					let activePlanes = [];
+				if(isGroup) {
+					// Instantiating a nested Three.js group for this specific collection
+					targetContainer = new THREE.Group();
+					targetContainer.name = ent._name || ent.classname || "MapGroup";
 
-					// Derive mathematical representation equations out of point matrices
-					for(let side of brush.sides) {
-						// Coordinate conversions mapping standard id Tech coordinate alignments to Three.js layout targets
+					// Keep entity configuration states available on user data structures
+					targetContainer.userData = {
+						classname: ent.classname,
+						origin: ent.origin || [0, 0, 0]
+					};
+
+					rootNode.add(targetContainer);
+				}
+
+				// Create tracking arrays isolated specifically to this entity's brush space
+				const masterVertices = [];
+				const masterIndices = [];
+				const parsedSurfaces = [];
+
+				for(const brush of ent.brushes) {
+					const activePlanes = [];
+
+					for(const side of brush.sides) {
 						let v0 = new THREE.Vector3(side.points[0][0], side.points[0][2], -side.points[0][1]);
 						let v1 = new THREE.Vector3(side.points[1][0], side.points[1][2], -side.points[1][1]);
 						let v2 = new THREE.Vector3(side.points[2][0], side.points[2][2], -side.points[2][1]);
@@ -606,9 +623,8 @@
 						}
 					}
 
-					// Cut initially infinite geometric plane hulls sequentially by every coplanar neighbor bounds
 					for(let i = 0; i < activePlanes.length; i++) {
-						let target = activePlanes[i];
+						const target = activePlanes[i];
 						let facePolygon = this._createInfinitePlanePolygon(target.geoPlane);
 
 						for(let j = 0; j < activePlanes.length; j++) {
@@ -616,35 +632,24 @@
 							facePolygon = this._clipPolygonByPlane(facePolygon, activePlanes[j].geoPlane);
 						}
 
-						// Discard broken/non-existent faces that have completely collapsed under clipping
 						if(facePolygon.length < 3) continue;
 
 						let surfaceIndexOffset = masterIndices.length * 4;
 						let vertexBaseOffset = masterVertices.length / 14;
 
-						// Calculate standard point matrices
 						for(let k = 0; k < facePolygon.length; k++) {
 							let vertexPosition = facePolygon[k];
-
-							// Vertex positions assignment
 							masterVertices.push(vertexPosition.x, vertexPosition.y, vertexPosition.z);
 
-							// Project UV mappings procedurally relative to plane orientations
 							let u = vertexPosition.dot(new THREE.Vector3(1, 0, 0)) * 0.015625;
 							let v = vertexPosition.dot(new THREE.Vector3(0, 1, 0)) * 0.015625;
 							masterVertices.push(u, v);
-
-							// Zero fallback lightmap layout space variables
 							masterVertices.push(0, 0);
 
-							// Surface Normals attributes tracking active plane configurations
 							masterVertices.push(target.geoPlane.normal.x, target.geoPlane.normal.y, target.geoPlane.normal.z);
-
-							// Solid baseline diffuse vertex weight variables
 							masterVertices.push(1.0, 1.0, 1.0, 1.0);
 						}
 
-						// Generate explicit Triangle Fan indices matching geometry layouts winding sequences
 						for(let k = 1; k < facePolygon.length - 1; k++) {
 							masterIndices.push(vertexBaseOffset);
 							masterIndices.push(vertexBaseOffset + k);
@@ -659,13 +664,19 @@
 						});
 					}
 				}
+
+				// Only assemble a mesh branch context if the entity actually contained convex brush layers
+				if(parsedSurfaces.length > 0) {
+					this._assembleMeshHierarchy({
+						vertices: new Float32Array(masterVertices),
+						indices: new Uint32Array(masterIndices),
+						surfaces: parsedSurfaces
+					}, targetContainer);
+					// Passing targetContainer hooks meshes directly into the sub-group or root node context dynamically
+				}
 			}
 
-			return this._assembleMeshHierarchy({
-				vertices: new Float32Array(masterVertices),
-				indices: new Uint32Array(masterIndices),
-				surfaces: parsedSurfaces
-			}, rootNode);
+			return rootNode;
 		}
 
 		_createInfinitePlanePolygon(plane) {

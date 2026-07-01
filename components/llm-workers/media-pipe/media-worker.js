@@ -222,6 +222,7 @@ async function initModel(payload) {
 				modelAssetPath: visionBlobUrl,
 				delegate: payload.visionDelegate || "GPU",
 			},
+			maxResults: 4,
 			scoreThreshold: payload.visionScoreThreshold || 0.08,
 			runningMode: "IMAGE",
 			canvas: globalThis['glCanvas']
@@ -327,7 +328,7 @@ async function runVisionDetection(payload) {
 		{
 			colorSpaceConversion: 'none',
 			premultipliedAlpha: 'none',
-			imageOrientation: 'flipY'
+			//imageOrientation: 'flipY'
 		}) : undefined;
 
 	const subBitmaps = await splitBitmapIntoQuadGrid(imageBitmap);
