@@ -1,48 +1,108 @@
+
+
+
 globalThis.document = {
 	baseURI: 'http://localhost:4000/'
 };
 
-let putRecord, getRecord, DB_STORE_NAME;
 
 async function initLocalStorage() {
-	try {
-		const downloaderModule = await import('../../core/local.js');
-		if(downloaderModule && Object.keys(downloaderModule).length > 0) {
-			({ putRecord, getRecord, DB_STORE_NAME } = downloaderModule);
+	let moduleWorker = false;
+	let moduleLoaded = false;
+
+	if(typeof DB_VERSION !== 'undefined') {
+		return;
+	}
+
+	if(typeof importScripts === 'function') {
+		// Classic Web Worker: execution is synchronous, no await needed for script loading
+		try {
+			importScripts('/components/core/local.js');
+			if(typeof getDatabaseMetadata === 'undefined') {
+				throw new Error("Classic script loaded, but getDatabaseMetadata namespace is missing.");
+			}
+			moduleLoaded = true;
+		} catch(error) {
+			moduleWorker = true;
+			if(!(this === undefined))
+				console.error("Failed to load database utilities via importScripts:", error);
 		}
-		else if(typeof self !== 'undefined' && self) {
-			({ putRecord, getRecord, DB_STORE_NAME } = self);
-		} else {
-			throw new Error("Downloader script loaded, but no valid exports or global namespaces were found.");
+	}
+
+
+	if(moduleWorker || !moduleLoaded) {
+		try {
+			const downloaderModule = await import('../../core/local.js');
+			let extracted = null;
+
+			if(downloaderModule && Object.keys(downloaderModule).length > 0) {
+				extracted = downloaderModule;
+			} else if(typeof globalThis !== 'undefined') {
+				extracted = globalThis;
+			}
+
+			if(extracted && ('putRecord' in extracted || 'getRecord' in extracted)) {
+				// Destructure locally and assign directly to globalThis properties
+				const { putRecord, getRecord, DB_STORE_NAME } = extracted;
+				Object.assign(globalThis, { putRecord, getRecord, DB_STORE_NAME });
+			} else {
+				throw new Error("Downloader script loaded, but no valid exports or global namespaces were found.");
+			}
+		} catch(error) {
+			console.error("Failed to dynamically initialize downloader local storage dependencies:", error);
+			throw error;
 		}
-	} catch(error) {
-		console.error("Failed to dynamically initialize downloader local storage dependencies:", error);
-		throw error;
 	}
 }
 
-await initLocalStorage();
-
-let installDatabaseIfNeeded, getTfUrl, fetchWithFallbackChain;
+const storagePromise = initLocalStorage();
 
 async function initDownloader() {
-	try {
-		const downloaderModule = await import('../downloader.js');
-		if(downloaderModule && Object.keys(downloaderModule).length > 0) {
-			({ installDatabaseIfNeeded, getTfUrl, fetchWithFallbackChain } = downloaderModule);
+	let moduleWorker = false;
+	let moduleLoaded = false;
+
+
+	if(typeof importScripts === 'function') {
+		// Classic Web Worker: execution is synchronous, no await needed for script loading
+		try {
+			importScripts('/components/llm-workers/downloader.js');
+			if(typeof getDatabaseMetadata === 'undefined') {
+				throw new Error("Classic script loaded, but getDatabaseMetadata namespace is missing.");
+			}
+			moduleLoaded = true;
+		} catch(error) {
+			moduleWorker = true;
+			if(!(this === undefined))
+				console.error("Failed to load database utilities via importScripts:", error);
 		}
-		else if(typeof self !== 'undefined' && self) {
-			({ installDatabaseIfNeeded, getTfUrl, fetchWithFallbackChain } = self);
-		} else {
-			throw new Error("Downloader script loaded, but no valid exports or global namespaces were found.");
+	}
+
+	if(moduleWorker || !moduleLoaded) {
+		try {
+			const downloaderModule = await import('../downloader.js');
+			let extracted = null;
+
+			if(downloaderModule && Object.keys(downloaderModule).length > 0) {
+				extracted = downloaderModule;
+			} else if(typeof globalThis !== 'undefined') {
+				extracted = globalThis;
+			}
+
+			if(extracted && ('installDatabaseIfNeeded' in extracted || 'fetchWithFallbackChain' in extracted)) {
+				// Destructure locally and assign directly onto globalThis in one clean sweep
+				const { installDatabaseIfNeeded, getTfUrl, fetchWithFallbackChain } = extracted;
+				Object.assign(globalThis, { installDatabaseIfNeeded, getTfUrl, fetchWithFallbackChain });
+			} else {
+				throw new Error("Downloader script loaded, but no valid exports or global namespaces were found.");
+			}
+		} catch(error) {
+			console.error("Failed to dynamically initialize downloader network dependencies:", error);
+			throw error;
 		}
-	} catch(error) {
-		console.error("Failed to dynamically initialize downloader network dependencies:", error);
-		throw error;
 	}
 }
 
-await initDownloader();
+const downloaderPromise = initDownloader();
 
 const GGUF_DATABASE = 'gguf';
 
@@ -94,7 +154,7 @@ async function initModel(payload) {
 	}
 
 	// Import the dedicated vision tasks bundle
-	const visionModule = await import("./vision_bundle.js");
+	const visionModule = await import("./vision_bundle.mjs");
 
 	// Resolve constructors whether exported natively or attached to the global/module namespace
 	const FilesetResolver = visionModule.FilesetResolver || self.FilesetResolver;
@@ -107,7 +167,7 @@ async function initModel(payload) {
 
 	// Locate the underlying core WASM task filesets
 	const visionFileset = await FilesetResolver.forVisionTasks(
-		"./vision_wasm_module_internal.wasm"
+		"."
 	);
 
 	// Convert cached IndexedDB tflite buffer into a transient local object URL
@@ -145,12 +205,16 @@ async function runVisionSegmentation(payload) {
 	}
 
 	try {
-		const { imageBitmap, uuid } = payload;
-		if(!imageBitmap) {
+		const { imageData, uuid } = payload;
+		if(!imageData) {
 			throw new Error("Missing structural input source parameter: imageBitmap");
 		}
 
-		// Segmentation runs synchronously over the bitmap array
+
+		const img = new Image();
+		img.src = imageData;
+		await img.decode();
+		const imageBitmap = await createImageBitmap(img);
 		const segmentationResult = imageSegmenterInstance.segment(imageBitmap);
 
 		// Extract category or confidence masks from the result payload structure
@@ -215,8 +279,12 @@ async function checkVersion(payload) {
 	}
 }
 
+
+
 self.onmessage = async (e) => {
 	const { type, payload, baseURI } = e.data;
+	await downloaderPromise;
+	await storagePromise;
 
 	if(type === 'VERSION_CHECK') {
 		await installDatabaseIfNeeded(GGUF_DATABASE);
@@ -255,10 +323,15 @@ self.onmessage = async (e) => {
 		}
 
 		try {
-			const { imageBitmap, uuid } = payload;
-			if(!imageBitmap) {
+			const { imageData, uuid } = payload;
+			if(!imageData) {
 				throw new Error("Missing structural input source parameter: imageBitmap");
 			}
+
+			const img = new Image();
+			img.src = imageData;
+			await img.decode();
+			const imageBitmap = await createImageBitmap(img);
 
 			const detectionResult = objectDetectorInstance.detect(imageBitmap);
 

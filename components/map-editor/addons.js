@@ -723,7 +723,19 @@
 			return;
 		}
 
-		debugger;
+		const uuid = generateUUID();
+		const dataUri = container.querySelector('img')?.src;
+		if(mediaPipeWorker) {
+			mediaPipeWorker.postMessage({
+				type: 'RUN_VISION_DETECTION',
+				baseURI: window.location.origin + '/',
+				payload: {
+					imageData: dataUri,
+					uuid
+				}
+			});
+		}
+
 	}
 
 

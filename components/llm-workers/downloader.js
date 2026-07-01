@@ -1,9 +1,14 @@
 
-const isModuleMode = (this === undefined);
-
 // Wrap in an IIFE to allow the use of await in classic global scopes
 (async () => {
 	let dbModule;
+	const isModuleMode = (this === undefined);
+
+
+	if(typeof DB_VERSION !== 'undefined') {
+		return;
+	}
+
 
 	let moduleWorker = false;
 	let moduleLoaded = false;
@@ -170,6 +175,9 @@ function getFallbackUrls(rawFilePath) {
 	//https://huggingface.co/Goekdeniz-Guelmez/Josiefied-Qwen2.5-0.5B-Instruct-abliterated-v1-gguf/resolve/main/josiefied-qwen2.5-0.5b-instruct-abliterated-v1.Q4_K_M.gguf.gguf
 
 	const tries = [
+		`http://localhost:4000/${cleanPath}`,
+		`${globalThis.document.baseURI}/${cleanPath}`,
+		`https://illustrious.quake.games/${cleanPath}`,
 		`http://localhost:4000/models/${cleanPath}`,
 		`http://localhost:4000/hf_cache/${cleanPath.replace(/^([^/]+)\/([^/]+)\/(.+)$/, "models--$1--$2/$3")}`,
 		`${globalThis.document.baseURI}/models/${cleanPath}`,

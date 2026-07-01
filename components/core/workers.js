@@ -44,7 +44,7 @@ async function bootAvailableWorkers() {
 	convertWorker.onmessage = convertResponseInterface;
 
 
-	mediaPipeWorker = new Worker(MEDIAPIPE_WORKER, { type: 'module' });
+	mediaPipeWorker = new Worker(MEDIAPIPE_WORKER, { type: 'module' /* 'classic' */ });
 	mediaPipeWorker.onerror = (err) => {
 		console.error("Worker error:", err);
 	};
@@ -177,10 +177,12 @@ async function mediapipeResponseInterface(e) {
 	const { type, payload } = e.data;
 
 	if(type === 'WORKER_READY') {
-		convertWorker.postMessage({
+		mediaPipeWorker.postMessage({
 			type: 'LOAD_MODEL',
 			baseURI: window.location.origin + '/',
 			payload: {
+				visionTaskType: "DETECTOR",
+				visionModelUrl: DEFAULT_DETECTOR
 			}
 		});
 	}
@@ -191,6 +193,7 @@ async function mediapipeResponseInterface(e) {
 
 	if(type === 'MODEL_READY') {
 
+		console.log(e.data);
 	}
 
 }

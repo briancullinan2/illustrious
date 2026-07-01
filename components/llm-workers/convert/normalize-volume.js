@@ -124,6 +124,110 @@ function normalizeModel(payload) {
 
 
 /*
+import * as THREE from 'three';
+import * as BufferGeometryUtils from 'three/addons/utils/BufferGeometryUtils.js';
+
+export function chooseyDecimateAndSnap(geometry, options = {}) {
+	const radialSteps = options.radialSteps || 16;
+	const gridSnap = options.gridSnap || 1.0;
+	const axis = options.axis || 'Z';
+	const tolerance = 0.005; // Distance to consider a point "already snapped"
+
+	// Working with a non-indexed triangle soup for isolated evaluation
+	const targetGeometry = geometry.index ? geometry.toNonIndexed() : geometry.clone();
+	const pos = targetGeometry.attributes.position;
+	const count = pos.count;
+
+	const angleStep = (Math.PI * 2) / radialSteps;
+	const snapValue = (val, step) => Math.round(val / step) * step;
+
+	// Helper: Detects if a coordinate is already locked to your world grid
+	const isAnchorPoint = (x, y, z) => {
+		const dx = Math.abs(x - snapValue(x, gridSnap));
+		const dy = Math.abs(y - snapValue(y, gridSnap));
+		const dz = Math.abs(z - snapValue(z, gridSnap));
+		return dx < tolerance && dy < tolerance && dz < tolerance;
+	};
+
+	const getRadialCoords = (x, y, z) => {
+		if (axis === 'X') return { u: y, v: z, h: x };
+		if (axis === 'Y') return { u: x, v: z, h: y };
+		return { u: x, v: y, h: z }; // Z-Up standard
+	};
+
+	const setFromRadialCoords = (u, v, h) => {
+		if (axis === 'X') return [h, u, v];
+		if (axis === 'Y') return [u, h, v];
+		return [u, v, h];
+	};
+
+	// Evaluate in blocks of 3 (individual triangles)
+	for (let i = 0; i < count; i += 3) {
+		const tri = [
+			{ id: i,   x: pos.getX(i),   y: pos.getY(i),   z: pos.getZ(i)   },
+			{ id: i+1, x: pos.getX(i+1), y: pos.getY(i+1), z: pos.getZ(i+1) },
+			{ id: i+2, x: pos.getX(i+2), y: pos.getY(i+2), z: pos.getZ(i+2) }
+		];
+
+		// Step 1: Flag vertices that are already clean anchors
+		tri.forEach(v => { v.isAnchor = isAnchorPoint(v.x, v.y, v.z); });
+		const anchors = tri.filter(v => v.isAnchor);
+
+		// Step 2: Choose target projection strategy based on triangle constraints
+		tri.forEach(v => {
+			let targetX, targetY, targetZ;
+
+			if (v.isAnchor) {
+				// Keep the anchor exactly where it is—no modification
+				targetX = snapValue(v.x, gridSnap);
+				targetY = snapValue(v.y, gridSnap);
+				targetZ = snapValue(v.z, gridSnap);
+			} else if (anchors.length > 0) {
+				// CHOOSEY SELECTION: Collapse toward the nearest grid anchor in this face
+				let nearestAnchor = anchors[0];
+				let minDist = Infinity;
+				anchors.forEach(a => {
+					const d = Math.hypot(v.x - a.x, v.y - a.y, v.z - a.z);
+					if (d < minDist) { minDist = d; nearestAnchor = a; }
+				});
+
+				// Pull the non-aligned coordinate directly to the anchor line
+				targetX = snapValue(nearestAnchor.x, gridSnap);
+				targetY = snapValue(nearestAnchor.y, gridSnap);
+				targetZ = snapValue(nearestAnchor.z, gridSnap);
+			} else {
+				// FALLBACK: Standard radial calculation if no points are near the grid
+				const { u, v: vecV, h } = getRadialCoords(v.x, v.y, v.z);
+				const radius = Math.sqrt(u * u + vecV * vecV);
+				let angle = Math.atan2(vecV, u);
+				if (angle < 0) angle += Math.PI * 2;
+
+				const snappedAngle = Math.round(angle / angleStep) * angleStep;
+				const [nx, ny, nz] = setFromRadialCoords(
+					radius * Math.cos(snappedAngle),
+					radius * Math.sin(snappedAngle),
+					h
+				);
+
+				targetX = snapValue(nx, gridSnap);
+				targetY = snapValue(ny, gridSnap);
+				targetZ = snapValue(nz, gridSnap);
+			}
+
+			pos.setXYZ(v.id, targetX, targetY, targetZ);
+		});
+	}
+
+	pos.needsUpdate = true;
+
+	// Step 3: Weld structural duplicates together and drop collapsed faces
+	let cleanGeo = BufferGeometryUtils.mergeVertices(targetGeometry, tolerance);
+	cleanGeo.computeVertexNormals();
+	cleanGeo.computeBoundingBox();
+
+	return cleanGeo;
+}
+
 
 async function decimateGeometry() {
 	import * as THREE from 'three';
