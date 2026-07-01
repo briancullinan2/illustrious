@@ -323,7 +323,12 @@ async function runVisionDetection(payload) {
 		throw new Error("Missing structural input source parameter: imageBitmap");
 	}
 
-	imageBitmap ||= typeof dataUri === 'string' ? await createImageBitmap(await (await fetch(dataUri)).blob()) : undefined;
+	imageBitmap ||= typeof dataUri === 'string' ? await createImageBitmap(await (await fetch(dataUri)).blob(),
+		{
+			colorSpaceConversion: 'none',
+			premultipliedAlpha: 'none',
+			imageOrientation: 'flipY'
+		}) : undefined;
 
 	const subBitmaps = await splitBitmapIntoQuadGrid(imageBitmap);
 
