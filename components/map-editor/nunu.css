@@ -134,6 +134,10 @@
 	width: auto !important;
 }
 
+#nunu .context-menu {
+	z-index: 1000 !important;
+}
+
 #nunu>div:not(.context-menu):not(.loading-panel) {
 	position: relative !important;
 	top: 0 !important;
