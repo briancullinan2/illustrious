@@ -440,4 +440,3 @@ function generateUUID() {
 		, n = 4294967295 * Math.random() | 0;
 	return (ki[255 & t] + ki[t >> 8 & 255] + ki[t >> 16 & 255] + ki[t >> 24 & 255] + "-" + ki[255 & e] + ki[e >> 8 & 255] + "-" + ki[e >> 16 & 15 | 64] + ki[e >> 24 & 255] + "-" + ki[63 & i | 128] + ki[i >> 8 & 255] + "-" + ki[i >> 16 & 255] + ki[i >> 24 & 255] + ki[255 & n] + ki[n >> 8 & 255] + ki[n >> 16 & 255] + ki[n >> 24 & 255]).toUpperCase();
 }
-

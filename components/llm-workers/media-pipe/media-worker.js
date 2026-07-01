@@ -142,6 +142,36 @@ async function downloadVisionModel(payload, forceUpdate = false) {
 	return buffer;
 }
 
+/**
+ * Slices a single ImageBitmap source into a 2x2 grid (4 quadrants).
+ * This operation is synchronous, hardware-accelerated, and completely worker-safe.
+ * * @param {ImageBitmap} sourceBitmap - The raw fully decoded incoming image asset.
+ * @returns {Promise<ImageBitmap[]>} An array containing [TopLeft, TopRight, BottomLeft, BottomRight]
+ */
+async function splitBitmapIntoQuadGrid(sourceBitmap) {
+	const w = sourceBitmap.width;
+	const h = sourceBitmap.height;
+
+	// Calculate split boundaries
+	const halfWidth = Math.floor(w / 2);
+	const halfHeight = Math.floor(h / 2);
+
+	// Sub-rect configuration slices: [sx, sy, sw, sh]
+	const quadrants = [
+		{ x: 0, y: 0, w: halfWidth, h: halfHeight }, // 0: Top-Left
+		{ x: halfWidth, y: 0, w: w - halfWidth, h: halfHeight }, // 1: Top-Right
+		{ x: 0, y: halfHeight, w: halfWidth, h: h - halfHeight }, // 2: Bottom-Left
+		{ x: halfWidth, y: halfHeight, w: w - halfWidth, h: h - halfHeight }  // 3: Bottom-Right
+	];
+
+	// Fire off crop tasks concurrently via native browser threading
+	const cropPromises = quadrants.map(q =>
+		createImageBitmap(sourceBitmap, q.x, q.y, q.w, q.h)
+	);
+
+	return Promise.all(cropPromises);
+}
+
 
 let objectDetectorInstance = null;
 let imageSegmenterInstance = null;
@@ -178,8 +208,9 @@ async function initModel(payload) {
 		imageSegmenterInstance = await ImageSegmenter.createFromOptions(visionFileset, {
 			baseOptions: {
 				modelAssetPath: visionBlobUrl,
-				delegate: payload.visionDelegate || "GPU"
+				delegate: payload.visionDelegate || "GPU",
 			},
+			canvas: globalThis['glCanvas'],
 			runningMode: "IMAGE",
 			outputCategoryMask: payload.outputCategoryMask !== undefined ? payload.outputCategoryMask : true,
 			outputConfidenceMasks: payload.outputConfidenceMasks !== undefined ? payload.outputConfidenceMasks : false
@@ -189,33 +220,32 @@ async function initModel(payload) {
 		objectDetectorInstance = await ObjectDetector.createFromOptions(visionFileset, {
 			baseOptions: {
 				modelAssetPath: visionBlobUrl,
-				delegate: payload.visionDelegate || "GPU"
+				delegate: payload.visionDelegate || "GPU",
 			},
-			scoreThreshold: payload.visionScoreThreshold || 0.5,
-			runningMode: "IMAGE"
+			scoreThreshold: payload.visionScoreThreshold || 0.08,
+			runningMode: "IMAGE",
+			canvas: globalThis['glCanvas']
 		});
 	}
 }
 
 // Complementary execution handler to route segmentation processing tasks
 async function runVisionSegmentation(payload) {
+	const { imageBitmap, dataUri, uuid } = payload;
+
 	if(!imageSegmenterInstance) {
 		self.postMessage({ type: 'ERROR', payload: { message: 'Vision image segmenter model layer not initialized.' } });
 		return;
 	}
 
 	try {
-		const { imageData, uuid } = payload;
-		if(!imageData) {
+		if(!(imageBitmap || dataUri)) {
 			throw new Error("Missing structural input source parameter: imageBitmap");
 		}
 
+		const blob = typeof dataUri === 'string' ? await createImageBitmap(await (await fetch(dataUri)).blob()) : undefined;
 
-		const img = new Image();
-		img.src = imageData;
-		await img.decode();
-		const imageBitmap = await createImageBitmap(img);
-		const segmentationResult = imageSegmenterInstance.segment(imageBitmap);
+		const segmentationResult = imageSegmenterInstance.segment(imageBitmap || blob);
 
 		// Extract category or confidence masks from the result payload structure
 		const mask = segmentationResult.categoryMask || segmentationResult.confidenceMasks;
@@ -234,7 +264,7 @@ async function runVisionSegmentation(payload) {
 		});
 	} catch(err) {
 		console.error(err);
-		self.postMessage({ type: 'ERROR', payload: { message: 'Segmentation execution failed: ' + err.message } });
+		self.postMessage({ type: 'ERROR', payload: { uuid, message: 'Segmentation execution failed: ' + err.message } });
 	}
 }
 
@@ -281,8 +311,79 @@ async function checkVersion(payload) {
 
 
 
+async function runVisionDetection(payload) {
+	if(!objectDetectorInstance) {
+		self.postMessage({ type: 'ERROR', payload: { message: 'Vision object detector model layer not initialized.' } });
+		return;
+	}
+
+
+	let { imageBitmap, dataUri, uuid } = payload;
+	if(!(imageBitmap || dataUri)) {
+		throw new Error("Missing structural input source parameter: imageBitmap");
+	}
+
+	imageBitmap ||= typeof dataUri === 'string' ? await createImageBitmap(await (await fetch(dataUri)).blob()) : undefined;
+
+	const subBitmaps = await splitBitmapIntoQuadGrid(imageBitmap);
+
+	const globalDetections = [];
+	const halfWidth = Math.floor(imageBitmap.width / 2);
+	const halfHeight = Math.floor(imageBitmap.height / 2);
+
+	// Quad spatial offsets mapping for coordinate translation: [offsetX, offsetY]
+	const quadOffsets = [
+		[0, 0],                 // 0: Top-Left
+		[halfWidth, 0],         // 1: Top-Right
+		[0, halfHeight],        // 2: Bottom-Left
+		[halfWidth, halfHeight] // 3: Bottom-Right
+	];
+
+	// SERIALLY INVOKE: Run each quadrant one by one to protect WebGL state
+	for(let i = 0; i < subBitmaps.length; i++) {
+		const quadBitmap = subBitmaps[i];
+
+		// Run the detection on the isolated sub-region
+		const quadResult = objectDetectorInstance.detect(quadBitmap);
+
+		if(quadResult && quadResult.detections) {
+			const [offsetX, offsetY] = quadOffsets[i];
+
+			for(const detection of quadResult.detections) {
+				const box = detection.boundingBox;
+
+				// Translate local quad pixel origins back to global image coordinates
+				const globalBox = {
+					originX: box.originX + offsetX,
+					originY: box.originY + offsetY,
+					width: box.width,
+					height: box.height,
+					angle: box.angle || 0
+				};
+
+				// Clone the detection structure and inject the corrected global box
+				globalDetections.push({
+					...detection,
+					boundingBox: globalBox
+				});
+			}
+		}
+
+		// Clean up GPU allocation for this sub-slice immediately
+		quadBitmap.close();
+	}
+
+	// Clean up parent image handle
+	imageBitmap.close();
+
+	// Ship the combined, re-mapped coordinate dataset back to the UI thread
+	self.postMessage({ type: 'VISION_DETECTION_COMPLETE', payload: { uuid, detections: globalDetections } });
+}
+
+
+
 self.onmessage = async (e) => {
-	const { type, payload, baseURI } = e.data;
+	const { type, payload, baseURI, uuid, canvas } = e.data;
 	await downloaderPromise;
 	await storagePromise;
 
@@ -303,6 +404,10 @@ self.onmessage = async (e) => {
 		await installDatabaseIfNeeded(GGUF_DATABASE);
 		const needsUpdate = await checkVersion(payload);
 
+		if(canvas) {
+			globalThis['glCanvas'] = canvas;
+			//globalThis['glContext'] = canvas.getContext("webgl2") || canvas.getContext("webgl");
+		}
 		try {
 			await initModel(payload);
 			self.postMessage({ type: 'MODEL_READY', payload: { needsUpdate } });
@@ -310,6 +415,7 @@ self.onmessage = async (e) => {
 			console.error(err);
 			self.postMessage({ type: 'ERROR', payload: { message: err.message + '\n' + (err.stack || err.stacktrace) } });
 		}
+
 	}
 
 	if(type === "RUN_VISION_SEGMENTATION") {
@@ -317,31 +423,11 @@ self.onmessage = async (e) => {
 	}
 
 	if(type === 'RUN_VISION_DETECTION') {
-		if(!objectDetectorInstance) {
-			self.postMessage({ type: 'ERROR', payload: { message: 'Vision object detector model layer not initialized.' } });
-			return;
-		}
-
 		try {
-			const { imageData, uuid } = payload;
-			if(!imageData) {
-				throw new Error("Missing structural input source parameter: imageBitmap");
-			}
-
-			const img = new Image();
-			img.src = imageData;
-			await img.decode();
-			const imageBitmap = await createImageBitmap(img);
-
-			const detectionResult = objectDetectorInstance.detect(imageBitmap);
-
-			self.postMessage({
-				type: 'VISION_DETECTION_COMPLETE',
-				payload: { uuid, result: detectionResult }
-			});
+			await runVisionDetection(payload);
 		} catch(err) {
 			console.error(err);
-			self.postMessage({ type: 'ERROR', payload: { message: 'Vision tracking failed: ' + err.message } });
+			self.postMessage({ type: 'ERROR', payload: { uuid, message: 'Vision tracking failed: ' + err.message } });
 		}
 	}
 

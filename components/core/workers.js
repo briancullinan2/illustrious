@@ -177,14 +177,16 @@ async function mediapipeResponseInterface(e) {
 	const { type, payload } = e.data;
 
 	if(type === 'WORKER_READY') {
+		const offscreenCanvas = document.getElementById('scratch').transferControlToOffscreen();
 		mediaPipeWorker.postMessage({
 			type: 'LOAD_MODEL',
 			baseURI: window.location.origin + '/',
+			canvas: offscreenCanvas,
 			payload: {
 				visionTaskType: "DETECTOR",
 				visionModelUrl: DEFAULT_DETECTOR
 			}
-		});
+		}, [offscreenCanvas]);
 	}
 
 	if(type === 'UNAUTHORIZED') {
@@ -193,6 +195,10 @@ async function mediapipeResponseInterface(e) {
 
 	if(type === 'MODEL_READY') {
 
+		console.log(e.data);
+	}
+
+	if(type === 'VISION_DETECTION_COMPLETE') {
 		console.log(e.data);
 	}
 

@@ -417,6 +417,17 @@ select option:hover {
 	color: var(--accent);
 }
 
+#scratch {
+	opacity: 0;
+	z-index: -1;
+	position: absolute;
+	top: 0;
+	bottom: 0;
+	left: 0;
+	right: 0;
+	pointer-events: none;
+}
+
 textarea {
 	height: 65px;
 	line-height: 1.4;
