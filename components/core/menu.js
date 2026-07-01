@@ -31,16 +31,18 @@ const SITE_MENU = [
             {
                 name: "Export", icon: "bx-arrow-in-down-square-half",
                 children: [
-                    { name: "OBJ", icon: "/components/map-editor/icons/misc/scene.png", target: "file/import/obj" },
-                    { name: "GLTF", icon: "/components/map-editor/icons/gltf.png", target: "file/import/gltf" },
-                    { name: "GLB", icon: "/components/map-editor/icons/gltf.png", target: "file/import/glb" },
-                    { name: "Draco", icon: "/components/map-editor/icons/misc/scene.png", target: "file/import/draco" },
-                    { name: "Collada V1.4.1", icon: "/components/map-editor/icons/misc/scene.png", target: "file/import/collada-v1.4.1" },
-                    { name: "Collada V1.5", icon: "/components/map-editor/icons/misc/scene.png", target: "file/import/collada-v1.5" },
-                    { name: "PLY", icon: "/components/map-editor/icons/misc/scene.png", target: "file/import/ply" },
-                    { name: "PLY (Binary)", icon: "/components/map-editor/icons/misc/scene.png", target: "file/import/ply-binary" },
-                    { name: "STL", icon: "/components/map-editor/icons/misc/scene.png", target: "file/import/stl" },
-                    { name: "STL (Binary)", icon: "/components/map-editor/icons/misc/scene.png", target: "file/import/stl-binary" }
+                    { name: "OBJ", icon: "/components/map-editor/icons/misc/scene.png", target: "file/export/obj" },
+                    { name: "GLTF", icon: "/components/map-editor/icons/gltf.png", target: "file/export/gltf" },
+                    { name: "GLB", icon: "/components/map-editor/icons/gltf.png", target: "file/export/glb" },
+                    { name: "Draco", icon: "/components/map-editor/icons/misc/scene.png", target: "file/export/draco" },
+                    { name: "Collada V1.4.1", icon: "/components/map-editor/icons/misc/scene.png", target: "file/export/collada-v1.4.1" },
+                    { name: "Collada V1.5", icon: "/components/map-editor/icons/misc/scene.png", target: "file/export/collada-v1.5" },
+                    { name: "PLY", icon: "/components/map-editor/icons/misc/scene.png", target: "file/export/ply" },
+                    { name: "PLY (Binary)", icon: "/components/map-editor/icons/misc/scene.png", target: "file/export/ply-binary" },
+                    { name: "STL", icon: "/components/map-editor/icons/misc/scene.png", target: "file/export/stl" },
+                    { name: "STL (Binary)", icon: "/components/map-editor/icons/misc/scene.png", target: "file/export/stl-binary" },
+					{ name: "Minecraft NBT (Binary)", icon: "/components/map-editor/icons/misc/scene.png", target: "file/export/nbt" },
+                    { name: "Minecraft ZIP (Binary)", icon: "/components/map-editor/icons/misc/scene.png", target: "file/export/nbt-zip" }
                 ]
             },
             { divider: true },
@@ -204,13 +206,13 @@ function renderMenuSystem(menuTreeData, targetWrapper) {
 
             currentLevelHtml += `
                 <li>
-                    <a id="main_menu_${currentPath}" 
-                       role="menuitem" 
-                       tabindex="-1" 
-                       aria-haspopup="${hasChildren}" 
-                       aria-expanded="false" 
-                       href="javascript:void(0)" 
-                       data-level="${level}" 
+                    <a id="main_menu_${currentPath}"
+                       role="menuitem"
+                       tabindex="-1"
+                       aria-haspopup="${hasChildren}"
+                       aria-expanded="false"
+                       href="javascript:void(0)"
+                       data-level="${level}"
                        data-index="${idx}"
                        ${node.target ? `data-target="${node.target}"` : ''}>
                         ${node.icon && node.icon.includes('/')
@@ -231,10 +233,10 @@ function renderMenuSystem(menuTreeData, targetWrapper) {
 
                 // Append the wrapper out flatly to the global pool along with its items
                 output.detachedPanelsHtml += `
-                    <ul class="${subClass}" 
-                        role="menu" 
-                        tabindex="0" 
-                        aria-labelledby="main_menu_${currentPath}" 
+                    <ul class="${subClass}"
+                        role="menu"
+                        tabindex="0"
+                        aria-labelledby="main_menu_${currentPath}"
                         id="dropdown_menu_${currentPath}">
                         ${childItemsHtml}
                     </ul>
