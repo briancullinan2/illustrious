@@ -14,7 +14,7 @@ const IMPORT_CSS = {
 	nunu: [
 		'/components/map-editor/styles.css',
 		'/components/map-editor/codemirror.css',
-		'/components/map-editor/nunu.css',
+		//'/components/map-editor/nunu.css',
 	]
 };
 
