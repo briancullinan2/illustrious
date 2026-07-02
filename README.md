@@ -32,6 +32,178 @@ Instead of burning cash on idle compute, this system implements **Zero-to-One Au
 
 ## So Far
 
+### 07/01/26
+
+Fair call. Packing everything into one generic global mega-atlas texture is what broke your asset explorer and submodels.
+
+Looking at `Screenshot 2026-07-01 224455.png`, the Asset Explorer previews are broken because every single individual material is sharing that exact same mega-atlas uniform. Since the material preview geometry doesn't have the custom scaled atlas vertex attributes, it samples the whole map's shadow layout scaled down across a tiny sphere.
+
+Looking at `Screenshot 2026-07-01 224400.jpg`, your map's main brush surfaces render right, but external submodels (like the blacked-out statue or sub-bsp assets) are completely ruined because they are referencing fallback or unmapped lightmap texture handles.
+
+To do this right and restore structural stability, we should drop the mega-atlas complexity and re-integrate individual, granular lightmap textures exactly like Toji's codebase did.
+
+---
+
+### 1. The Worker Code: Parse Individual Lightmaps
+
+Instead of packing pixels into a massive master sheet, `parseRawBSP` should keep lightmaps separated as an array of individual 128x128 RGBA buffers.
+
+Update that section in `parseRawBSP` to match this layout:
+
+```javascript
+let lmLump = lumps[14];
+let lightmapSize = 128 * 128;
+let lmCount = lmLump.length / (lightmapSize * 3);
+
+let bspLightmaps = []; // Flat array holding separate individual 128x128 buffers
+let lmPtr = lmLump.offset;
+
+for (let i = 0; i < lmCount; i++) {
+    let elements = new Uint8Array(lightmapSize * 4);
+
+    for (let j = 0; j < lightmapSize * 4; j += 4) {
+        let r = view.getUint8(lmPtr++);
+        let g = view.getUint8(lmPtr++);
+        let b = view.getUint8(lmPtr++);
+
+        // Quake 3 brightness adjust factor (4.0)
+        r = Math.min(255, Math.floor(r * 4.0));
+        g = Math.min(255, Math.floor(g * 4.0));
+        b = Math.min(255, Math.floor(b * 4.0));
+
+        elements[j]     = r;
+        elements[j + 1] = g;
+        elements[j + 2] = b;
+        elements[j + 3] = 255;
+    }
+
+    bspLightmaps.push(elements);
+}
+
+```
+
+Since we are using individual lightmap textures, **stop multiplying the coordinates by atlas scales.** Inside the face processing loop where you compute coordinates, assign the raw `lmCoord` coordinates directly out to the vertex:
+
+```javascript
+// Inside your face loop processing for face.type 1, 2, and 3:
+vert.lmNewCoord[0] = vert.lmCoord[0];
+vert.lmNewCoord[1] = vert.lmCoord[1];
+
+```
+
+And make sure your face index mapping tracking maps the target index over to the final extracted surface object inside `extractSurfaceGeometry`:
+
+```javascript
+// Inside extractSurfaceGeometry, make sure to forward the face's target lightmap index:
+return {
+    index: s,
+    shaderName: surface.shaderName,
+    geomType: surface.geomType,
+    lightmapIndex: surface.faces && surface.faces[0] ? surface.faces[0].lightmap : 0, // Track original index
+    positions: new Float32Array(subPositions),
+    normals: new Float32Array(subNormals),
+    uvs: new Float32Array(subUvs),
+    lightCoords: new Float32Array(subLightmapCoords), // Extracted un-scaled coords
+    colors: new Float32Array(subColors),
+    indices: subIndices
+};
+
+```
+
+---
+
+### 2. Main Thread: Hydrate Individual Texture Instances
+
+When storing the lightmaps data array on your loader instance, map the raw byte buffers into individual, decoupled `THREE.DataTexture` array instances:
+
+```javascript
+setLightmaps(rawLightmapsArray) {
+    this.lightmapTextures = [];
+
+    if (Array.isArray(rawLightmapsArray)) {
+        rawLightmapsArray.forEach((bytes, index) => {
+            const texture = new THREE.DataTexture(bytes, 128, 128, THREE.RGBAFormat);
+            texture.wrapS = THREE.RepeatWrapping;
+            texture.wrapT = THREE.RepeatWrapping;
+            texture.minFilter = THREE.LinearFilter;
+            texture.magFilter = THREE.LinearFilter;
+            texture.flipY = false;
+            texture.needsUpdate = true;
+
+            this.lightmapTextures[index] = texture;
+        });
+    }
+    return this;
+}
+
+```
+
+---
+
+### 3. Associate and Bind Prior to Generation
+
+Now, your individual meshes can request their *exact* localized shadow layer block inside `processBatch`, and your Asset Explorer can gracefully safely ignore texture configurations for unrelated contexts.
+
+Update `processBatch` to pick out the correct specific index:
+
+```javascript
+processBatch(surf, rootNode) {
+    // ... (Your standard geometry buffer configuration block goes here)
+
+    // Select the unique lightmap texture assigned specifically to this geometry piece
+    let faceLightmap = this.whiteTexture;
+    if (this.lightmapTextures && this.lightmapTextures[surf.lightmapIndex]) {
+        faceLightmap = this.lightmapTextures[surf.lightmapIndex];
+    }
+
+    // Set it cleanly on the builder before compiling the active stages
+    if (typeof this.materialBuilder.setLightmap === 'function') {
+        this.materialBuilder.setLightmap(faceLightmap);
+    }
+
+    let textureShaderPath = surf.shaderName;
+    let finalMaterials = [];
+
+    // Check if it's a standard interface preview pass or an empty shader name
+    const isAssetExplorer = textureShaderPath.toLowerCase().includes('preview') || textureShaderPath === '';
+
+    if (isAssetExplorer) {
+        // Force asset previews to fall back cleanly to a solid white lighting multiplier
+        if (typeof this.materialBuilder.setLightmap === 'function') {
+            this.materialBuilder.setLightmap(this.whiteTexture);
+        }
+    }
+
+    if(textureShaderPath && textureShaderPath !== "noshader") {
+        let lookupName = textureShaderPath.toLowerCase();
+        let cachedShader = registry[lookupName];
+
+        if(cachedShader) {
+            finalMaterials = this.materialBuilder.buildMaterials(cachedShader);
+        }
+    }
+
+    if(finalMaterials.length === 0) {
+        finalMaterials.push(this.materialBuilder.buildDefaultMaterial(textureShaderPath, THREE.DoubleSide));
+        finalMaterials[0].uniforms.lightmap.value = faceLightmap;
+
+        this.materialBuilder.resolveTexture(textureShaderPath + ".jpg", false, (tex) => {
+            finalMaterials[0].uniforms.map.value = tex;
+        });
+    }
+
+    finalMaterials.forEach((material, stageIndex) => {
+        let surfaceMesh = new THREE.Mesh(geometry, material);
+        // ... (remaining mesh generation attachment logic)
+        rootNode.add(surfaceMesh);
+    });
+}
+
+```
+
+This restores the isolated, pure single-pass texturing system from Toji's codebase while cleanly fixing the asset inspector previews.
+
+
 
 ### 06/29/26
 
