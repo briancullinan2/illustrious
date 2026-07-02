@@ -3,7 +3,8 @@ const express = require('express');
 const {
 	requireReactiveCredentials,
 	fetchAndValidateIdentity,
-	saveUserToDictionary
+	saveUserToDictionary,
+	CREDENTIALS_DIR
 } = require('../cloud-functions/cluster-manager/host-google.js');
 const { app, server, PORT, serveErrorScreen } = require('./server.js');
 require('../setup/setup.js'); // Mounts setup wizard routes cleanly
@@ -18,7 +19,6 @@ const session = require('express-session');
 // Import and initialize the file-backed session store
 const FileStore = require('session-file-store')(session);
 
-const CREDENTIALS_DIR = path.join(os.homedir(), '.credentials');
 const DUAL_STORE_PATH = path.join(CREDENTIALS_DIR, 'illustrious-users.json');
 const SESSIONS_DIR = path.join(CREDENTIALS_DIR, 'sessions'); // Isolated folder for raw browser sessions
 

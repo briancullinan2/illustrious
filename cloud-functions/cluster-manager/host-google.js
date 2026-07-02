@@ -7,6 +7,7 @@ const GLOBAL_CRED_DIR = path.join(os.homedir(), '.credentials');
 const DEFAULT_URI = 'http://localhost:4000/';
 const DEFAULT_ENDPOINT = DEFAULT_URI + 'oauth2callback';
 const GLOBAL_SETTINGS = path.join(__dirname, '../..', 'illustrious-config.json');
+const CREDENTIALS_DIR = path.join(os.homedir(), '.credentials');
 
 
 async function listProjectsFromGoogle(req, clientOpts) {
@@ -687,6 +688,7 @@ module.exports = {
 	getGcpClientOptions,
 	fetchTelemetry,
 	fetchAndValidateIdentity,
-	saveUserToDictionary
+	saveUserToDictionary,
+	CREDENTIALS_DIR
 };
 
